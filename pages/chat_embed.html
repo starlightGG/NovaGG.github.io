@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  // Check if already authorized
+  if (localStorage.getItem('isAuthorized') === 'true') {
+    console.log("Already authorized");
+  } else {
+    let pass = prompt("Enter password (Changed recently)");
+    if (pass == "8/5/13") {
+      alert("Granted");
+      // Save authorization state
+      localStorage.setItem('isAuthorized', 'true');
+    } else {
+      alert("WRONG, try again");
+      let pass2 = prompt("Enter password");
+      if (pass2 == "8513") {
+        alert("Granted");
+        localStorage.setItem('isAuthorized', 'true');
+      } else {
+        alert("WRONG! Redirecting...");
+        window.location.href = "https://google.com";
+      }
+    }
+  }
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Chat</title>
+    <style>
+        /* 1. Remove all default browser spacing */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 2. Ensure the containers fill the entire height of the browser */
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Prevents the page itself from scrolling */
+        }
+
+        /* 3. The wrapper for your chat */
+        .chat-wrapper {
+            width: 100%;
+            /* dvh (dynamic viewport height) fixes the mobile address bar issue */
+            height: 100vh; 
+            height: 100dvh; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 4. Ensure the RumbleTalk div expands to fill the wrapper */
+        #rt-d4dc4ea0e6ecd094ad1bfd1cbb0bfcf5 {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-wrapper">
+        <div id="rt-d4dc4ea0e6ecd094ad1bfd1cbb0bfcf5"></div>
+        
+        <script src="https://rumbletalk.com/client/?AFeSblMD"></script>
+    </div>
+
+</body>
+</html>

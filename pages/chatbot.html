@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlighter AI</title>
+    
+    <!-- 1. MathJax Configuration (Must be before script load) -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      };
+    </script>
+    <!-- 2. MathJax Library -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <!-- 3. MathJax Safe Refresh Logic -->
+<script>
+  let mathTimeout;
+
+  // 1. The Debounced Render Function
+  function safeRefreshMath(content) {
+    // Only activate if the provided content contains items from the math text list
+    if (content && !containsMath(content)) return;
+
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      clearTimeout(mathTimeout);
+      mathTimeout = setTimeout(() => {
+        MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
+      }, 100);
+    }
+  }
+
+  // 2. YOUR EXACT LIST
+  // This matches the delimiters in your MathJax config:
+  // Inline: $ and \( ... \)
+  // Display: $$ and \[ ... \] and [ ... ]
+  const mathDelimiters = [
+    '$$', 
+    '$', 
+    '\\(', '\\)', 
+    '\\[', '\\]'
+  ];
+
+  // 3. Check if text contains ANY of the delimiters from the list
+  function containsMath(text) {
+    if (!text) return false;
+    // Returns true if the text strictly includes any string from the list above
+    return mathDelimiters.some(delim => text.includes(delim));
+  }
+
+  // 4. The Observer Logic
+  const observer = new MutationObserver((mutations) => {
+    let shouldRender = false;
+
+    for (const mutation of mutations) {
+      // Check added nodes
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+            if (containsMath(node.textContent)) shouldRender = true;
+          } else if (node.nodeType === Node.TEXT_NODE) {
+            if (containsMath(node.textContent)) shouldRender = true;
+          }
+        });
+      } 
+      // Check modified text
+      else if (mutation.type === 'characterData') {
+        if (containsMath(mutation.target.textContent)) {
+          shouldRender = true;
+        }
+      }
+      
+      if (shouldRender) break;
+    }
+
+    if (shouldRender) {
+      safeRefreshMath();
+    }
+  });
+
+  // 5. Start Observing
+  document.addEventListener("DOMContentLoaded", () => {
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true, 
+      characterData: true 
+    });
+  });
+</script>
+    <!-- 4. Marked Library for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* --- CORE VARIABLES --- */
+        :root {
+            /* Light Theme (Default) */
+            --bg-color: #e0e5ec;
+            --text-color: #333333;
+            --text-secondary: #555555;
+            --primary-color: #4c68ff;
+            --primary-light: #7c90ff;
+            --primary-dark: #3a50cc;
+            --secondary-bg: #e0e5ec;
+            --glass-color: rgba(255, 255, 255, 0.4);
+            --card-glass: rgba(255, 255, 255, 0.65);
+            --line-color: rgba(0, 0, 0, 0.07);
+            --star-color: #E5B500;
+            --toggle-size: 4rem;
+            --border-radius: 20px;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+
+            /* Neumorphic Shadows (Light) */
+            --shadow-light-top: -6px -6px 12px #ffffff;
+            --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            
+            --highlight-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --active-color: #3498db;
+            
+            /* Action Colors */
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        /* --- GLOBAL RESET & BOX SIZING --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* NEW: Universal transitions for smooth UI updates */
+        body, .sidebar, .input-area, .chat-box, .message, .chat-item,
+        button, input, textarea, select, .modal-content, .latex-btn {
+            transition: background-color 0.3s ease, color 0.3s ease, 
+                        border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-color: #212529; /* Slightly darker for better contrast */
+            --text-color: #f0f0f0;
+            --text-secondary: #aaaaaa;
+            --primary-color: #6a7eff;
+            --secondary-bg: #2b3035;
+            --glass-color: rgba(30, 32, 35, 0.6);
+            --card-glass: rgba(40, 44, 52, 0.7);
+            --line-color: rgba(255, 255, 255, 0.08);
+            --star-color: #FFFACD;
+            
+            --shadow-light-top: -5px -5px 10px rgba(60, 60, 60, 0.3);
+            --shadow-light-bottom: 5px 5px 10px rgba(0, 0, 0, 0.5);
+            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(60, 60, 60, 0.3);
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.5);
+
+            --highlight-light: #34343e;
+            --shadow-dark: #101214;
+        }
+
+/* Fraction Builder Styles - RESTORED & UPDATED */
+.fraction-builder {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    padding: 10px;
+}
+.fraction-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.fraction-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+}
+.fraction-input {
+    width: 100%;
+    padding: 8px;
+    text-align: center;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-inset-light);
+    outline: none;
+    font-size: 1em;
+    color: var(--text-color);
+}
+.fraction-line {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-color);
+    margin: 5px 0;
+    border-radius: 2px;
+}
+.fraction-whole {
+    width: 60px;
+    height: 40px;
+}
+
+/* LaTeX Picker Modal Specifics */
+.latex-picker { width: 450px; }
+.latex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+
+/* NEW: Image Modal Styles */
+.image-modal-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    animation: fadeIn 0.3s ease;
+    object-fit: contain;
+}
+
+/* NEW: Stop Button Style */
+.stop-mode {
+    background-color: var(--danger-color) !important;
+    animation: fadeIn 0.2s ease;
+}
+
+.latex-btn { 
+    background: var(--bg-color); 
+    color: var(--text-secondary); 
+    border: none; 
+    padding: 12px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 1.1em; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top); 
+    transition: all 0.2s ease; 
+}
+
+.latex-btn:hover { 
+    color: var(--primary-color); 
+    transform: translateY(-2px); 
+}
+.latex-btn:active { 
+    box-shadow: var(--shadow-inset-light); 
+    transform: translateY(0); 
+}
+
+.latex-category { 
+    grid-column: span 5; 
+    font-size: 0.85em; 
+    color: var(--primary-color); 
+    margin-top: 15px; 
+    margin-bottom: 5px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px; 
+    border-bottom: 1px solid var(--line-color); 
+    padding-bottom: 5px; 
+}
+
+/* FIX: Insert Button Style */
+#latex-insert-main-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    transition: all 0.2s ease;
+}
+#latex-insert-main-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+#latex-insert-main-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-inset-light);
+}
+
+/* Scrollbar for grid */
+.latex-grid::-webkit-scrollbar { width: 6px; }
+.latex-grid::-webkit-scrollbar-track { background: transparent; }
+.latex-grid::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; opacity: 0.5; }
+
+/* --- Base and Full-Screen Layout --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    font-family: var(--font-stack);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    height: 100vh;
+    overflow: hidden;
+    cursor: url('https://raw.githubusercontent.com/BeckBusch/Custom-Rainbow-Cursor-Extension/refs/heads/master/Pictures/cursors/arrows/light-darkblue.png'), default;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+input[type="text"]:hover {
+    cursor: url('data:image/x-icon;base64,AAACAAEAICAAAA8AEACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/49eKf+PXin/j14p/8yCMf/MgjH/zIIx/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/49eKf+PXin/zIIx/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/49eKf8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/j14p/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/49eKf+PXin/zIIx/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf+PXin/j14p/49eKf/MgjH/zIIx/8yCMf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7+/gEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v7+AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA///////////////////////////////////////gD///4A///+AP///4P////H////x////8f////H////x////8f////H////x////8f///+D///+AP///gD///4A////////////////////////////////////////////8=');
+}
+
+/* 3. Custom Cursor for Interactive Elements */
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+select:hover,
+label:hover  {
+    cursor: url('https://raw.githubusercontent.com/BeckBusch/Custom-Rainbow-Cursor-Extension/refs/heads/master/Pictures/cursors/pointers/light-darkblue.png'), pointer;
+}
+        
+/* --- App Container Layout --- */
+.app-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    width: 280px;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.sidebar-header {
+    padding: 10px 0;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.sidebar-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.new-chat-button {
+    width: 100%; 
+    padding: 12px; 
+    background-color: var(--primary-color); 
+    color: white; 
+    border: none; 
+    border-radius: var(--border-radius); 
+    font-size: 1em; 
+    font-weight: 600; 
+    margin-bottom: 20px; 
+    transition: all 0.2s; 
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    cursor: pointer;
+}
+.new-chat-button:active { 
+    box-shadow: var(--shadow-inset-light); 
+    transform: scale(0.98); 
+}
+
+.chat-list { 
+    flex-grow: 1; 
+    overflow-y: auto; 
+    margin-bottom: 15px; 
+    padding-right: 5px;
+}
+/* Style for individual chat items */
+.chat-item { 
+    padding: 10px; 
+    margin-bottom: 10px; 
+    border-radius: var(--border-radius); 
+    font-size: 0.9em; 
+    color: var(--text-secondary); 
+    overflow: hidden; 
+    white-space: nowrap; 
+    text-overflow: ellipsis; 
+    transition: all 0.2s; 
+    background: var(--bg-color); 
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    cursor: pointer;
+}
+.chat-item.active { 
+    box-shadow: var(--shadow-inset-light); 
+    color: var(--primary-color); 
+    font-weight: 600; 
+}
+.chat-item:hover {
+    color: var(--text-color);
+}
+
+.sidebar-footer {
+    padding: 10px 0;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--line-color);
+}
+
+/* --- Main Content Area --- */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* --- Start Page Styles --- */
+.start-page {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+    z-index: 100;
+}
+
+.start-page h1 {
+    color: var(--primary-color);
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.model-selector-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Model Button Styling */
+.model-button {
+    padding: 15px 30px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1.1em;
+    font-weight: 600;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    pointer-events: none;
+    cursor: pointer;
+}
+
+.model-button.selected {
+    box-shadow: var(--shadow-inset-light); 
+    color: var(--primary-color);
+}
+
+/* --- Chat Container & Messages --- */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: var(--bg-color);
+}
+
+.welcome-prompt { 
+    text-align: center;
+    padding: 50px;
+    color: var(--text-secondary); 
+}
+
+/* Added Fade In Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message { 
+    margin-bottom: 15px; 
+    padding: 12px 18px; 
+    border-radius: 18px; 
+    line-height: 1.5; 
+    max-width: 80%; 
+    font-size: 1em;
+    animation: fadeIn 0.4s ease-out backwards; /* Smoother animation */
+    transition: all 0.3s ease;
+}
+
+/* Strong tag styling for AI responses */
+.message-content strong {
+    color: var(--primary-color);
+    font-weight: 700;
+    text-shadow: 0 0 1px rgba(0,0,0,0.1);
+}
+
+.user-message {
+    position: relative;
+    background-color: var(--primary-color); 
+    color: white; 
+    margin-left: auto; 
+    border-bottom-right-radius: 4px; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    overflow-x: auto;
+    max-width: 100vh;
+}
+.ai-message { 
+    position: relative;
+    background-color: var(--bg-color);
+    color: var(--text-color); 
+    max-width: 100vh;
+    margin-right: auto; 
+    border-bottom-left-radius: 4px; 
+    /* Soft UI Mix: Enhanced border and shadows */
+    border: 1px solid rgba(127, 127, 127, 0.2); 
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    overflow-x: auto;
+}
+
+/* Animating other elements */
+.chat-item, .modal-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* --- 3. Copy Button Specific Neumorphism Styles --- */
+.copy-button {
+    position: absolute;
+    top: 6px; 
+    right: 6px; 
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7em;
+    font-weight: 600;
+    opacity: 0.7; 
+    z-index: 10;
+    transition: all 0.2s ease-in-out;
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+}
+.ai-message:hover .copy-button {
+    opacity: 1; 
+}
+.copy-button:hover {
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+.copy-button:active,
+.copy-button.copied {
+    box-shadow: var(--shadow-inset-light);
+    color: var(--success-color);
+    transform: scale(0.95);
+    font-weight: bold;
+}
+
+/* --- Input Area --- */
+.input-area { 
+    display: flex; 
+    flex-direction: column; 
+    padding: 15px; 
+    background-color: var(--bg-color); 
+    box-shadow: var(--shadow-light-top); /* Shadow pointing up */
+    flex-shrink: 0;
+    gap: 8px;
+    z-index: 10;
+}
+
+.model-select-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+#model-select-dropdown {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-inset-light);
+    color: var(--text-color);
+    appearance: none;
+    font-size: 0.95em;
+    cursor: pointer;
+}
+
+.input-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+/* TEXTAREA */
+#user-input { 
+    flex-grow: 1; 
+    padding: 12px 18px; 
+    border: none; 
+    border-radius: 25px; 
+    font-size: 1em; 
+    font-family: inherit; 
+    background-color: var(--bg-color); 
+    box-shadow: var(--shadow-inset-light); 
+    resize: none; 
+    min-height: 48px; 
+    max-height: 150px; 
+    overflow-y: auto; 
+    color: var(--text-color);
+    line-height: 1.4;
+    transition: all 0.2s;
+}
+
+#user-input:focus {
+    outline: none;
+    box-shadow: var(--shadow-inset-light), 0 0 0 1px var(--primary-color);
+}
+
+/* SEND & UPLOAD BUTTONS */
+.send-button, .upload-button, .math-button { 
+    background-color: var(--success-color); 
+    color: white;
+    font-size: 1.2em; 
+    border: none; 
+    border-radius: 25px; 
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    flex-shrink: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    cursor: pointer;
+}
+
+.math-button {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+.math-button:hover {
+    color: var(--primary-color);
+}
+
+.send-button:active:not(:disabled), .upload-button:active:not(:disabled), .math-button:active:not(:disabled) { 
+    box-shadow: var(--shadow-inset-light); 
+    transform: scale(0.95); 
+}
+
+.send-button:disabled, .upload-button:disabled, .math-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* FILE DISPLAY AREA */
+.file-display-area {
+    display: none;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-inset-light);
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+
+#selected-file-name {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.clear-file-button {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    font-weight: bold;
+    padding: 0 5px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+    cursor: pointer;
+}
+
+.clear-file-button:hover {
+    color: #a71d2a;
+}
+
+/* --- Context Menu Styles --- */
+#context-menu {
+    position: absolute;
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding: 5px;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    display: none;
+    z-index: 1000;
+    min-width: 150px;
+}
+
+#context-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--text-color);
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+#context-menu button:hover {
+    background-color: var(--line-color);
+    color: var(--primary-color);
+}
+
+/* --- MODAL STYLES --- */
+/* FIX: Added #image-modal to this list so it floats correctly */
+#custom-confirm-modal, #custom-prompt-modal, #latex-modal, #image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Darker background for better image viewing */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px); /* Nice blur effect */
+}
+
+/* Ensure Image Modal is on top of everything */
+#image-modal {
+    z-index: 2500 !important;
+}
+
+#custom-confirm-modal, #custom-prompt-modal {
+    z-index: 2100;
+}
+
+.modal-content {
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    text-align: center;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.modal-buttons .confirm-btn {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+}
+
+.modal-buttons .confirm-btn:active {
+    box-shadow: var(--shadow-inset-light);
+}
+
+.modal-buttons .cancel-btn {
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+}
+
+.modal-buttons .cancel-btn:active {
+    box-shadow: var(--shadow-inset-light);
+}
+
+#prompt-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-inset-light);
+    color: var(--text-color);
+}
+#latex-live-preview {
+    min-height: 60px; 
+    margin-bottom: 15px; 
+    padding: 15px; 
+    background: var(--bg-color); 
+    border-radius: 8px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.5em; 
+    box-shadow: var(--shadow-inset-light); 
+    overflow-x: auto; 
+    color: var(--primary-color);
+}
+
+/* --- Media Query --- */
+@media (max-width: 768px) { 
+    .sidebar { 
+        width: 100%;
+        height: auto;
+        border-right: none;
+        box-shadow: none;
+        order: -1; 
+    } 
+    .app-container {
+        flex-direction: column;
+    }
+    .chat-box {
+        padding-bottom: 120px; 
+    }
+}
+    </style>
+
+</head>
+<body>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <button data-action="edit">Edit Title</button>
+        <button data-action="delete">Delete Chat</button>
+    </div>
+
+    <!-- Modals -->
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirm-title">Confirm</h3>
+            <p id="confirm-message">Are you sure?</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" data-confirm-response="false">Cancel</button>
+                <button class="confirm-btn" data-confirm-response="true">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-prompt-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="prompt-title">Input</h3>
+            <p id="prompt-message">Enter value:</p>
+            <input type="text" id="prompt-input">
+            <div class="modal-buttons">
+                <button class="cancel-btn" data-prompt-response="false">Cancel</button>
+                <button class="confirm-btn" data-prompt-response="true">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Image Magnification Modal -->
+    <div id="image-modal" class="modal" onclick="this.style.display='none'">
+        <img class="image-modal-img" id="img-modal-content">
+    </div>
+
+        <!-- New LaTeX Picker Modal Structure -->
+    <div id="latex-modal" class="modal">
+        <div class="modal-content latex-picker">
+            <h3>Math Symbols</h3>
+            
+            <!-- NEW: Live Render Preview -->
+            <div id="latex-live-preview" style="min-height: 60px; margin-bottom: 15px; padding: 15px; background: var(--neumorphic-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: var(--inner-shadow-recessed); overflow-x: auto; color: var(--main-color);">
+                <span style="color:#aaa; font-size:0.6em; font-weight:normal;">Preview</span>
+            </div>
+
+            <!-- NEW: Live Preview / Builder Input -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="latex-preview-input" class="fraction-input" placeholder="Build equation (e.g., 2 + \pi)" style="text-align: left; flex-grow: 1;">
+                <button id="latex-insert-main-btn" class="confirm-btn">Insert</button>
+            </div>
+
+            <!-- Standard Grid -->
+            <div class="latex-grid" id="latex-grid-container">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <!-- New Fraction Builder UI -->
+            <div id="fraction-builder-ui" class="fraction-builder">
+                <h4>Insert Fraction</h4>
+                <div class="fraction-row">
+                    <!-- Whole Number -->
+                    <input type="text" id="frac-whole" class="fraction-input fraction-whole" placeholder="#">
+                    
+                    <!-- Fraction Stack -->
+                    <div class="fraction-stack">
+                        <input type="text" id="frac-num" class="fraction-input" placeholder="Num">
+                        <div class="fraction-line"></div>
+                        <input type="text" id="frac-den" class="fraction-input" placeholder="Den">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="cancel-btn" id="cancel-frac-btn">Back</button>
+                    <button class="confirm-btn" id="insert-frac-btn">Insert</button>
+                </div>
+            </div>
+
+            <!-- NEW: Generic Single Input Builder UI -->
+            <div id="single-builder-ui" class="fraction-builder">
+                <h4 id="single-builder-title">Insert Value</h4>
+                <div class="fraction-row">
+                    <input type="text" id="single-input-val" class="fraction-input" placeholder="Value" style="width: 150px;">
+                </div>
+                <div class="modal-buttons">
+                    <button class="cancel-btn" id="cancel-single-btn">Back</button>
+                    <button class="confirm-btn" id="insert-single-btn">Insert</button>
+                </div>
+            </div>
+
+            <div class="modal-buttons" id="main-latex-buttons">
+                 <button class="cancel-btn" id="close-latex-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Layout -->
+    <div class="app-container">
+        
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Starlighter AI</h2>
+            </div>
+            <button id="new-chat-button" class="new-chat-button">+ New Chat</button>
+            <div id="chat-list" class="chat-list"></div>
+            <div class="sidebar-footer">
+                <p>Model: <span id="displayed-model">Loading...</span></p>
+                <p>Status: <span id="api-status">Loading API Key...</span></p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="start-page" class="start-page">
+                <h1>Welcome!</h1>
+                <p>Select a model to start a conversation.</p>
+                <div id="model-selector-container" class="model-selector-container"></div>
+            </div>
+
+            <div id="main-chat-container" class="chat-container">
+                <div id="chat-box" class="chat-box"></div>
+
+                <div class="input-area">
+                    <div class="model-select-bar">
+                        <label for="model-select-dropdown">Current Model:</label>
+                        <select id="model-select-dropdown" onchange="selectModel(this.value)" disabled></select>
+                    </div>
+
+                    <div class="input-controls">
+                        <input type="file" id="image-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        
+                        <!-- File Upload Button -->
+                        <button id="file-upload-button" class="upload-button" style="display:none;" title="Upload Image">🖼️</button>
+                        
+                        <!-- NEW: Math Button -->
+                        <button id="math-button" class="math-button" title="Insert Math Symbol">Σ</button>
+
+                        <!-- Reverted Placeholder Text -->
+                        <textarea id="user-input" placeholder="Type your message here..." rows="1" disabled></textarea>
+                        
+                        <div id="main-char-counter" style="text-align: right; font-size: 0.7em; color: #888; padding: 0 10px;">0 / 4000</div>
+                        <button id="send-button" class="send-button" disabled>Send</button>
+                    </div>
+                    
+                    <div id="file-display-area" class="file-display-area" style="display:none;">
+                        <span id="selected-file-name">No file selected</span>
+                        <button id="clear-file-button" class="clear-file-button">X</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const API_KEY_URL = "../txt/token.txt";
+        const LOCAL_STORAGE_KEY = "starlighter_chats"; 
+        const MODEL_KEY_STORAGE = "starlighter_model_key"; 
+        
+        const MODELS = {
+            'gpt-oss-20b': { name: "Chat-GPT OSS 20", id: "openai/gpt-oss-20b" },
+            'compound-mini': { name: "Compound mini (Groq)", id: "groq/compound-mini" },
+            'llama3.1-8b': { name: "Llama AI 3.1", id: "llama-3.1-8b-instant" },
+            'llama4-scout': { name: "Llama 4 Scout (Vision)", id: "meta-llama/llama-4-scout-17b-16e-instruct", multimodal: true },
+        };
+        const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
+
+// --- Updated System Prompt Setup for LaTeX Support ---
+        // --- System Prompt Setup ---
+        const BASE_SYSTEM_PROMPT_CONTENT = "You are a helpful and fast AI assistant powered by StarlightGG. You are currently running on the [MODEL_NAME] model. Keep your responses concise.";
+        const VISION_SYSTEM_PROMPT_CONTENT = "You are a dedicated **Vision Expert** powered by StarlightGG and running on the [MODEL_NAME] model. **Crucially, you are a multimodal processor. Whenever a user submits an image, your primary and IMMEDIATE task is to analyze it, describe its contents, and address the user's prompt using the visual data.** Do NOT state that you cannot see images. Always be direct and confident in your visual analysis. ";
+        
+
+        function getModelSystemPrompt(modelName = CURRENT_MODEL.name, isVisionModel = false) {
+            const content = isVisionModel ? VISION_SYSTEM_PROMPT_CONTENT : BASE_SYSTEM_PROMPT_CONTENT;
+            return { "role": "system", "content": content.replace('[MODEL_NAME]', modelName) };
+        }
+
+        let GROQ_API_KEY = null; 
+        let CURRENT_MODEL = MODELS['gpt-oss-20b'];
+        
+        // --- Global State ---
+        let allChatHistories = {};
+        let currentChatId = 'chat-0'; 
+        let chatCounter = 0;
+        let imageAnalysisCounter = 0; 
+        let contextMenuTargetChatId = null; 
+        let selectedFile = null; 
+        let abortController = null; // NEW: Controller for stopping generation
+
+        // --- DOM Elements ---
+        const startPage = document.getElementById('start-page');
+        const mainChatContainer = document.getElementById('main-chat-container');
+        const modelSelectorContainer = document.getElementById('model-selector-container'); 
+        const modelSelectDropdown = document.getElementById('model-select-dropdown'); 
+        const apiStatus = document.getElementById('api-status');
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const chatListContainer = document.getElementById('chat-list');
+        const modelDisplay = document.getElementById('displayed-model'); 
+        const contextMenu = document.getElementById('context-menu'); 
+        const newChatButton = document.getElementById('new-chat-button');
+        const mainCharCounter = document.getElementById('main-char-counter');
+        
+        const imageFileInput = document.getElementById('image-file-input');
+        const fileUploadButton = document.getElementById('file-upload-button');
+        const fileDisplayArea = document.getElementById('file-display-area');
+        const selectedFileName = document.getElementById('selected-file-name');
+        const clearFileButton = document.getElementById('clear-file-button');
+        
+        const confirmModal = document.getElementById('custom-confirm-modal');
+        const promptModal = document.getElementById('custom-prompt-modal');
+        const promptInput = document.getElementById('prompt-input');
+
+        // NEW: Image Modal Elements
+        const imageModal = document.getElementById('image-modal');
+        const imgModalContent = document.getElementById('img-modal-content');
+
+        // NEW: Math Modal Elements
+        const mathButton = document.getElementById('math-button');
+        const latexModal = document.getElementById('latex-modal');
+        const latexGridContainer = document.getElementById('latex-grid-container');
+        const closeLatexBtn = document.getElementById('close-latex-btn');
+        
+        // NEW Preview Elements
+        const latexPreviewInput = document.getElementById('latex-preview-input');
+        const latexLivePreview = document.getElementById('latex-live-preview');
+        const latexInsertMainBtn = document.getElementById('latex-insert-main-btn');
+
+        // Fraction Builder Elements
+        const fractionBuilderUI = document.getElementById('fraction-builder-ui');
+        const mainLatexButtons = document.getElementById('main-latex-buttons');
+        const insertFracBtn = document.getElementById('insert-frac-btn');
+        const cancelFracBtn = document.getElementById('cancel-frac-btn');
+        const fracWhole = document.getElementById('frac-whole');
+        const fracNum = document.getElementById('frac-num');
+        const fracDen = document.getElementById('frac-den');
+
+        function updateLivePreview() {
+            const val = latexPreviewInput.value.trim();
+            if (!val) {
+                latexLivePreview.innerHTML = '<span style="color:#aaa; font-size:0.6em; font-weight:normal;">Preview</span>';
+            } else {
+                // CHANGED: Use \[ \] instead of $$ for preview
+                latexLivePreview.innerHTML = `\\[${val}\\]`;
+                if (window.MathJax) {
+                    MathJax.typesetPromise([latexLivePreview]).catch(err => console.log('Preview render error:', err));
+                }
+            }
+        }
+
+        // Single Builder Elements
+        const singleBuilderUI = document.getElementById('single-builder-ui');
+        const singleBuilderTitle = document.getElementById('single-builder-title');
+        const singleInputVal = document.getElementById('single-input-val');
+        const insertSingleBtn = document.getElementById('insert-single-btn');
+        const cancelSingleBtn = document.getElementById('cancel-single-btn');
+        let currentSingleTemplate = "";
+
+        // --- NEW: LaTeX Picker Logic ---
+        const latexSymbols = [
+            { cat: "Basic", symbols: [ 
+                { label: "+", code: "+" }, { label: "-", code: "-" }, { label: "=", code: "=" }, 
+                { label: "±", code: "\\pm" }, { label: "×", code: "\\times" }, { label: "÷", code: "\\div" },
+                { label: "·", code: "\\cdot" }, { label: "√", code: "\\sqrt{}" }, { label: "frac", code: "SPECIAL_FRAC" }, 
+                { label: "^", code: "^{}" }, { label: "_", code: "_{}" }, { label: "( )", code: "\\left(  \\right)" }
+            ]},
+            { cat: "Greek", symbols: [
+                { label: "α", code: "\\alpha" }, { label: "β", code: "\\beta" }, { label: "γ", code: "\\gamma" }, { label: "δ", code: "\\delta" },
+                { label: "ε", code: "\\epsilon" }, { label: "θ", code: "\\theta" }, { label: "λ", code: "\\lambda" }, { label: "μ", code: "\\mu" },
+                { label: "π", code: "\\pi" }, { label: "ρ", code: "\\rho" }, { label: "σ", code: "\\sigma" }, { label: "τ", code: "\\tau" },
+                { label: "φ", code: "\\phi" }, { label: "ω", code: "\\omega" }, { label: "Δ", code: "\\Delta" }, { label: "Γ", code: "\\Gamma" },
+                { label: "Λ", code: "\\Lambda" }, { label: "Π", code: "\\Pi" }, { label: "Σ", code: "\\Sigma" }, { label: "Φ", code: "\\Phi" },
+                { label: "Ω", code: "\\Omega" }
+            ]},
+            { cat: "Calculus", symbols: [
+                { label: "∫", code: "\\int" }, { label: "∬", code: "\\iint" }, { label: "∮", code: "\\oint" }, { label: "∂", code: "\\partial" },
+                { label: "∇", code: "\\nabla" }, { label: "lim", code: "\\lim_{x \\to \\infty}" }, { label: "Σ", code: "\\sum" }, { label: "Π", code: "\\prod" },
+                { label: "∞", code: "\\infty" }, { label: "dx", code: "\\,dx" }, { label: "x'", code: "x'" }
+            ]},
+             { cat: "Sets & Logic", symbols: [
+                { label: "∈", code: "\\in" }, { label: "∉", code: "\\notin" }, { label: "⊂", code: "\\subset" }, { label: "⊃", code: "\\supset" },
+                { label: "∪", code: "\\cup" }, { label: "∩", code: "\\cap" }, { label: "∀", code: "\\forall" }, { label: "∃", code: "\\exists" },
+                { label: "¬", code: "\\neg" }, { label: "∨", code: "\\lor" }, { label: "∧", code: "\\land" }, { label: "∅", code: "\\emptyset" },
+                { label: "ℝ", code: "\\mathbb{R}" }, { label: "ℤ", code: "\\mathbb{Z}" }, { label: "ℕ", code: "\\mathbb{N}" }, { label: "ℚ", code: "\\mathbb{Q}" }
+            ]},
+            { cat: "Relations & Arrows", symbols: [
+                { label: "≠", code: "\\neq" }, { label: "≈", code: "\\approx" }, { label: "≤", code: "\\leq" }, { label: "≥", code: "\\geq" },
+                { label: "≡", code: "\\equiv" }, { label: "→", code: "\\rightarrow" }, { label: "←", code: "\\leftarrow" }, { label: "↔", code: "\\leftrightarrow" },
+                { label: "⇒", code: "\\Rightarrow" }, { label: "⇐", code: "\\Leftarrow" }, { label: "⇔", code: "\\Leftrightarrow" }, { label: "↑", code: "\\uparrow" },
+                { label: "↓", code: "\\downarrow" }
+            ]},
+            { cat: "Geometry/Trig", symbols: [
+                { label: "∠", code: "\\angle" }, { label: "△", code: "\\triangle" }, { label: "⊥", code: "\\perp" }, { label: "∥", code: "\\parallel" },
+                { label: "°", code: "^\\circ" }, { label: "sin", code: "\\sin" }, { label: "cos", code: "\\cos" }, { label: "tan", code: "\\tan" }
+            ]}
+        ];
+
+        function initLatexPicker() {
+            latexGridContainer.innerHTML = '';
+            latexSymbols.forEach(group => {
+                const header = document.createElement('div');
+                header.className = 'latex-category';
+                header.textContent = group.cat;
+                latexGridContainer.appendChild(header);
+
+                group.symbols.forEach(sym => {
+                    const btn = document.createElement('button');
+                    btn.className = 'latex-btn';
+                    btn.textContent = sym.label;
+                    btn.title = sym.code;
+                    btn.onclick = () => {
+                        if (sym.code === "SPECIAL_FRAC") {
+                            showFractionBuilder();
+                        } else if (sym.code.includes("{}")) {
+                            showSingleBuilder(sym.label, sym.code);
+                        } else {
+                            // Append to preview input instead of main chat
+                            insertAtCursor(latexPreviewInput, sym.code);
+                            latexPreviewInput.focus();
+                        }
+                    };
+                    latexGridContainer.appendChild(btn);
+                });
+            });
+        }
+
+        // Fraction Builder Logic
+        function showFractionBuilder() {
+            latexGridContainer.style.display = 'none';
+            mainLatexButtons.style.display = 'none';
+            fractionBuilderUI.style.display = 'flex';
+            // Reset inputs
+            fracWhole.value = '';
+            fracNum.value = '';
+            fracDen.value = '';
+            fracNum.focus();
+        }
+
+        function hideFractionBuilder() {
+            fractionBuilderUI.style.display = 'none';
+            latexGridContainer.style.display = 'grid';
+            mainLatexButtons.style.display = 'flex';
+        }
+
+        // Single Builder Logic
+        function showSingleBuilder(label, template) {
+            currentSingleTemplate = template;
+            latexGridContainer.style.display = 'none';
+            mainLatexButtons.style.display = 'none';
+            singleBuilderUI.style.display = 'flex';
+            
+            let titleText = "Insert Value";
+            if (label === "√") titleText = "Square Root";
+            else if (label === "^") titleText = "Exponent";
+            else if (label === "_") titleText = "Subscript";
+            
+            singleBuilderTitle.textContent = titleText;
+            singleInputVal.value = '';
+            singleInputVal.focus();
+        }
+
+        function hideSingleBuilder() {
+            singleBuilderUI.style.display = 'none';
+            latexGridContainer.style.display = 'grid';
+            mainLatexButtons.style.display = 'flex';
+        }
+
+        function insertSingleValue() {
+            const val = singleInputVal.value.trim();
+            // Replace first instance of {} with {val}
+            const finalLatex = currentSingleTemplate.replace("{}", `{${val}}`);
+            
+            // Insert into preview input
+            insertAtCursor(latexPreviewInput, finalLatex);
+            
+            hideSingleBuilder();
+            // Do not close modal, return to grid
+        }
+
+        function insertFraction() {
+            const w = fracWhole.value.trim();
+            const n = fracNum.value.trim();
+            const d = fracDen.value.trim();
+            
+            if (!n || !d) {
+                showCustomConfirm("Input Error", "Numerator and Denominator are required.");
+                return;
+            }
+
+            // Construct LaTeX
+            let latex = "";
+            if (w) latex += `${w} `;
+            latex += `\\frac{${n}}{${d}}`;
+            
+            // Insert into preview input
+            insertAtCursor(latexPreviewInput, latex);
+
+            hideFractionBuilder();
+            // Do not close modal
+        }
+
+        function insertAtCursor(myField, myValue) {
+            // IE support
+            if (document.selection) {
+                myField.focus();
+                var sel = document.selection.createRange();
+                sel.text = myValue;
+            }
+            // MOZILLA and others
+            else if (myField.selectionStart || myField.selectionStart == '0') {
+                var startPos = myField.selectionStart;
+                var endPos = myField.selectionEnd;
+                // Check if we need to put cursor inside brackets (e.g. \sqrt{})
+                let newCursorPos = startPos + myValue.length;
+                
+                if(myValue.includes("{}")) {
+                    newCursorPos -= 1; // Move back inside the bracket
+                    // If we wrapped it in \[\], we need to move back 2 more spaces (\] length is 2)
+                    if(myValue.endsWith("\\]")) {
+                        newCursorPos -= 2;
+                    }
+                } else if (myValue === "\\[  \\]") {
+                    newCursorPos -= 2;
+                } else if (myValue.includes("\n")) {
+                    newCursorPos -= 3; // Center of block math
+                }
+
+                myField.value = myField.value.substring(0, startPos)
+                    + myValue
+                    + myField.value.substring(endPos, myField.value.length);
+                
+                myField.focus();
+                myField.selectionStart = newCursorPos;
+                myField.selectionEnd = newCursorPos;
+            } else {
+                myField.value += myValue;
+            }
+            // Trigger input event for counter
+            myField.dispatchEvent(new Event('input'));
+        }
+
+        // --- Standard UI Functions ---
+
+        function showStartPage() {
+            startPage.style.display = 'flex';
+            mainChatContainer.style.display = 'none';
+        }
+
+        function showChatInterface() {
+            startPage.style.display = 'none';
+            mainChatContainer.style.display = 'flex';
+            renderCurrentChat(); // Force refresh to update Welcome Message with correct Model Name
+            setupMainInputCounter();
+            userInput.focus();
+        }
+
+        function hideContextMenu() { 
+            contextMenu.style.display = 'none';
+            contextMenuTargetChatId = null;
+        }
+
+        function showCustomConfirm(title, message) {
+            return new Promise(resolve => {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                confirmModal.style.display = 'flex';
+                const confirmButtons = confirmModal.querySelectorAll('.modal-buttons button');
+                const handleConfirmClick = (event) => {
+                    const response = event.target.dataset.confirmResponse === 'true';
+                    confirmButtons.forEach(btn => btn.removeEventListener('click', handleConfirmClick));
+                    confirmModal.style.display = 'none';
+                    resolve(response);
+                };
+                confirmButtons.forEach(btn => btn.addEventListener('click', handleConfirmClick));
+            });
+        }
+
+        function showCustomPrompt(title, message, defaultValue) {
+            return new Promise(resolve => {
+                document.getElementById('prompt-title').textContent = title;
+                document.getElementById('prompt-message').textContent = message;
+                promptInput.value = defaultValue;
+                promptModal.style.display = 'flex';
+                promptInput.focus();
+                promptInput.select();
+                const promptButtons = promptModal.querySelectorAll('.modal-buttons button');
+                
+                const handlePromptClick = (event) => {
+                    const responseType = event.target.dataset.promptResponse;
+                    promptButtons.forEach(btn => btn.removeEventListener('click', handlePromptClick));
+                    promptInput.removeEventListener('keydown', handlePromptKeydown);
+                    promptModal.style.display = 'none';
+                    if (responseType === 'true') resolve(promptInput.value.trim() || null);
+                    else resolve(null);
+                };
+
+                const handlePromptKeydown = (event) => {
+                    if (event.key === 'Enter') { event.preventDefault(); promptModal.querySelector('.confirm-btn').click(); }
+                    else if (event.key === 'Escape') { event.preventDefault(); promptModal.querySelector('.cancel-btn').click(); }
+                };
+
+                promptButtons.forEach(btn => btn.addEventListener('click', handlePromptClick));
+                promptInput.addEventListener('keydown', handlePromptKeydown);
+            });
+        }
+
+        // --- Model Logic ---
+        function populateModelSelector() {
+            modelSelectorContainer.innerHTML = '';
+            modelSelectDropdown.innerHTML = '';
+            Object.keys(MODELS).forEach(key => {
+                const model = MODELS[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = model.name;
+                modelSelectDropdown.appendChild(option);
+
+                const button = document.createElement('button');
+                button.className = 'model-button';
+                button.dataset.modelKey = key;
+                button.textContent = model.name;
+                button.onclick = (e) => selectModel(key, true, e.target); 
+                modelSelectorContainer.appendChild(button);
+            });
+        }
+
+        function toggleModelSelectorLock() {
+            const history = allChatHistories[currentChatId] ? allChatHistories[currentChatId].history : [];
+            const shouldBeLocked = history && history.length > 1; 
+            modelSelectDropdown.disabled = shouldBeLocked;
+        }
+
+        function selectModel(modelKey, isInitialSelection = false, targetButton = null) {
+            const previousModel = CURRENT_MODEL;
+            const modelObject = MODELS[modelKey] || CURRENT_MODEL;
+            CURRENT_MODEL = modelObject;
+            localStorage.setItem(MODEL_KEY_STORAGE, modelKey); 
+
+            modelDisplay.textContent = CURRENT_MODEL.name;
+            modelSelectDropdown.value = modelKey;
+            
+            // FIX: Save the selected model to the current chat history object immediately
+            if (allChatHistories[currentChatId]) {
+                allChatHistories[currentChatId].modelKey = modelKey;
+                saveStateToLocalStorage();
+            }
+            
+            if (fileUploadButton) { 
+                if (CURRENT_MODEL.multimodal) {
+                    fileUploadButton.style.display = 'flex'; 
+                } else {
+                    fileUploadButton.style.display = 'none';
+                    if (selectedFile) clearSelectedFile();
+                }
+            }
+            
+            if (previousModel.id !== CURRENT_MODEL.id) {
+                const currentChatObject = allChatHistories[currentChatId];
+                if (currentChatObject && currentChatObject.history && currentChatObject.history.length > 0) {
+                    currentChatObject.history[0] = getModelSystemPrompt(CURRENT_MODEL.name, CURRENT_MODEL.multimodal);
+                    saveStateToLocalStorage();
+                }
+            }
+
+            if (isInitialSelection) {
+                document.querySelectorAll('.model-button').forEach(btn => btn.classList.remove('selected'));
+                if (targetButton) {
+                    targetButton.classList.add('selected');
+                    setTimeout(showChatInterface, 300);
+                }
+            } else {
+                renderCurrentChat(); 
+            }
+        }
+
+        function setupMainInputCounter() {
+            if (!userInput || !mainCharCounter) return;
+            userInput.maxLength = 4000;
+            const updateCounter = () => {
+                const currentLength = userInput.value.length;
+                mainCharCounter.textContent = `${currentLength} / ${4000}`;
+                if (currentLength >= 4000 * 0.9) mainCharCounter.style.color = 'orange';
+                else mainCharCounter.style.color = '#888';
+            };
+            userInput.addEventListener('input', updateCounter);
+            updateCounter();
+        }
+
+        // --- Local Storage ---
+        function saveStateToLocalStorage() {
+            imageAnalysisCounter = 0;
+            Object.keys(allChatHistories).forEach(id => {
+                const chatObject = allChatHistories[id];
+                if (typeof chatObject.title === 'string' && chatObject.title.startsWith('Image Analysis')) { 
+                    const num = parseInt(chatObject.title.split(' ')[2]);
+                    if (!isNaN(num) && num > imageAnalysisCounter) imageAnalysisCounter = num;
+                }
+            });
+
+            const state = { histories: allChatHistories, counter: chatCounter, currentId: currentChatId, imageCounter: imageAnalysisCounter };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const storedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedState) {
+                    const state = JSON.parse(storedState);
+                    const loadedHistories = {};
+                    for (const id in state.histories) {
+                        const item = state.histories[id];
+                        if (Array.isArray(item)) {
+                            const firstUserMsg = item.find(msg => msg.role === 'user');
+                            loadedHistories[id] = { history: item, title: firstUserMsg ? firstUserMsg.content : `Chat ${id.split('-')[1]}` };
+                        } else {
+                            loadedHistories[id] = item;
+                        }
+                    }
+                    allChatHistories = loadedHistories;
+                    chatCounter = state.counter || 0;
+                    currentChatId = state.currentId || 'chat-0';
+                    imageAnalysisCounter = state.imageCounter || 0; 
+
+                    if (Object.keys(allChatHistories).length > 0 && !allChatHistories[currentChatId]) {
+                        currentChatId = Object.keys(allChatHistories)[0];
+                    }
+                }
+                const savedModelKey = localStorage.getItem(MODEL_KEY_STORAGE) || Object.keys(MODELS)[0];
+                if (MODELS[savedModelKey]) CURRENT_MODEL = MODELS[savedModelKey];
+                
+                return Object.keys(allChatHistories).length > 0;
+            } catch (e) {
+                console.error("Error loading storage:", e);
+                return false;
+            }
+        }
+
+        // --- Chat Lifecycle ---
+        function renderCurrentChat() {
+            const chatObject = allChatHistories[currentChatId];
+            const history = chatObject ? chatObject.history : [];
+            chatBox.innerHTML = ''; 
+
+            if (!history || history.length <= 1) { 
+                const promptDiv = document.createElement('div');
+                promptDiv.className = 'welcome-prompt';
+                // FIX: Update the Welcome Prompt to show the current model name dynamically
+                promptDiv.innerHTML = `<h1>Starlighter</h1><p>Using ${CURRENT_MODEL.name}. Ask a question to start.</p>`;
+                chatBox.appendChild(promptDiv);
+            } else {
+                history.slice(1).forEach(msg => addMessage(msg.role, msg.content, chatBox));
+            }
+            toggleModelSelectorLock();
+            scrollToBottom();
+        }
+
+        function createNewChatObject(id, initialTitle) {
+            // FIX: Capture the current model key when creating a new chat
+            const currentModelKey = Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id) || Object.keys(MODELS)[0];
+            const newHistory = [getModelSystemPrompt(CURRENT_MODEL.name, CURRENT_MODEL.multimodal)];
+            
+            allChatHistories[id] = { 
+                history: newHistory, 
+                title: initialTitle,
+                modelKey: currentModelKey // Save it
+            };
+            saveStateToLocalStorage();
+            return newHistory;
+        }
+
+        function updateChatTitle(id, newTitle) {
+            const chatItem = document.querySelector(`.chat-item[data-chat-id="${id}"]`);
+            if (chatItem) {
+                chatItem.textContent = truncateText(newTitle);
+                if (allChatHistories[id]) allChatHistories[id].title = newTitle;
+                saveStateToLocalStorage();
+            }
+        }
+
+        function startNewChat() {
+            chatCounter++;
+            currentChatId = `chat-${chatCounter}`;
+            createNewChatObject(currentChatId, `New Chat ${chatCounter}`);
+            renderSidebar();
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const newItem = document.querySelector(`.chat-item[data-chat-id="${currentChatId}"]`);
+            if (newItem) newItem.classList.add('active'); 
+            clearSelectedFile();
+            renderCurrentChat();
+            const currentModelKey = Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id) || Object.keys(MODELS)[0];
+            selectModel(currentModelKey); 
+        }
+
+        function loadChat(chatId) {
+            if (currentChatId === chatId) { renderCurrentChat(); return; } 
+            currentChatId = chatId;
+            // Removed: saveStateToLocalStorage(); // Not needed just for switching ID, selectModel will handle updates
+            clearSelectedFile(); 
+
+            const chatObject = allChatHistories[chatId];
+            const history = chatObject ? chatObject.history : [];
+            
+            // FIX: Load model from the specific chat object, fallback to default if missing
+            let modelKeyToLoad = chatObject.modelKey; 
+
+            // Legacy Fallback: Try to guess from system prompt if modelKey is missing
+            if (!modelKeyToLoad && history && history.length > 0 && history[0].role === 'system') {
+                const promptContent = history[0].content;
+                const match = promptContent.match(/running on the (.*?) model/); 
+                if (match && match[1]) {
+                    const modelNameInHistory = match[1].trim();
+                    const modelKey = Object.keys(MODELS).find(key => MODELS[key].name === modelNameInHistory);
+                    if (modelKey) modelKeyToLoad = modelKey;
+                }
+            }
+            
+            // If still no key, default to the first available model
+            if (!modelKeyToLoad) modelKeyToLoad = Object.keys(MODELS)[0];
+
+            modelSelectDropdown.value = modelKeyToLoad; 
+            const modelObject = MODELS[modelKeyToLoad] || MODELS[Object.keys(MODELS)[0]];
+            modelDisplay.textContent = modelObject.name;
+            
+            // Pass true to avoid re-saving the model key redundantly, but ensure UI updates
+            selectModel(modelKeyToLoad, false); 
+
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        function renderSidebar() {
+            chatListContainer.innerHTML = ''; 
+            const sortedChatIds = Object.keys(allChatHistories).sort((a, b) => parseInt(b.split('-')[1]) - parseInt(a.split('-')[1]));
+            sortedChatIds.forEach(id => {
+                const chatObject = allChatHistories[id];
+                let title = chatObject.title || `Chat ${id.split('-')[1]}`; 
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
+                chatItem.dataset.chatId = id;
+                chatItem.textContent = truncateText(title);                
+                chatItem.onclick = () => loadChat(id); 
+                chatItem.addEventListener('contextmenu', function(event) {
+                    event.preventDefault(); 
+                    contextMenuTargetChatId = id; 
+                    contextMenu.style.top = `${event.clientY}px`;
+                    contextMenu.style.left = `${event.clientX}px`;
+                    contextMenu.style.display = 'block';
+                });
+                chatListContainer.appendChild(chatItem);
+            });
+        }
+
+        function truncateText(text, maxLength = 50) {
+            if (!text || typeof text !== 'string' || text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        }
+
+        // --- Handlers ---
+        async function handleDeleteChat() {
+            const chatIdToDelete = contextMenuTargetChatId;
+            if (!chatIdToDelete) return; 
+            const confirmed = await showCustomConfirm("Confirm Deletion", `Delete ${allChatHistories[chatIdToDelete].title || chatIdToDelete}?`);
+            if (!confirmed) return;
+
+            delete allChatHistories[chatIdToDelete];
+            const remainingChatIds = Object.keys(allChatHistories);
+            let newChatToLoadId = null; 
+
+            if (currentChatId === chatIdToDelete) {
+                if (remainingChatIds.length > 0) {
+                    const sortedIds = remainingChatIds.sort((a, b) => parseInt(b.split('-')[1]) - parseInt(a.split('-')[1]));
+                    newChatToLoadId = sortedIds[0];
+                } else {
+                    chatCounter++;
+                    newChatToLoadId = `chat-${chatCounter}`;
+                    createNewChatObject(newChatToLoadId, `New Chat ${chatCounter}`);
+                }
+            }
+            renderSidebar();
+            saveStateToLocalStorage();
+            if (newChatToLoadId) loadChat(newChatToLoadId); 
+            else renderCurrentChat(); 
+        }
+
+        async function handleEditChatTitle() {
+            const chatIdToEdit = contextMenuTargetChatId;
+            const chatObject = allChatHistories[chatIdToEdit];
+            if (!chatIdToEdit || !chatObject) return;
+
+            const currentTitle = chatObject.title;
+            const newTitle = await showCustomPrompt("Edit Title", `Enter new title:`, currentTitle);
+            if (newTitle && newTitle.trim()) {
+                const cleanNewTitle = newTitle.trim();
+                chatObject.title = cleanNewTitle;
+                const history = chatObject.history;
+                const firstUserMsgIndex = history.findIndex(msg => msg.role === 'user');
+                if (firstUserMsgIndex !== -1) history[firstUserMsgIndex].content = cleanNewTitle;
+                else if (history.length === 1) history.push({ "role": "user", "content": cleanNewTitle });
+                updateChatTitle(chatIdToEdit, cleanNewTitle);
+                renderSidebar(); 
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 4 * 1024 * 1024) {
+                    alert("File size exceeds 4MB.");
+                    event.target.value = ''; 
+                    return;
+                }
+                selectedFile = file;
+                selectedFileName.textContent = file.name;
+                fileDisplayArea.style.display = 'flex';
+                const reader = new FileReader();
+                reader.onload = function(e) { selectedFile.base64 = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearSelectedFile() {
+            selectedFile = null;
+            imageFileInput.value = ''; 
+            fileDisplayArea.style.display = 'none';
+            selectedFileName.textContent = 'No file selected';
+        }
+
+        function encodeFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function scrollToBottom() {
+            if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function copyToClipboard(text, buttonElement) {
+            const originalText = buttonElement.textContent;
+            const showFeedback = () => {
+                buttonElement.textContent = 'Copied!';
+                buttonElement.classList.add('copied');
+                setTimeout(() => {
+                    buttonElement.textContent = originalText;
+                    buttonElement.classList.remove('copied');
+                }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showFeedback).catch(err => fallbackCopyTextToClipboard(text, buttonElement));
+            } else {
+                fallbackCopyTextToClipboard(text, buttonElement);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text, buttonElement) {
+            let textArea = document.createElement("textarea");
+            textArea.style.position = 'fixed'; textArea.style.top = '0'; textArea.style.left = '0';
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    buttonElement.textContent = 'Copied!';
+                    buttonElement.classList.add('copied');
+                    setTimeout(() => { buttonElement.textContent = 'Copy'; buttonElement.classList.remove('copied'); }, 1500);
+                }
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        }
+
+        function addMessage(role, content, targetElement = chatBox) {
+            const msgDiv = document.createElement('div');
+            const safeRole = (role === 'user' || role === 'ai') ? role : 'ai';
+            msgDiv.className = `message ${safeRole}-message`;
+            
+            let contentToParse;
+            let imagesToRender = []; // Store URLs to render
+
+            if (Array.isArray(content)) {
+                let displayParts = [];
+                content.forEach(part => {
+                    if (part.type === 'text' && part.text) {
+                        displayParts.push(part.text.trim());
+                    } else if (part.type === 'image_url') {
+                         if (part.image_url && part.image_url.url) {
+                             imagesToRender.push(part.image_url.url);
+                         } else {
+                             displayParts.push('**[Image attached]**');
+                         }
+                    }
+                });
+                contentToParse = displayParts.join('\n');
+            } else {
+                contentToParse = content && typeof content === 'string' ? content : '...';
+            }
+
+            const rawTextForCopy = Array.isArray(content) 
+                ? content.filter(p => p.type === 'text').map(p => p.text).join('\n') 
+                : contentToParse;
+
+            let renderedHtml;
+            // NEW: Check for stopped status to apply specific styling
+            if (contentToParse === '(Stopped by user)') {
+                renderedHtml = '<span style="color:var(--text-secondary); font-style:italic;">(Stopped by user)</span>';
+            } else if (typeof marked !== 'undefined') {
+                // FIX: Escape backslashes so Marked doesn't consume them, allowing MathJax to render keys like \[, \(, \\
+                const protectedText = contentToParse.replace(/\\/g, '\\\\');
+                renderedHtml = marked.parse(protectedText);
+            } else {
+                renderedHtml = contentToParse.replace(/\n/g, '<br>');
+            }
+            
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'message-content';
+            contentContainer.innerHTML = renderedHtml;
+
+            // Render collected images
+            imagesToRender.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '400px'; // Prevent excessively tall images
+                img.style.borderRadius = '12px';
+                img.style.marginTop = '10px';
+                img.style.display = 'block';
+                img.style.cursor = 'zoom-in'; // Ensure cursor shows zoom capability
+                
+                // Fix: Scroll to bottom once image loads to prevent layout shift ("spawning up")
+                img.onload = () => scrollToBottom();
+
+                // NEW: Add zoom capability
+                img.onclick = () => {
+                    imgModalContent.src = url;
+                    imageModal.style.display = "flex";
+                };
+
+                img.onerror = () => {
+                    const fallback = document.createElement('div');
+                    fallback.style.marginTop = '10px';
+                    fallback.style.fontWeight = 'bold';
+                    fallback.style.color = 'var(--text-secondary)';
+                    fallback.textContent = '[Image attached]';
+                    img.replaceWith(fallback);
+                };
+                contentContainer.appendChild(img);
+            });
+
+            msgDiv.appendChild(contentContainer); 
+
+            if (safeRole === 'ai') {
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.textContent = 'Copy';
+                copyButton.setAttribute('data-text', rawTextForCopy);
+                copyButton.onclick = function() { copyToClipboard(this.getAttribute('data-text'), this); };
+                msgDiv.appendChild(copyButton);
+            }
+            targetElement.appendChild(msgDiv);
+            scrollToBottom();
+            return msgDiv; 
+        }
+
+        async function loadApiKey() {
+            const hasExistingChats = loadStateFromLocalStorage();
+            populateModelSelector(); 
+            selectModel(Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id) || Object.keys(MODELS)[0]);
+
+            if (Object.keys(allChatHistories).length === 0) {
+                createNewChatObject('chat-0', 'Initial Chat');
+                currentChatId = 'chat-0';
+            }
+
+            renderSidebar();
+            showStartPage();
+            apiStatus.textContent = 'Fetching API Key...';
+            try {
+                const response = await fetch(API_KEY_URL);
+                if (!response.ok) throw new Error(`HTTP Status: ${response.status}`);
+                let rawKey = (await response.text()).trim();
+                rawKey = atob(rawKey);
+                GROQ_API_KEY = `gsk_${rawKey}`;
+                if (GROQ_API_KEY.length < 10) throw new Error("Key is too short or invalid.");
+                apiStatus.textContent = 'API Key loaded.';
+                modelSelectDropdown.disabled = false;
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                document.querySelectorAll('.model-button').forEach(btn => btn.style.pointerEvents = 'auto');
+                if (hasExistingChats) showChatInterface();
+                else {
+                     const initialModelKey = Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id);
+                     if(initialModelKey) document.querySelector(`.model-button[data-model-key="${initialModelKey}"]`)?.classList.add('selected');
+                }
+            } catch (error) {
+                console.error('API Key Error:', error);
+                // Updated to use primary color (blue) instead of red
+                apiStatus.innerHTML = `<span style="color:var(--primary-color); font-weight:bold;">Error: ${error.message}</span>`;
+            }
+            toggleModelSelectorLock();
+            renderCurrentChat();
+        }
+
+        async function sendMessage() {
+            const userText = userInput.value.trim();
+            if ((!userText && !selectedFile) || !GROQ_API_KEY) return;
+            
+            const currentChatObject = allChatHistories[currentChatId];
+            const currentHistory = currentChatObject.history;
+            const isFirstMessage = currentHistory.length === 1; 
+
+            userInput.value = '';
+            
+            // UPDATED: Switch to Stop Mode instead of disabling
+            sendButton.textContent = 'Stop';
+            sendButton.classList.add('stop-mode');
+            
+            userInput.disabled = true;
+            modelSelectDropdown.disabled = true;
+            fileUploadButton.disabled = true;
+            mathButton.disabled = true; 
+
+            let finalUserMessageContent;
+            let fileToDisplay = selectedFile; 
+
+            if (fileToDisplay) {
+                if (!CURRENT_MODEL.multimodal) {
+                    alert("Cannot send image. Please select a Multimodal model.");
+                    clearSelectedFile(); 
+                    sendButton.disabled = false; userInput.disabled = false; fileUploadButton.disabled = false; mathButton.disabled = false;
+                    return;
+                }
+                try {
+                    const base64Url = selectedFile.base64; // Already loaded
+                    finalUserMessageContent = [];
+                    if (userText) finalUserMessageContent.push({ "type": "text", "text": userText });
+                    finalUserMessageContent.push({ "type": "image_url", "image_url": { "url": base64Url } });
+                } catch (e) {
+                    addMessage('ai', `Error: ${e.message}`, chatBox);
+                    return;
+                }
+            } else {
+                finalUserMessageContent = userText; 
+            }
+
+            const displayContent = fileToDisplay ? `${userText} **Image: ${fileToDisplay.name}**` : userText;
+            addMessage('user', displayContent);
+            
+            if(fileToDisplay) {
+                // CAPTURE DATA LOCAL: Fixes the "Error" on click by capturing base64 before clearSelectedFile()
+                const localBase64 = selectedFile.base64; 
+                
+                const imgPreview = document.createElement('img');
+                imgPreview.src = localBase64;
+                imgPreview.style.maxWidth = '200px';
+                imgPreview.style.maxHeight = '200px';
+                // FIX: Styling to prevent floating/layout issues
+                imgPreview.style.display = 'block';
+                imgPreview.style.marginTop = '10px';
+                imgPreview.style.borderRadius = '12px';
+                
+                // FIX: Add click-to-magnify for the local preview immediately
+                imgPreview.style.cursor = 'zoom-in';
+                imgPreview.onclick = () => {
+                    imgModalContent.src = localBase64;
+                    imageModal.style.display = "flex";
+                };
+                
+                // Append to the message content container we just created
+                chatBox.lastElementChild.querySelector('.message-content').appendChild(imgPreview);
+                scrollToBottom(); // Ensure we see the new image
+            }
+
+            currentHistory.push({ "role": "user", "content": finalUserMessageContent });
+            clearSelectedFile();
+
+            if (isFirstMessage) {
+                let newTitle = fileToDisplay ? `Image Analysis ${++imageAnalysisCounter}` : truncateText(userText);
+                updateChatTitle(currentChatId, newTitle); 
+                renderSidebar(); 
+            }
+
+            const aiMessageElement = addMessage('ai', 'Thinking...'); 
+            const aiContentContainer = aiMessageElement.querySelector('.message-content');
+            const aiCopyButton = aiMessageElement.querySelector('.copy-button');
+
+            // NEW: Init AbortController
+            abortController = new AbortController();
+            let fullAiResponse = "";
+
+            try {
+                // Prepare messages (remove objects if model doesn't support them, though we enforce multimodal check)
+                const response = await fetch(GROQ_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: CURRENT_MODEL.id, 
+                        messages: currentHistory, 
+                        stream: true
+                    }),
+                    signal: abortController.signal // NEW: Connect signal
+                });
+
+                if (!response.ok) {
+                    let errMessage = `API Error: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        // Groq/OpenAI often puts the "Try again in X seconds" text here
+                        if (errorData?.error?.message) {
+                            errMessage = errorData.error.message;
+                        }
+                        
+                        // CUSTOM FIX: Extract only the wait time for rate limits
+                        if (response.status === 429) {
+                            // Regex to find "Please try again in 240ms" or similar
+                            const waitMatch = errMessage.match(/Please try again in \d+(\.\d+)?(ms|s|m|h)?/);
+                            if (waitMatch) {
+                                errMessage = waitMatch[0];
+                            } else {
+                                // Fallback to header if specific phrase isn't found
+                                const retryAfter = response.headers.get('Retry-After');
+                                if (retryAfter) {
+                                    errMessage = `Please try again in ${retryAfter} seconds`;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Unable to parse detailed error, keep default status message
+                    }
+                    throw new Error(errMessage);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                // removed: let fullAiResponse = ""; // (Moved up)
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split("\n");
+                    for (const line of lines) {
+                        if (line.startsWith("data: ") && line !== "data: [DONE]") {
+                            try {
+                                const json = JSON.parse(line.substring(6));
+                                const content = json.choices[0]?.delta?.content || "";
+                                fullAiResponse += content;
+                                // REMOVED: Streaming update (aiContentContainer.innerHTML = ...)
+                                // We wait until the loop is finished to show text
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                if (!fullAiResponse.trim()) {
+                    throw new Error("Sorry, I received an empty message from the API.");
+                }
+
+                // Update UI all at once after generation is complete
+                // FIX: Escape backslashes for MathJax preservation before Markdown parsing
+                const protectedResponse = fullAiResponse.replace(/\\/g, '\\\\');
+                aiContentContainer.innerHTML = marked.parse(protectedResponse);
+                
+                // Re-apply LaTeX rendering to the new content
+                if (window.safeRefreshMath) {
+                    safeRefreshMath(fullAiResponse);
+                }
+                scrollToBottom();
+
+                if(aiCopyButton) aiCopyButton.setAttribute('data-text', fullAiResponse);
+                currentHistory.push({ "role": "assistant", "content": fullAiResponse });
+                saveStateToLocalStorage();
+
+            } catch (error) {
+                // NEW: Handle Abort
+                if (error.name === 'AbortError') {
+                    // FIX: Replace partial text with specific stop message
+                    const stopMsg = '(Stopped by user)';
+                    aiContentContainer.innerHTML = `<span style="color:var(--text-secondary); font-style:italic;">${stopMsg}</span>`;
+                    
+                    // FIX: Save to history so it persists on reload
+                    currentHistory.push({ "role": "assistant", "content": stopMsg });
+                    saveStateToLocalStorage();
+                    
+                    // Remove the stop button styling immediately so user knows it stopped
+                    sendButton.classList.remove('stop-mode');
+                    sendButton.textContent = 'Send';
+                } else {
+                    // Updated to use primary color (blue) instead of red
+                    aiContentContainer.innerHTML = `<span style="color:var(--primary-color); font-weight:bold;">Error: ${error.message}</span>`;
+                }
+            } finally {
+                abortController = null;
+                toggleModelSelectorLock();
+                
+                // Restore Button State
+                sendButton.textContent = 'Send';
+                sendButton.classList.remove('stop-mode');
+                
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                fileUploadButton.disabled = false;
+                mathButton.disabled = false;
+                userInput.focus();
+                setupMainInputCounter();
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme Logic (Checks storage and sets data-theme attribute)
+            const savedTheme = localStorage.getItem('theme') || localStorage.getItem('starlighter_theme');
+            if (savedTheme == 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+
+            initLatexPicker(); // Initialize Math Buttons
+
+            // Event Listeners
+            if (newChatButton) newChatButton.addEventListener('click', startNewChat);
+            if (contextMenu) contextMenu.addEventListener('click', (e) => {
+                 const btn = e.target.closest('button');
+                 if(!btn) return;
+                 if(btn.dataset.action === 'edit') handleEditChatTitle();
+                 else if(btn.dataset.action === 'delete') handleDeleteChat();
+                 hideContextMenu();
+            });
+            document.addEventListener('click', hideContextMenu);
+            document.addEventListener('contextmenu', (e) => { if(!e.target.closest('.chat-item')) hideContextMenu(); });
+
+            if (fileUploadButton) fileUploadButton.addEventListener('click', () => imageFileInput.click());
+            if (imageFileInput) imageFileInput.addEventListener('change', handleFileSelect);
+            if (clearFileButton) clearFileButton.addEventListener('click', clearSelectedFile);
+            
+            // New Math Listeners
+            if (mathButton) mathButton.addEventListener('click', () => {
+                latexModal.style.display = 'flex';
+                latexPreviewInput.value = ''; // Clear previous build
+                updateLivePreview(); // Clear preview display
+                latexPreviewInput.focus();
+                hideFractionBuilder(); // Reset to grid view
+                hideSingleBuilder();
+            });
+            if (closeLatexBtn) closeLatexBtn.addEventListener('click', () => latexModal.style.display = 'none');
+            
+            // Live Preview Listener
+            if (latexPreviewInput) {
+                latexPreviewInput.addEventListener('input', updateLivePreview);
+            }
+
+            // NEW: Main Insert Button Listener
+            if (latexInsertMainBtn) latexInsertMainBtn.addEventListener('click', () => {
+                const equation = latexPreviewInput.value.trim();
+                if (equation) {
+                    // CHANGED: Insert using \[ \] delimiters
+                    insertAtCursor(userInput, `\\[${equation}\\]`);
+                }
+                latexModal.style.display = 'none';
+            });
+
+            // Fraction Builder Listeners
+            if (insertFracBtn) insertFracBtn.addEventListener('click', insertFraction);
+            if (cancelFracBtn) cancelFracBtn.addEventListener('click', hideFractionBuilder);
+
+            // Single Builder Listeners
+            if (insertSingleBtn) insertSingleBtn.addEventListener('click', insertSingleValue);
+            if (cancelSingleBtn) cancelSingleBtn.addEventListener('click', hideSingleBuilder);
+            
+            // Allow Enter key in single input to submit
+            if (singleInputVal) singleInputVal.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') insertSingleValue();
+            });
+
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                    e.preventDefault();
+                    // If button is in stop mode (controller exists), do nothing or trigger stop.
+                    // But usually Enter just sends. We'll route it through the button click logic.
+                    if (!abortController) sendMessage();
+                }
+            });
+            
+            // UPDATED: Send Button Listener handles Stop logic
+            sendButton.addEventListener('click', () => {
+                if (abortController) {
+                    abortController.abort();
+                    abortController = null;
+                } else {
+                    sendMessage();
+                }
+            });
+
+            // Modal Closes
+            window.onclick = function(event) {
+                if (event.target == latexModal) latexModal.style.display = "none";
+                if (event.target == confirmModal) confirmModal.style.display = "none";
+                if (event.target == promptModal) promptModal.style.display = "none";
+                if (event.target == imageModal) imageModal.style.display = "none"; // Close Image Modal
+            }
+
+            loadApiKey();
+        });
+    </script>
+</body>
+</html>
