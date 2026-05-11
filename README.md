@@ -1,19 +1,19 @@
 <h1 align="center">
-StarlightGG
+NovaGG
 </h1>
 <p align="center">
   <img src="favicons/favicon.png" alt="Starlight Games Logo" width="120">
 </p>
 
 <p align="center">
-  <a href="https://github.com/starlightgg">
-    <img src="https://img.shields.io/badge/Organization-Starlight--GG-7dd3fc?style=for-the-badge&logo=github&labelColor=0f172a" alt="Organization">
+  <a href="https://github.com/novagg">
+    <img src="https://img.shields.io/badge/Organization-Nova--GG-7dd3fc?style=for-the-badge&logo=github&labelColor=0f172a" alt="Organization">
   </a>
-  <a href="https://github.com/starlightgg/starlightgg.github.io/fork">
-    <img src="https://img.shields.io/github/forks/starlightgg/starlightgg.github.io?label=Fork&style=for-the-badge&color=7dd3fc&labelColor=0f172a" alt="Real-time Forks">
+  <a href="https://github.com/novagg/novagg.github.io/fork">
+    <img src="https://img.shields.io/github/forks/novagg/novagg.github.io?label=Fork&style=for-the-badge&color=7dd3fc&labelColor=0f172a" alt="Real-time Forks">
   </a>
-  <a href="https://github.com/starlightgg/starlightgg.github.io/stargazers">
-    <img src="https://img.shields.io/github/stars/starlightgg/starlightgg.github.io?label=Stars&style=for-the-badge&color=7dd3fc&labelColor=0f172a" alt="Real-time Stars">
+  <a href="https://github.com/novagg/novagg.github.io/stargazers">
+    <img src="https://img.shields.io/github/stars/novagg/novagg.github.io?label=Stars&style=for-the-badge&color=7dd3fc&labelColor=0f172a" alt="Real-time Stars">
   </a>
 </p>
 
@@ -24,7 +24,7 @@ StarlightGG
 ---
 
 ## 🚀 Mission Control
-Starlight Games is a curated sanctuary for gamers seeking a quick break without the hassle. We are built for **privacy first**. No installs, no accounts—just pure play.
+NovaGG is a curated sanctuary for gamers seeking a quick break without the hassle. We are built for **privacy first**. No installs, no accounts—just pure play.
 
 ---
 
@@ -76,14 +76,13 @@ We are faster, stronger, and put less stress on your CPU.
 ---
 
 * **Setup** [Instructions](/setup.md).
-* **Proxy Setup** [Instructions](https://github.com/starlightgg/starlightgg-proxy).
-
+* 
 ---
 
 ## 🛠️ Join the Organization
 We are doing this for the people who want privacy in mind.
 
-* **Found a Bug?** [Open an Issue](https://github.com/starlightgg/starlightgg.github.io/issues).
+* **Found a Bug?** [Open an Issue](https://github.com/novagg/novagg.github.io/issues).
 * **Have a Game Idea?** Join the discussion.
 * **Devs:** Fork the repo and submit a PR to add your own games!
 
