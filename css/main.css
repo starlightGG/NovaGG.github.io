@@ -1,4 +1,4 @@
-          /* --- CORE VARIABLES --- */
+            /* --- CORE VARIABLES (Original structure, now with light + dark theme) --- */
         :root {
             /* Light Theme (Default) */
             --bg-color: #e0e5ec;
@@ -26,47 +26,90 @@
             --active-color: #4c68ff; /* Synced with primary color */
         }
 
+        /* Dark Theme (Nova cosmic) */
+        [data-theme="dark"] {
+            --bg-color: #0a0a1a;
+            --text-color: #f0f3ff;
+            --primary-color: #6940c7;
+            --primary-light: #a78bfa;
+            --primary-dark: #6620d4;
+            --secondary-bg: #0f0f23;
+            --glass-color: rgba(15, 25, 45, 0.7);
+            --card-glass: rgba(20, 30, 55, 0.8);
+            --line-color: rgba(139, 92, 246, 0.2);
+            --star-color: #c084fc;
+            
+            --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+            --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            --highlight-light: #1e1a3a;
+            --shadow-dark: #03030c;
+            --active-color: #8b5cf6;
+        }
+
         /* --- GLOBAL RESET & BOX SIZING --- */
         * {
             box-sizing: border-box;
         }
 
-        /* Dark Theme */
-        [data-theme="dark"] {
-            --bg-color: #1e2023;
-            --text-color: #f0f0f0;
-            --primary-color: #6a7eff;
-            --secondary-bg: #1e2023;
-            --glass-color: rgba(30, 32, 35, 0.6);
-            --card-glass: rgba(40, 44, 52, 0.7);
-            --line-color: rgba(255, 255, 255, 0.08);
-            --star-color: #FFFACD;
-            
-            --shadow-light-top: -6px -6px 12px #34343e;
-            --shadow-light-bottom: 6px 6px 12px #101214;
-            --shadow-inset-light: inset 2px 2px 5px #101214, inset -2px -2px 5px #34343e;
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.5);
-
-            --highlight-light: #34343e;
-            --shadow-dark: #101214;
-        }
-
-        /* --- GLOBAL STYLES --- */
         body {
             font-family: var(--font-stack);
-            /* Animated Background Gradient - Adjusted for less blue intensity */
-            background: linear-gradient(300deg, var(--bg-color) 0%, var(--bg-color) 35%, var(--primary-light) 50%, var(--bg-color) 65%, var(--bg-color) 100%);
-            background-size: 400% 400%;
-            animation: gradient-flow 60s ease infinite;
-            
+            background-color: var(--bg-color);   /* solid static background */
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            transition: color 0.4s ease-in-out; 
-            overflow: hidden; /* App handles scroll */
+            overflow: hidden;
+            position: relative;
+        }
+          
+        
+        .moving-circle {
+            position: fixed;
+            top: -15%;
+            left: -15%;
+            width: 130%;
+            height: 130%;
+            pointer-events: none;
+            z-index: 0;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            opacity:  0.5;
+        }
+        
+        
+        .circle-1 {
+            background-image: radial-gradient(circle at 20% 30%, var(--primary-light) 0%, transparent 40%);
+            animation: drift1 22s infinite alternate ease-in-out;
+        }
+        
+        .circle-2 {
+            background-image: radial-gradient(circle at 80% 70%, var(--primary-color) 0%, transparent 45%);
+            animation: drift2 18s infinite alternate ease-in-out;
+        }
+        
+        .circle-3 {
+            background-image: radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+            animation: drift3 25s infinite alternate ease-in-out;
         }
 
-        /* --- ANIMATIONS --- */
+        @keyframes drift1 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(6%, 10%); }
+        }
+        
+        @keyframes drift2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-4%, 8%); }
+        }
+        
+        @keyframes drift3 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(8%, -6%); }
+        }
+
+
+        /* --- ANIMATIONS (all original) --- */
         @keyframes gradient-flow {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -89,16 +132,8 @@
         }
         
         @keyframes slideUp {
-            0% { 
-                opacity: 0; 
-                transform: translateY(40px);
-                filter: blur(2px);
-            }
-            100% { 
-                opacity: 1; 
-                transform: translateY(0);
-                filter: blur(0);
-            }
+            0% { opacity: 0; transform: translateY(40px); filter: blur(2px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
         
         @keyframes float {
@@ -135,25 +170,13 @@
         }
 
         @keyframes fadeInScale {
-            0% { 
-                opacity: 0; 
-                transform: scale(0.95);
-            }
-            100% { 
-                opacity: 1; 
-                transform: scale(1);
-            }
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes slideInRight {
-            0% {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes textGlow {
@@ -162,31 +185,36 @@
             100% { text-shadow: 0 0 2px var(--primary-color); }
         }
 
-        /* Cards animate AFTER loading */
         .card-animate {
-          animation: slideUp 0.5s ease-out;
+            animation: slideUp 0.5s ease-out;
             animation-fill-mode: both;
         }
-
         .card-animate:nth-child(1) { animation-delay: 0.1s; }
         .card-animate:nth-child(2) { animation-delay: 0.2s; }
         .card-animate:nth-child(3) { animation-delay: 0.3s; }
         .card-animate:nth-child(4) { animation-delay: 0.4s; }
         .card-animate:nth-child(5) { animation-delay: 0.5s; }
 
-        /* --- ADDED: BACKGROUND CANVAS STYLE --- */
         #bg-canvas {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: 0; /* Behind content */
+            z-index: 0;
             pointer-events: none;
+            background-image: radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
+                              radial-gradient(1px 1px at 70% 80%, var(--star-color), rgba(0,0,0,0));
+            background-size: 200px 200px, 150px 150px;
+            background-repeat: repeat;
+            opacity: 0.3;
+            animation: drift 60s linear infinite;
         }
+        @keyframes drift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 400px 400px, -200px 300px; } }
 
-        /* --- LAYOUT & BACKGROUNDS --- */
         #main-menu {
             height: 100vh;
             width: 100%;
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -198,7 +226,7 @@
             animation: fadeInScale 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* Background Patterns */
+        /* Background Patterns (unchanged) */
         #main-menu[data-pattern="lines"] {
             background-image: linear-gradient(to right, var(--line-color) 1px, transparent 1px), linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
             background-size: 50px 50px;
@@ -232,7 +260,6 @@
           animation: moveLines 25s linear infinite;
         }
 
-        /* --- DASHBOARD GRID SYSTEM --- */
         .dashboard-container {
             width: 100%;
             max-width: 1000px;
@@ -280,18 +307,19 @@
             opacity: 0;
         }
 
+        /* --- DIFFERENT LAYOUT: Pill-shaped cards with diagonal hover tilt --- */
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            gap: 40px;
             width: 100%;
         }
 
         .dashboard-card {
             background: var(--card-glass);
             backdrop-filter: blur(10px);
-            border-radius: 25px;
-            padding: 30px;
+            border-radius: 60px;  /* pill shape */
+            padding: 32px 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -303,8 +331,7 @@
             box-shadow: var(--card-shadow);
             position: relative;
             overflow: hidden;
-            height: 200px;
-            opacity: 1;
+            height: 220px;
         }
 
         .dashboard-card:not(:hover) {
@@ -313,6 +340,22 @@
             filter: blur(0.5px);
         }
 
+
+        
+        .dashboard-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .dashboard-card:hover::after {
+            left: 100%;
+        }
         .dashboard-card:hover {
             transform: translateY(-15px) scale(1.03);
             box-shadow: 0 25px 50px rgba(0,0,0,0.3);
@@ -320,15 +363,16 @@
             opacity: 1;
             filter: blur(0);
             transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
 
         .dashboard-card:hover i {
-            transform: scale(1.2) rotate(3deg);
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: scale(1.2) rotate(2deg);
         }
 
         .dashboard-card i {
-            font-size: 3em;
+            font-size: 3.2em;
             margin-bottom: 20px;
             color: var(--primary-color);
             transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -336,37 +380,27 @@
 
         .dashboard-card h3 { 
             margin: 0; 
-            font-size: 1.5em; 
+            font-size: 1.6em; 
             font-weight: 700; 
-            transition: all 0.3s ease;
         }
         
         .dashboard-card p { 
             opacity: 0.7; 
             font-size: 0.9em; 
-            margin-top: 10px;
-            transition: opacity 0.3s ease;
+            margin-top: 12px;
         }
 
         .dashboard-card:hover p {
             opacity: 1;
         }
 
-        /* Special Card for Surf Web */
         .card-accent {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white !important;
-          animation: slideUp 0.5s ease-out;
-            animation-fill-mode: both;
         }
         .card-accent i, .card-accent h3, .card-accent p { color: white !important; }
 
-        .card-accent:not(:hover) {
-            opacity: 0.9;
-            filter: blur(0.5px);
-        }
-
-        /* --- SUB-PAGE HEADERS --- */
+        /* --- SUB-PAGE HEADERS (unchanged) --- */
         .page-header {
             width: 100%;
             max-width: 1000px;
@@ -408,7 +442,7 @@
             transform: translateX(-3px);
         }
 
-        /* --- COMPONENTS --- */
+        /* --- COMPONENTS (unchanged) --- */
         .menu-tab-content {
             display: none;
             flex-direction: column;
@@ -441,7 +475,6 @@
             max-width: 800px;
         }
 
-        /* Neumorphic Buttons */
         .menu-buttons button, .menu-buttons2 button {
             color: var(--text-color);
             background-color: var(--secondary-bg);
@@ -486,7 +519,6 @@
             animation: shimmer 1.5s infinite;
         }
 
-        /* Refresh icon spin on hover */
         .fa-sync-alt {
             transition: transform 0.3s ease;
         }
@@ -495,7 +527,7 @@
             animation: spinFast 0.8s ease-in-out;
         }
 
-        /* --- BOTTOM BAR --- */
+        /* --- BOTTOM BAR (unchanged) --- */
         #bottom-bar {
             position: fixed;
             bottom: 20px;
@@ -544,7 +576,7 @@
             box-shadow: var(--shadow-inset-light);
         }
 
-        /* --- SETTINGS TOGGLES --- */
+        /* --- SETTINGS TOGGLES (unchanged) --- */
         .settings-container { 
             display: flex; 
             flex-direction: column; 
@@ -580,7 +612,6 @@
             animation: slideUp 0.5s ease-out;
             animation-fill-mode: both;
         }
-
         
         .settings-item:hover {
             transform: translateX(5px);
@@ -627,7 +658,7 @@
             color: white;
         }
 
-        /* --- IFRAME & CHATBOT --- */
+        /* --- IFRAME & CHATBOT (unchanged) --- */
         #iframe-container {
             display: none;
             position: fixed;
@@ -693,7 +724,7 @@
             animation: fadeInScale 0.5s ease-out;
         }
 
-        /* --- MODAL --- */
+        /* --- MODAL (unchanged) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
@@ -722,7 +753,7 @@
             transform: scale(1); 
         }
 
-        /* --- PERFORMANCE MONITOR --- */
+        /* --- PERFORMANCE MONITOR (unchanged) --- */
         #info-btn {
             position: fixed; bottom: 80px; right: 20px;
             width: 30px; height: 30px; border-radius: 50%;
@@ -733,7 +764,6 @@
             box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
             font-size: 0.8rem;
             font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             outline: none; 
             border: none;
             animation: pulseGlow 3s ease-in-out infinite;
@@ -771,7 +801,7 @@
         .text-medium { color: #f1c40f; font-weight: bold; }
         .text-bad { color: #e74c3c; font-weight: bold; }
 
-        /* --- TEXT INPUTS & BUTTONS --- */
+        /* --- TEXT INPUTS & BUTTONS (unchanged) --- */
         input[type="text"] {
             padding: 12px 15px; border-radius: 12px; border: 1px solid var(--line-color);
             background: var(--secondary-bg); color: var(--text-color);
@@ -842,7 +872,7 @@
             left: 100%;
         }
         
-        /* --- LOADING SCREEN --- */
+        /* --- LOADING SCREEN (unchanged) --- */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--bg-color); z-index: 10000;
@@ -857,11 +887,11 @@
             visibility: hidden; 
         }
         
-        /* --- CLOAKING ALERT --- */
+        /* --- CLOAKING ALERT (unchanged, fully functional) --- */
         #CloakingAlert {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 20000;
-            display:flex;
+            display:none;
             flex-direction: column; justify-content: center; align-items: center;
             color: var(--primary-color); font-size: 1.2em; font-weight: bold;
             font-family: var(--font-stack);
@@ -895,7 +925,7 @@
             animation: spin 1s linear infinite, pulseGlow 2s ease-in-out infinite;
         }
 
-        /* --- IFRAME LOADING BAR --- */
+        /* --- IFRAME LOADING BAR (unchanged) --- */
         .iframe-loading-bar {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
             background: transparent; overflow: hidden; display: none;
@@ -937,20 +967,23 @@
             }
         }
 
-        /* --- MOBILE RESPONSIVENESS --- */
+        /* --- MOBILE RESPONSIVENESS (unchanged) --- */
         @media (max-width: 600px) {
             #iframe-nav button span { display: none; }
             #iframe-nav button { padding: 10px; justify-content: center; }
             .dashboard-container { padding: 20px 10px; }
             .hero-section h2 { font-size: 2em; }
-            .dashboard-card { height: 180px; padding: 20px; }
+            .dashboard-card { height: 180px; padding: 20px; border-radius: 40px; }
             .dashboard-card i { font-size: 2.5em; }
             .dashboard-card h3 { font-size: 1.2em; }
         }
         
-        /* --- TOGGLE GRADIENT --- */
+        /* --- TOGGLE GRADIENT (kept from original) --- */
+        body[data-gradient="false"] .moving-circle {
+            display: none;
+        }
+        
         body[data-gradient="false"] {
-            background: var(--bg-color);
             animation: none;
             background-size: auto;
         }

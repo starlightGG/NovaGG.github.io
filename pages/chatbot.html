@@ -98,772 +98,685 @@
     <!-- 4. Marked Library for Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <style>
-        /* --- CORE VARIABLES --- */
-        :root {
-            /* Light Theme (Default) */
-            --bg-color: #e0e5ec;
-            --text-color: #333333;
-            --text-secondary: #555555;
-            --primary-color: #4c68ff;
-            --primary-light: #7c90ff;
-            --primary-dark: #3a50cc;
-            --secondary-bg: #e0e5ec;
-            --glass-color: rgba(255, 255, 255, 0.4);
-            --card-glass: rgba(255, 255, 255, 0.65);
-            --line-color: rgba(0, 0, 0, 0.07);
-            --star-color: #E5B500;
-            --toggle-size: 4rem;
-            --border-radius: 20px;
-            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-
-            /* Neumorphic Shadows (Light) */
-            --shadow-light-top: -6px -6px 12px #ffffff;
-            --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
-            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            
-            --highlight-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            --active-color: #3498db;
-            
-            /* Action Colors */
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-        }
-
-        /* --- GLOBAL RESET & BOX SIZING --- */
-        * {
-            box-sizing: border-box;
-        }
-
-        /* NEW: Universal transitions for smooth UI updates */
-        body, .sidebar, .input-area, .chat-box, .message, .chat-item,
-        button, input, textarea, select, .modal-content, .latex-btn {
-            transition: background-color 0.3s ease, color 0.3s ease, 
-                        border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-        }
-
-        /* Dark Theme */
-        [data-theme="dark"] {
-            --bg-color: #212529; /* Slightly darker for better contrast */
-            --text-color: #f0f0f0;
-            --text-secondary: #aaaaaa;
-            --primary-color: #6a7eff;
-            --secondary-bg: #2b3035;
-            --glass-color: rgba(30, 32, 35, 0.6);
-            --card-glass: rgba(40, 44, 52, 0.7);
-            --line-color: rgba(255, 255, 255, 0.08);
-            --star-color: #FFFACD;
-            
-            --shadow-light-top: -5px -5px 10px rgba(60, 60, 60, 0.3);
-            --shadow-light-bottom: 5px 5px 10px rgba(0, 0, 0, 0.5);
-            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(60, 60, 60, 0.3);
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.5);
-
-            --highlight-light: #34343e;
-            --shadow-dark: #101214;
-        }
-
-/* Fraction Builder Styles - RESTORED & UPDATED */
-.fraction-builder {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    margin-top: 10px;
-    padding: 10px;
-}
-.fraction-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-.fraction-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 80px;
-}
-.fraction-input {
-    width: 100%;
-    padding: 8px;
-    text-align: center;
-    border: none;
-    border-radius: 8px;
-    background: var(--bg-color);
-    box-shadow: var(--shadow-inset-light);
-    outline: none;
-    font-size: 1em;
-    color: var(--text-color);
-}
-.fraction-line {
-    width: 100%;
-    height: 2px;
-    background-color: var(--text-color);
-    margin: 5px 0;
-    border-radius: 2px;
-}
-.fraction-whole {
-    width: 60px;
-    height: 40px;
-}
-
-/* LaTeX Picker Modal Specifics */
-.latex-picker { width: 450px; }
-.latex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; max-height: 300px; overflow-y: auto; padding-right: 5px; }
-
-/* NEW: Image Modal Styles */
-.image-modal-img {
-    max-width: 90vw;
-    max-height: 90vh;
-    border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8);
-    animation: fadeIn 0.3s ease;
-    object-fit: contain;
-}
-
-/* NEW: Stop Button Style */
-.stop-mode {
-    background-color: var(--danger-color) !important;
-    animation: fadeIn 0.2s ease;
-}
-
-.latex-btn { 
-    background: var(--bg-color); 
-    color: var(--text-secondary); 
-    border: none; 
-    padding: 12px; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-size: 1.1em; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top); 
-    transition: all 0.2s ease; 
-}
-
-.latex-btn:hover { 
-    color: var(--primary-color); 
-    transform: translateY(-2px); 
-}
-.latex-btn:active { 
-    box-shadow: var(--shadow-inset-light); 
-    transform: translateY(0); 
-}
-
-.latex-category { 
-    grid-column: span 5; 
-    font-size: 0.85em; 
-    color: var(--primary-color); 
-    margin-top: 15px; 
-    margin-bottom: 5px; 
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px; 
-    border-bottom: 1px solid var(--line-color); 
-    padding-bottom: 5px; 
-}
-
-/* FIX: Insert Button Style */
-#latex-insert-main-btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: 600;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    transition: all 0.2s ease;
-}
-#latex-insert-main-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-#latex-insert-main-btn:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-inset-light);
-}
-
-/* Scrollbar for grid */
-.latex-grid::-webkit-scrollbar { width: 6px; }
-.latex-grid::-webkit-scrollbar-track { background: transparent; }
-.latex-grid::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; opacity: 0.5; }
-
-/* --- Base and Full-Screen Layout --- */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body, html {
-    font-family: var(--font-stack);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    height: 100vh;
-    overflow: hidden;
-    cursor: url('https://raw.githubusercontent.com/BeckBusch/Custom-Rainbow-Cursor-Extension/refs/heads/master/Pictures/cursors/arrows/light-darkblue.png'), default;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-input[type="text"]:hover {
-    cursor: url('data:image/x-icon;base64,AAACAAEAICAAAA8AEACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/49eKf+PXin/j14p/8yCMf/MgjH/zIIx/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/49eKf+PXin/zIIx/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/49eKf8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/j14p/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP+PXin/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/j14p/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/49eKf+PXin/zIIx/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/49eKf+PXin/j14p/49eKf/MgjH/zIIx/8yCMf8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7+/gEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v7+AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+/v4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA///////////////////////////////////////gD///4A///+AP///4P////H////x////8f////H////x////8f////H////x////8f///+D///+AP///gD///4A////////////////////////////////////////////8=');
-}
-
-/* 3. Custom Cursor for Interactive Elements */
-button:hover,
-input[type="submit"]:hover,
-input[type="button"]:hover,
-select:hover,
-label:hover  {
-    cursor: url('https://raw.githubusercontent.com/BeckBusch/Custom-Rainbow-Cursor-Extension/refs/heads/master/Pictures/cursors/pointers/light-darkblue.png'), pointer;
-}
+<style>
+    /* --- 1. CORE VARIABLES (Light Neumorphic & Nova Cosmic) --- */
+    :root {
+        /* Light Theme (Default) */
+        --bg-color: #e0e5ec;
+        --text-color: #333333;
+        --text-secondary: #555555;
+        --primary-color: #4c68ff;
+        --primary-light: #7c90ff;
+        --primary-dark: #3a50cc;
+        --secondary-bg: #e0e5ec;
         
-/* --- App Container Layout --- */
-.app-container {
-    display: flex;
-    height: 100%;
-    width: 100%;
-}
+        /* Action Colors (Light) */
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        
+        /* Glass & Lines */
+        --glass-color: rgba(255, 255, 255, 0.4);
+        --card-glass: rgba(255, 255, 255, 0.65);
+        --line-color: rgba(0, 0, 0, 0.07);
+        --star-color: #E5B500;
+        --toggle-size: 4rem;
+        --border-radius: 20px;
+        --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-/* --- Sidebar --- */
-.sidebar {
-    width: 280px;
-    background-color: var(--bg-color);
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    flex-shrink: 0;
-    z-index: 10;
-}
+        /* Neumorphic Shadows (Light) */
+        --shadow-light-top: -6px -6px 12px #ffffff;
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        
+        --highlight-light: #ffffff;
+        --shadow-dark: #a3b1c6;
+        --active-color: #4c68ff;
+    }
 
-.sidebar-header {
-    padding: 10px 0;
-    margin-bottom: 10px;
-    text-align: center;
-}
+    /* Dark Theme (Nova Cosmic) */
+    [data-theme="dark"] {
+        --bg-color: #0a0a1a;
+        --text-color: #f0f3ff;
+        --text-secondary: #94a3b8;
+        --primary-color: #6940c7;
+        --primary-light: #a78bfa;
+        --primary-dark: #6620d4;
+        --secondary-bg: #0f0f23;
+        
+        /* Action Colors (Cosmic Dark) */
+        --success-color: #10b981;
+        --danger-color: #ef4444;
 
-.sidebar-header h2 {
-    color: var(--primary-color);
-    font-size: 1.5em;
-    font-weight: 700;
-}
+        /* Glass & Lines */
+        --glass-color: rgba(15, 25, 45, 0.7);
+        --card-glass: rgba(20, 30, 55, 0.8);
+        --line-color: rgba(139, 92, 246, 0.2);
+        --star-color: #c084fc;
+        
+        /* Neumorphic Shadows (Cosmic Dark) */
+        --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+        --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        
+        --highlight-light: #1e1a3a;
+        --shadow-dark: #03030c;
+        --active-color: #8b5cf6;
+    }
 
-.new-chat-button {
-    width: 100%; 
-    padding: 12px; 
-    background-color: var(--primary-color); 
-    color: white; 
-    border: none; 
-    border-radius: var(--border-radius); 
-    font-size: 1em; 
-    font-weight: 600; 
-    margin-bottom: 20px; 
-    transition: all 0.2s; 
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    cursor: pointer;
-}
-.new-chat-button:active { 
-    box-shadow: var(--shadow-inset-light); 
-    transform: scale(0.98); 
-}
+    /* --- 2. GLOBAL RESET & BASE --- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
-.chat-list { 
-    flex-grow: 1; 
-    overflow-y: auto; 
-    margin-bottom: 15px; 
-    padding-right: 5px;
-}
-/* Style for individual chat items */
-.chat-item { 
-    padding: 10px; 
-    margin-bottom: 10px; 
-    border-radius: var(--border-radius); 
-    font-size: 0.9em; 
-    color: var(--text-secondary); 
-    overflow: hidden; 
-    white-space: nowrap; 
-    text-overflow: ellipsis; 
-    transition: all 0.2s; 
-    background: var(--bg-color); 
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    cursor: pointer;
-}
-.chat-item.active { 
-    box-shadow: var(--shadow-inset-light); 
-    color: var(--primary-color); 
-    font-weight: 600; 
-}
-.chat-item:hover {
-    color: var(--text-color);
-}
+    body, html {
+        font-family: var(--font-stack);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        height: 100vh;
+        overflow: hidden;
+    }
 
-.sidebar-footer {
-    padding: 10px 0;
-    font-size: 0.8em;
-    color: var(--text-secondary);
-    border-top: 1px solid var(--line-color);
-}
+    body, .sidebar, .input-area, .chat-box, .message, .chat-item,
+    button, input, textarea, select, .modal-content, .latex-btn {
+        transition: background-color 0.4s ease, color 0.4s ease, 
+                    border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.3s ease;
+    }
 
-/* --- Main Content Area --- */
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
+    input[type="text"]:hover,
+    button:hover,
+    input[type="submit"]:hover,
+    input[type="button"]:hover,
+    select:hover,
+    label:hover {
+        cursor: pointer;
+    }
 
-/* --- Start Page Styles --- */
-.start-page {
-    position: fixed; 
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-color);
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    text-align: center;
-    padding: 20px;
-    z-index: 100;
-}
-
-.start-page h1 {
-    color: var(--primary-color);
-    font-size: 3em;
-    margin-bottom: 10px;
-}
-
-.model-selector-container {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-}
-
-/* Model Button Styling */
-.model-button {
-    padding: 15px 30px;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 1.1em;
-    font-weight: 600;
-    background-color: var(--bg-color);
-    color: var(--text-secondary);
-    transition: all 0.2s;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    pointer-events: none;
-    cursor: pointer;
-}
-
-.model-button.selected {
-    box-shadow: var(--shadow-inset-light); 
-    color: var(--primary-color);
-}
-
-/* --- Chat Container & Messages --- */
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    min-height: 0;
-}
-
-.chat-box {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 20px;
-    background-color: var(--bg-color);
-}
-
-.welcome-prompt { 
-    text-align: center;
-    padding: 50px;
-    color: var(--text-secondary); 
-}
-
-/* Added Fade In Animation */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.message { 
-    margin-bottom: 15px; 
-    padding: 12px 18px; 
-    border-radius: 18px; 
-    line-height: 1.5; 
-    max-width: 80%; 
-    font-size: 1em;
-    animation: fadeIn 0.4s ease-out backwards; /* Smoother animation */
-    transition: all 0.3s ease;
-}
-
-/* Strong tag styling for AI responses */
-.message-content strong {
-    color: var(--primary-color);
-    font-weight: 700;
-    text-shadow: 0 0 1px rgba(0,0,0,0.1);
-}
-
-.user-message {
-    position: relative;
-    background-color: var(--primary-color); 
-    color: white; 
-    margin-left: auto; 
-    border-bottom-right-radius: 4px; 
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    overflow-x: auto;
-    max-width: 100vh;
-}
-.ai-message { 
-    position: relative;
-    background-color: var(--bg-color);
-    color: var(--text-color); 
-    max-width: 100vh;
-    margin-right: auto; 
-    border-bottom-left-radius: 4px; 
-    /* Soft UI Mix: Enhanced border and shadows */
-    border: 1px solid rgba(127, 127, 127, 0.2); 
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    overflow-x: auto;
-}
-
-/* Animating other elements */
-.chat-item, .modal-content {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* --- 3. Copy Button Specific Neumorphism Styles --- */
-.copy-button {
-    position: absolute;
-    top: 6px; 
-    right: 6px; 
-    border: none;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.7em;
-    font-weight: 600;
-    opacity: 0.7; 
-    z-index: 10;
-    transition: all 0.2s ease-in-out;
-    background: var(--bg-color);
-    color: var(--text-secondary);
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-}
-.ai-message:hover .copy-button {
-    opacity: 1; 
-}
-.copy-button:hover {
-    color: var(--primary-color);
-    transform: translateY(-1px);
-}
-.copy-button:active,
-.copy-button.copied {
-    box-shadow: var(--shadow-inset-light);
-    color: var(--success-color);
-    transform: scale(0.95);
-    font-weight: bold;
-}
-
-/* --- Input Area --- */
-.input-area { 
-    display: flex; 
-    flex-direction: column; 
-    padding: 15px; 
-    background-color: var(--bg-color); 
-    box-shadow: var(--shadow-light-top); /* Shadow pointing up */
-    flex-shrink: 0;
-    gap: 8px;
-    z-index: 10;
-}
-
-.model-select-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-#model-select-dropdown {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--bg-color);
-    box-shadow: var(--shadow-inset-light);
-    color: var(--text-color);
-    appearance: none;
-    font-size: 0.95em;
-    cursor: pointer;
-}
-
-.input-controls {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-}
-
-/* TEXTAREA */
-#user-input { 
-    flex-grow: 1; 
-    padding: 12px 18px; 
-    border: none; 
-    border-radius: 25px; 
-    font-size: 1em; 
-    font-family: inherit; 
-    background-color: var(--bg-color); 
-    box-shadow: var(--shadow-inset-light); 
-    resize: none; 
-    min-height: 48px; 
-    max-height: 150px; 
-    overflow-y: auto; 
-    color: var(--text-color);
-    line-height: 1.4;
-    transition: all 0.2s;
-}
-
-#user-input:focus {
-    outline: none;
-    box-shadow: var(--shadow-inset-light), 0 0 0 1px var(--primary-color);
-}
-
-/* SEND & UPLOAD BUTTONS */
-.send-button, .upload-button, .math-button { 
-    background-color: var(--success-color); 
-    color: white;
-    font-size: 1.2em; 
-    border: none; 
-    border-radius: 25px; 
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    flex-shrink: 0;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 20px;
-    cursor: pointer;
-}
-
-.math-button {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-}
-.math-button:hover {
-    color: var(--primary-color);
-}
-
-.send-button:active:not(:disabled), .upload-button:active:not(:disabled), .math-button:active:not(:disabled) { 
-    box-shadow: var(--shadow-inset-light); 
-    transform: scale(0.95); 
-}
-
-.send-button:disabled, .upload-button:disabled, .math-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-/* FILE DISPLAY AREA */
-.file-display-area {
-    display: none;
-    align-items: center;
-    padding: 8px 15px;
-    background-color: var(--bg-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-inset-light);
-    font-size: 0.9em;
-    color: var(--text-secondary);
-    margin-top: 5px;
-}
-
-#selected-file-name {
-    flex-grow: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    margin-right: 10px;
-}
-
-.clear-file-button {
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    font-weight: bold;
-    padding: 0 5px;
-    flex-shrink: 0;
-    transition: color 0.2s;
-    cursor: pointer;
-}
-
-.clear-file-button:hover {
-    color: #a71d2a;
-}
-
-/* --- Context Menu Styles --- */
-#context-menu {
-    position: absolute;
-    background-color: var(--bg-color);
-    border-radius: var(--border-radius);
-    padding: 5px;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    display: none;
-    z-index: 1000;
-    min-width: 150px;
-}
-
-#context-menu button {
-    display: block;
-    width: 100%;
-    padding: 10px 15px;
-    text-align: left;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    color: var(--text-color);
-    font-size: 0.9em;
-    transition: background-color 0.2s;
-    cursor: pointer;
-}
-
-#context-menu button:hover {
-    background-color: var(--line-color);
-    color: var(--primary-color);
-}
-
-/* --- MODAL STYLES --- */
-/* FIX: Added #image-modal to this list so it floats correctly */
-#custom-confirm-modal, #custom-prompt-modal, #latex-modal, #image-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85); /* Darker background for better image viewing */
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    backdrop-filter: blur(5px); /* Nice blur effect */
-}
-
-/* Ensure Image Modal is on top of everything */
-#image-modal {
-    z-index: 2500 !important;
-}
-
-#custom-confirm-modal, #custom-prompt-modal {
-    z-index: 2100;
-}
-
-.modal-content {
-    background-color: var(--bg-color);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-    text-align: center;
-}
-
-.modal-content h3 {
-    margin-top: 0;
-    color: var(--text-color);
-    margin-bottom: 10px;
-}
-
-.modal-content p {
-    color: var(--text-secondary);
-    margin-bottom: 20px;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
-}
-
-.modal-buttons button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.modal-buttons .confirm-btn {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-}
-
-.modal-buttons .confirm-btn:active {
-    box-shadow: var(--shadow-inset-light);
-}
-
-.modal-buttons .cancel-btn {
-    background-color: var(--bg-color);
-    color: var(--text-secondary);
-    box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
-}
-
-.modal-buttons .cancel-btn:active {
-    box-shadow: var(--shadow-inset-light);
-}
-
-#prompt-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: none;
-    border-radius: 8px;
-    box-sizing: border-box;
-    background-color: var(--bg-color);
-    box-shadow: var(--shadow-inset-light);
-    color: var(--text-color);
-}
-#latex-live-preview {
-    min-height: 60px; 
-    margin-bottom: 15px; 
-    padding: 15px; 
-    background: var(--bg-color); 
-    border-radius: 8px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-size: 1.5em; 
-    box-shadow: var(--shadow-inset-light); 
-    overflow-x: auto; 
-    color: var(--primary-color);
-}
-
-/* --- Media Query --- */
-@media (max-width: 768px) { 
-    .sidebar { 
-        width: 100%;
-        height: auto;
-        border-right: none;
-        box-shadow: none;
-        order: -1; 
-    } 
+    /* --- 3. APP LAYOUT --- */
     .app-container {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    .main-content {
+        flex-grow: 1;
+        display: flex;
         flex-direction: column;
+        height: 100%;
     }
+
+    /* --- 4. SIDEBAR --- */
+    .sidebar {
+        width: 280px;
+        background-color: var(--secondary-bg);
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        flex-shrink: 0;
+        z-index: 10;
+    }
+
+    .sidebar-header {
+        padding: 10px 0;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .sidebar-header h2 {
+        color: var(--active-color);
+        font-size: 1.5em;
+        font-weight: 700;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+
+    .new-chat-button {
+        width: 100%; 
+        padding: 12px; 
+        background-color: var(--primary-color); 
+        color: #ffffff; 
+        border: none; 
+        border-radius: var(--border-radius); 
+        font-size: 1em; 
+        font-weight: 600; 
+        margin-bottom: 20px; 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    .new-chat-button:active { 
+        box-shadow: var(--shadow-inset-light); 
+        transform: scale(0.98); 
+    }
+
+    .chat-list { 
+        flex-grow: 1; 
+        overflow-y: auto; 
+        margin-bottom: 15px; 
+        padding-right: 5px;
+    }
+
+    .chat-item { 
+        padding: 10px; 
+        margin-bottom: 10px; 
+        border-radius: var(--border-radius); 
+        font-size: 0.9em; 
+        color: var(--text-secondary); 
+        overflow: hidden; 
+        white-space: nowrap; 
+        text-overflow: ellipsis; 
+        background: var(--bg-color); 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .chat-item.active { 
+        box-shadow: var(--shadow-inset-light); 
+        color: var(--active-color); 
+        font-weight: 600; 
+    }
+
+    .chat-item:hover:not(.active) {
+        color: var(--text-color);
+        transform: translateY(-1px);
+    }
+
+    .sidebar-footer {
+        padding: 10px 0;
+        font-size: 0.8em;
+        color: var(--text-secondary);
+        border-top: 1px solid var(--line-color);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--active-color); border-radius: 3px; opacity: 0.4; }
+
+    /* --- 5. START PAGE & MODEL SELECTOR --- */
+    .start-page {
+        position: fixed; 
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+        z-index: 100;
+    }
+
+    .start-page h1 {
+        color: var(--active-color);
+        font-size: 3em;
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+
+    .model-selector-container {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .model-button {
+        padding: 15px 30px;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1.1em;
+        font-weight: 600;
+        background-color: var(--secondary-bg);
+        color: var(--text-secondary);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        pointer-events: none;
+    }
+
+    .model-button.selected {
+        box-shadow: var(--shadow-inset-light); 
+        color: var(--active-color);
+    }
+
+    /* --- 6. CHAT AREA --- */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        min-height: 0;
+    }
+
     .chat-box {
-        padding-bottom: 120px; 
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light);
     }
-}
-    </style>
+
+    .welcome-prompt { 
+        text-align: center;
+        padding: 50px;
+        color: var(--text-secondary); 
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message { 
+        margin-bottom: 15px; 
+        padding: 12px 18px; 
+        border-radius: 18px; 
+        line-height: 1.5; 
+        max-width: 80%; 
+        font-size: 1em;
+        animation: fadeIn 0.4s ease-out backwards; 
+    }
+
+    .message-content strong {
+        color: var(--active-color);
+        font-weight: 700;
+    }
+
+    .user-message {
+        position: relative;
+        background-color: var(--primary-color); 
+        color: #ffffff; 
+        margin-left: auto; 
+        border-bottom-right-radius: 4px; 
+        box-shadow: var(--shadow-light-bottom);
+        overflow-x: auto;
+    }
+
+    .ai-message { 
+        position: relative;
+        background-color: var(--secondary-bg);
+        color: var(--text-color); 
+        margin-right: auto; 
+        border-bottom-left-radius: 4px; 
+        border: 1px solid var(--line-color); 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        overflow-x: auto;
+    }
+
+    /* Copy Button */
+    .copy-button {
+        position: absolute;
+        top: 6px; 
+        right: 6px; 
+        border: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7em;
+        font-weight: 600;
+        opacity: 0; 
+        z-index: 10;
+        background: var(--bg-color);
+        color: var(--text-secondary);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    .ai-message:hover .copy-button { opacity: 0.8; }
+    .copy-button:hover { color: var(--active-color); transform: translateY(-1px); opacity: 1; }
+    .copy-button:active, .copy-button.copied {
+        box-shadow: var(--shadow-inset-light);
+        color: var(--success-color);
+        transform: scale(0.95);
+    }
+
+    /* --- 7. INPUT AREA --- */
+    .input-area { 
+        display: flex; 
+        flex-direction: column; 
+        padding: 15px; 
+        background-color: var(--secondary-bg); 
+        box-shadow: var(--shadow-light-top); 
+        flex-shrink: 0;
+        gap: 8px;
+        z-index: 10;
+    }
+
+    .model-select-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    #model-select-dropdown {
+        padding: 6px 10px;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light);
+        color: var(--text-color);
+        appearance: none;
+        outline: none;
+    }
+
+    .input-controls {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+    }
+
+    #user-input { 
+        flex-grow: 1; 
+        padding: 12px 18px; 
+        border: 1px solid transparent; 
+        border-radius: 25px; 
+        font-size: 1em; 
+        font-family: inherit; 
+        background-color: var(--bg-color); 
+        box-shadow: var(--shadow-inset-light); 
+        resize: none; 
+        min-height: 48px; 
+        max-height: 150px; 
+        overflow-y: auto; 
+        color: var(--text-color);
+        line-height: 1.4;
+    }
+
+    #user-input:focus {
+        border-bottom: 2px solid var(--active-color);
+        outline: none;
+    }
+
+    .send-button, .upload-button, .math-button { 
+        background-color: var(--success-color); 
+        color: #ffffff;
+        font-size: 1.2em; 
+        border: none; 
+        border-radius: 25px; 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        padding: 12px 20px;
+    }
+
+    .math-button {
+        background-color: var(--secondary-bg);
+        color: var(--text-color);
+    }
+
+    .math-button:hover { color: var(--active-color); transform: translateY(-1px); }
+    .send-button:hover, .upload-button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    .send-button:active:not(:disabled), .upload-button:active:not(:disabled), .math-button:active:not(:disabled) { 
+        box-shadow: var(--shadow-inset-light); 
+        transform: scale(0.95); 
+    }
+
+    .send-button:disabled, .upload-button:disabled, .math-button:disabled {
+        background-color: var(--primary-dark);
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    /* Stop Button Override */
+    .stop-mode {
+        background-color: var(--danger-color) !important;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .file-display-area {
+        display: none;
+        align-items: center;
+        padding: 8px 15px;
+        background-color: var(--bg-color);
+        border-radius: 12px;
+        box-shadow: var(--shadow-inset-light);
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+
+    #selected-file-name {
+        flex-grow: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .clear-file-button {
+        background: none;
+        border: none;
+        color: var(--danger-color);
+        font-weight: bold;
+        padding: 0 5px;
+    }
+
+    /* --- 8. FRACTION BUILDER & LATEX --- */
+    .fraction-builder {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+        padding: 10px;
+    }
+
+    .fraction-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .fraction-stack { display: flex; flex-direction: column; align-items: center; width: 80px; }
+    
+    .fraction-input {
+        width: 100%;
+        padding: 8px;
+        text-align: center;
+        border: none;
+        border-radius: 8px;
+        background: var(--bg-color);
+        box-shadow: var(--shadow-inset-light);
+        outline: none;
+        color: var(--text-color);
+    }
+    
+    .fraction-line {
+        width: 100%;
+        height: 2px;
+        background-color: var(--active-color);
+        margin: 5px 0;
+        border-radius: 2px;
+    }
+    
+    .fraction-whole { width: 60px; height: 40px; }
+
+    .latex-picker { width: 450px; }
+    .latex-grid { 
+        display: grid; 
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 10px; 
+        margin: 15px 0; 
+        max-height: 300px; 
+        overflow-y: auto; 
+        padding-right: 5px; 
+    }
+
+    .latex-btn { 
+        background: var(--bg-color); 
+        color: var(--text-color); 
+        border: none; 
+        padding: 12px; 
+        border-radius: 8px; 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top); 
+    }
+
+    .latex-btn:hover { color: var(--active-color); transform: translateY(-2px); }
+    .latex-btn:active { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+
+    .latex-category { 
+        grid-column: span 5; 
+        font-size: 0.85em; 
+        color: var(--active-color); 
+        margin-top: 15px; 
+        margin-bottom: 5px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        border-bottom: 1px solid var(--line-color); 
+        padding-bottom: 5px; 
+    }
+
+    #latex-insert-main-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    #latex-insert-main-btn:hover { transform: translateY(-2px); background-color: var(--primary-light); }
+    #latex-insert-main-btn:active { transform: translateY(0); box-shadow: var(--shadow-inset-light); }
+
+    #latex-live-preview {
+        min-height: 60px; 
+        margin-bottom: 15px; 
+        padding: 15px; 
+        background: var(--bg-color); 
+        border-radius: 8px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 1.5em; 
+        box-shadow: var(--shadow-inset-light); 
+        color: var(--active-color);
+    }
+
+    /* --- 9. CONTEXT MENU --- */
+    #context-menu {
+        position: absolute;
+        background-color: var(--card-glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--line-color);
+        border-radius: var(--border-radius);
+        padding: 5px;
+        box-shadow: var(--card-shadow);
+        display: none;
+        z-index: 1000;
+        min-width: 150px;
+    }
+
+    #context-menu button {
+        display: block;
+        width: 100%;
+        padding: 10px 15px;
+        text-align: left;
+        border: none;
+        border-radius: 8px;
+        background: none;
+        color: var(--text-color);
+        font-size: 0.9em;
+    }
+
+    #context-menu button:hover {
+        background-color: var(--bg-color);
+        color: var(--active-color);
+        box-shadow: var(--shadow-inset-light);
+    }
+
+    /* --- 10. MODALS --- */
+    #custom-confirm-modal, #custom-prompt-modal, #latex-modal, #image-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); 
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(8px); 
+    }
+
+    #image-modal { z-index: 2500 !important; }
+
+    .image-modal-img {
+        max-width: 90vw;
+        max-height: 90vh;
+        border-radius: 12px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        animation: fadeIn 0.3s ease;
+        object-fit: contain;
+    }
+
+    .modal-content {
+        background-color: var(--secondary-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--line-color);
+        padding: 30px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: var(--card-shadow);
+        text-align: center;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-content h3 { color: var(--active-color); margin-bottom: 10px; }
+    .modal-content p { color: var(--text-secondary); margin-bottom: 20px; }
+
+    #prompt-input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light);
+        color: var(--text-color);
+        outline: none;
+    }
+
+    #prompt-input:focus { border-bottom: 2px solid var(--active-color); }
+
+    .modal-buttons { display: flex; justify-content: space-around; gap: 10px; }
+
+    .modal-buttons button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .modal-buttons .confirm-btn {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    .modal-buttons .cancel-btn {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    .modal-buttons button:hover { transform: translateY(-2px); }
+    .modal-buttons button:active { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+
+    /* --- 11. MEDIA QUERIES --- */
+    @media (max-width: 768px) { 
+        .sidebar { 
+            width: 100%;
+            height: auto;
+            border-right: none;
+            box-shadow: none;
+            order: -1; 
+        } 
+        .app-container { flex-direction: column; }
+        .chat-box { padding-bottom: 120px; }
+    }
+</style>
 
 </head>
 <body>

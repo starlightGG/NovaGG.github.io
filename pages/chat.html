@@ -9,303 +9,361 @@
     <script src="../js/settings.js"></script>
     <script src="../js/fixing.js"></script>
 
-    <style>
-        /* --- 1. Soft UI Theme Variables --- */
-        :root {
-            --bg-color: #e0e5ec;
-            --text-color: #4a5568;
-            --text-secondary: #718096;
-            --card-bg: #e0e5ec;
-            
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            
-            --primary-color: #4c68ff;
-            --success-color: #008069;
-            --warning-color: #f7941d;
-            
-            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #292d32;
-            --text-color: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --card-bg: #292d32;
-            
-            --shadow-light: #353b42;
-            --shadow-dark: #1e2125;
-        }
+<style>
+    /* --- 1. Core Variables (Light Default & Nova Cosmic Dark) --- */
+    :root {
+        /* Light Theme (Default) */
+        --bg-color: #e0e5ec;
+        --text-color: #333333;
+        --primary-color: #4c68ff;
+        --primary-light: #7c90ff;
+        --primary-dark: #3a50cc;
+        --secondary-bg: #e0e5ec;
         
-        body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden; 
-            transition: background 0.3s ease;
-        }
+        /* New Action Colors */
+        --success-color: #008069;
+        --warning-color: #f7941d;
 
-        /* --- 2. Main Layout & Container --- */
-        .main-app-container {
-            width: 95%;
-            max-width: 1400px; 
-            height: 90vh;
-            padding: 30px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            
-            box-shadow: 
-                15px 15px 30px var(--shadow-dark), 
-                -15px -15px 30px var(--shadow-light);
-            
-            display: flex;
-            flex-direction: column;
-        }
+        /* Glass & Lines */
+        --glass-color: rgba(255, 255, 255, 0.4);
+        --card-glass: rgba(255, 255, 255, 0.65);
+        --line-color: rgba(0, 0, 0, 0.07);
+        --star-color: #E5B500;
+        --toggle-size: 4rem;
+        --border-radius: 20px;
+        --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-        h1 {
-            color: var(--primary-color);
-            font-size: 1.8em;
-            margin: 0 0 10px 0;
-            text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--shadow-light);
-        }
+        /* Neumorphic Shadows (Light) */
+        --shadow-light-top: -6px -6px 12px #ffffff;
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        
+        --highlight-light: #ffffff;
+        --shadow-dark: #a3b1c6;
+        --active-color: #4c68ff; 
+    }
 
-        p {
-            color: var(--text-secondary);
-            font-size: 0.9em;
-            margin-bottom: 20px;
-        }
+    /* Dark Theme (Nova Cosmic) */
+    [data-theme="dark"] {
+        --bg-color: #0a0a1a;
+        --text-color: #f0f3ff;
+        --primary-color: #6940c7;
+        --primary-light: #a78bfa;
+        --primary-dark: #6620d4;
+        --secondary-bg: #0f0f23;
+        
+        /* Vibrant Action Colors for Dark Mode */
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
 
-        /* --- 3. Layout Wrapper --- */
-        .content-wrapper {
-            display: flex;
-            flex-grow: 1;
-            gap: 20px;
-            min-height: 0; 
-        }
+        /* Glass & Lines */
+        --glass-color: rgba(15, 25, 45, 0.7);
+        --card-glass: rgba(20, 30, 55, 0.8);
+        --line-color: rgba(139, 92, 246, 0.2);
+        --star-color: #c084fc;
+        
+        /* Neumorphic Shadows (Cosmic Dark) */
+        --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+        --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        
+        --highlight-light: #1e1a3a;
+        --shadow-dark: #03030c;
+        --active-color: #8b5cf6;
+    }
+    
+    /* --- 2. Base Setup --- */
+    body {
+        font-family: var(--font-stack);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden; 
+        transition: background 0.4s ease, color 0.4s ease;
+    }
 
-        /* --- 4. Chat Embed Area --- */
-        .chat-embed-area {
-            flex-grow: 1;
-            border-radius: 15px;
-            overflow: hidden;
-            background-color: var(--bg-color);
-            position: relative;
-            
-            box-shadow: 
-                inset 6px 6px 12px var(--shadow-dark), 
-                inset -6px -6px 12px var(--shadow-light);
-        }
+    /* --- 3. Main App Container (Glassmorphic Elevated) --- */
+    .main-app-container {
+        width: 95%;
+        max-width: 1400px; 
+        height: 90vh;
+        padding: 30px;
+        background: var(--card-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--line-color);
+        border-radius: var(--border-radius);
+        
+        /* Deep elevation shadow */
+        box-shadow: var(--card-shadow);
+        
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s ease;
+    }
 
-        .chat-embed-area iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
+    h1 {
+        color: var(--active-color);
+        font-size: 1.8em;
+        margin: 0 0 10px 0;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+        transition: color 0.3s ease;
+    }
 
-        /* --- 5. GIF Sidebar Styles --- */
-        .gif-sidebar {
-            width: 320px;
-            border-radius: 15px;
-            padding: 15px;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            
-            box-shadow: 
-                inset 6px 6px 12px var(--shadow-dark), 
-                inset -6px -6px 12px var(--shadow-light);
-        }
+    p {
+        color: var(--text-color);
+        opacity: 0.6;
+        font-size: 0.9em;
+        margin-bottom: 20px;
+    }
 
-        .gif-search-controls {
-            display: flex;
-            gap: 10px;
-        }
+    /* --- 4. Layout Wrapper --- */
+    .content-wrapper {
+        display: flex;
+        flex-grow: 1;
+        gap: 20px;
+        min-height: 0; 
+    }
 
-        .search-input-wrapper {
-            position: relative;
-            flex-grow: 1;
-            display: flex;
-        }
+    /* --- 5. Chat Embed Area (Recessed) --- */
+    .chat-embed-area {
+        flex-grow: 1;
+        border-radius: 15px;
+        overflow: hidden;
+        background-color: var(--secondary-bg);
+        position: relative;
+        
+        /* Neumorphic Inset */
+        box-shadow: var(--shadow-inset-light);
+        transition: background-color 0.4s ease;
+    }
 
-        #gif-search-bar {
-            width: 100%;
-            padding: 10px 30px 10px 10px;
-            border: none;
-            border-radius: 8px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            box-shadow: 
-                inset 3px 3px 6px var(--shadow-dark), 
-                inset -3px -3px 6px var(--shadow-light);
-            outline: none;
-        }
+    .chat-embed-area iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
 
-        #clear-search-btn {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 14px;
-            display: none;
-            padding: 5px;
-        }
+    /* --- 6. GIF Sidebar Styles (Recessed) --- */
+    .gif-sidebar {
+        width: 320px;
+        border-radius: 15px;
+        padding: 15px;
+        background-color: var(--secondary-bg);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        
+        /* Neumorphic Inset */
+        box-shadow: var(--shadow-inset-light);
+        transition: background-color 0.4s ease;
+    }
 
-        #clear-search-btn:hover {
-            color: var(--text-color);
-        }
+    .gif-search-controls {
+        display: flex;
+        gap: 10px;
+    }
 
-        #gif-search-btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            background: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 
-                3px 3px 6px var(--shadow-dark), 
-                -3px -3px 6px var(--shadow-light);
-            transition: transform 0.1s;
-        }
+    .search-input-wrapper {
+        position: relative;
+        flex-grow: 1;
+        display: flex;
+    }
 
-        #gif-search-btn:active {
-            transform: scale(0.95);
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
-        }
+    #gif-search-bar {
+        width: 100%;
+        padding: 10px 30px 10px 10px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: var(--bg-color);
+        color: var(--text-color);
+        
+        /* Deep input recess */
+        box-shadow: var(--shadow-inset-light);
+        outline: none;
+        transition: all 0.3s ease;
+    }
 
-        #gif-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            align-content: flex-start;
-            padding-bottom: 10px;
-        }
+    #gif-search-bar:focus {
+        border-bottom: 2px solid var(--active-color);
+    }
+    
+    #gif-search-bar::placeholder {
+        color: var(--text-color);
+        opacity: 0.5;
+    }
 
-        #gif-container::-webkit-scrollbar { width: 6px; }
-        #gif-container::-webkit-scrollbar-track { background: transparent; }
-        #gif-container::-webkit-scrollbar-thumb { background: var(--shadow-dark); border-radius: 10px; }
+    #clear-search-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: var(--text-color);
+        opacity: 0.5;
+        cursor: pointer;
+        font-size: 14px;
+        display: none;
+        padding: 5px;
+    }
 
-        .gif-item {
-            width: 135px;
-            height: 100px; /* Fixed height for observer stability */
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.3s;
-            background-color: var(--shadow-light);
-            object-fit: cover;
-            opacity: 0; /* Hidden until in sight */
-        }
+    #clear-search-btn:hover {
+        opacity: 1;
+        color: var(--active-color);
+    }
 
-        .gif-item.in-sight {
-            opacity: 1;
-        }
+    #gif-search-btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        background: var(--primary-color);
+        color: #ffffff;
+        cursor: pointer;
+        font-weight: bold;
+        
+        /* Extruded Button */
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        transition: all 0.2s ease;
+    }
 
-        .gif-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
+    #gif-search-btn:hover {
+        background: var(--primary-light);
+        transform: translateY(-1px);
+    }
 
-        .gif-instruction {
-            text-align: center;
-            font-size: 0.85em;
-            color: var(--text-secondary);
-            font-weight: bold;
-            padding-top: 5px;
-            margin-top: auto; 
-        }
+    #gif-search-btn:active {
+        transform: translateY(1px);
+        box-shadow: var(--shadow-inset-light);
+    }
 
-        /* --- 6. Footer Buttons --- */
-        .footer-actions {
-            margin-top: 25px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+    #gif-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        align-content: flex-start;
+        padding-bottom: 10px;
+    }
 
-        .nav-button {
-            padding: 12px 20px;
-            font-size: 0.95em;
-            font-weight: bold;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
+    #gif-container::-webkit-scrollbar { width: 6px; }
+    #gif-container::-webkit-scrollbar-track { background: transparent; }
+    #gif-container::-webkit-scrollbar-thumb { background: var(--active-color); border-radius: 10px; opacity: 0.4; }
 
-            box-shadow: 
-                5px 5px 10px var(--shadow-dark), 
-                -5px -5px 10px var(--shadow-light);
-        }
+    .gif-item {
+        width: 135px;
+        height: 100px; 
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s, opacity 0.3s, box-shadow 0.2s;
+        background-color: var(--bg-color);
+        object-fit: cover;
+        opacity: 0; 
+    }
 
-        .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                7px 7px 14px var(--shadow-dark), 
-                -7px -7px 14px var(--shadow-light);
-            filter: brightness(1.1);
-        }
+    .gif-item.in-sight {
+        opacity: 1;
+    }
 
-        .nav-button:active {
-            transform: translateY(1px);
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
-        }
+    .gif-item:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-light-bottom);
+    }
 
-        .back-button { background-color: var(--primary-color); }
-        .refresh-button { background-color: var(--success-color); }
-        .fullscreen-button { background-color: var(--warning-color); }
+    .gif-instruction {
+        text-align: center;
+        font-size: 0.85em;
+        color: var(--text-color);
+        opacity: 0.6;
+        font-weight: bold;
+        padding-top: 5px;
+        margin-top: auto; 
+    }
 
-        /* --- 7. Toast Notification --- */
-        #toast-container {
-            visibility: hidden;
-            min-width: 300px;
-            background-color: var(--primary-color);
-            color: #fff;
-            text-align: center;
-            border-radius: 12px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1000;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            font-size: 0.95em;
-            line-height: 1.5;
-            opacity: 0;
-            transition: opacity 0.5s, top 0.5s;
-        }
+    /* --- 7. Footer Buttons --- */
+    .footer-actions {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
 
-        #toast-container.show {
-            visibility: visible;
-            opacity: 1;
-            top: 50px;
-        }
+    .nav-button {
+        padding: 12px 20px;
+        font-size: 0.95em;
+        font-weight: bold;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
 
-        @media (max-width: 800px) {
-            .content-wrapper { flex-direction: column; }
-            .gif-sidebar { width: auto; height: 250px; }
-        }
-    </style>
+        /* Extruded Buttons */
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+
+    .nav-button:active {
+        transform: translateY(1px);
+        box-shadow: var(--shadow-inset-light);
+    }
+
+    .back-button { background-color: var(--primary-color); }
+    .refresh-button { background-color: var(--success-color); }
+    .fullscreen-button { background-color: var(--warning-color); }
+
+    /* --- 8. Toast Notification --- */
+    #toast-container {
+        visibility: hidden;
+        min-width: 300px;
+        background-color: var(--primary-color);
+        color: #fff;
+        text-align: center;
+        border: 1px solid var(--line-color);
+        border-radius: 12px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1000;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: var(--card-shadow);
+        font-size: 0.95em;
+        line-height: 1.5;
+        opacity: 0;
+        transition: opacity 0.5s, top 0.5s;
+    }
+
+    #toast-container.show {
+        visibility: visible;
+        opacity: 1;
+        top: 50px;
+    }
+
+    @media (max-width: 800px) {
+        .content-wrapper { flex-direction: column; }
+        .gif-sidebar { width: auto; height: 250px; }
+    }
+</style>
 </head>
 <body>
 
@@ -321,7 +379,7 @@
     </script>
 
     <div class="main-app-container">
-        <h1>Starlight Games | Community Chat</h1>
+        <h1>NovaGG | Community Chat</h1>
         <p>For the best experience, we recommend using the fullscreen option, especially on Chromebooks.</p>
         
         <div class="content-wrapper">

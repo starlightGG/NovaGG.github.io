@@ -4,154 +4,329 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Plagiarism Analyzer</title>
-    <style>
-        /* CSS Variables - Managed by JavaScript reading localStorage */
-        :root {
-            --bg-color: #e0e5ec;
-            --text-color: #333;
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            --accent-red: #d93025;
-            --accent-green: #1e8e3e;
-            --accent-orange: #f9ab00;
-            --modal-bg: rgba(224, 229, 236, 0.8);
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #292d32;
-            --text-color: #eee;
-            --shadow-light: #353a40;
-            --shadow-dark: #1d2024;
-            --accent-red: #ff6b6b;
-            --accent-green: #4ade80;
-            --accent-orange: #fbbf24;
-            --modal-bg: rgba(41, 45, 50, 0.8);
-        }
-
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-            padding: 20px; 
-            max-width: 800px; 
-            margin: auto; 
-            line-height: 1.6; 
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* Neumorphic Utility Classes */
-        .neu-outset {
-            background: var(--bg-color);
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .neu-inset {
-            background: var(--bg-color);
-            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        h1 { text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; margin-bottom: 30px; opacity: 0.8; }
-
-        /* Inputs and Buttons */
-        textarea { 
-            width: 100%; 
-            height: 200px; 
-            margin-bottom: 20px; 
-            padding: 20px; 
-            font-family: inherit; 
-            border: none; 
-            outline: none; 
-            color: var(--text-color); 
-            resize: vertical;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        button.action-btn { 
-            padding: 15px 20px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            color: var(--text-color); 
-            border: none; 
-            font-weight: bold; 
-            flex: 1;
-            outline: none;
-            border-radius: 12px;
-        }
+<style>
+    /* --- 1. CORE VARIABLES (Light Neumorphic & Nova Cosmic) --- */
+    :root {
+        /* Light Theme (Default) */
+        --bg-color: #e0e5ec;
+        --text-color: #333333;
+        --text-secondary: #555555;
+        --primary-color: #4c68ff;
+        --secondary-bg: #e0e5ec;
         
-        button.action-btn:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
-        button.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* Results Section */
-        #results { display: none; padding: 30px; margin-top: 20px; }
+        /* Action Colors (Mapped from your accents) */
+        --danger-color: #d93025;
+        --danger-bg: rgba(217, 48, 37, 0.15);
+        --success-color: #1e8e3e;
+        --warning-color: #f9ab00;
         
-        .score-dashboard { display: flex; justify-content: space-around; margin-bottom: 30px; }
-        .score-box { text-align: center; padding: 20px; width: 35%; border-radius: 50%; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .score-number { font-size: 3.5em; font-weight: bold; margin: 0; }
-        .score-label { font-size: 1em; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 5px; opacity: 0.8;}
-        
-        .color-red { color: var(--accent-red); }
-        .color-orange { color: var(--accent-orange); }
-        .color-green { color: var(--accent-green); }
+        /* Glass & Lines */
+        --glass-color: rgba(255, 255, 255, 0.4);
+        --card-glass: rgba(224, 229, 236, 0.8);
+        --line-color: rgba(0, 0, 0, 0.07);
+        --border-radius: 20px;
+        --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-        /* Data Rows */
-        .section-title { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; margin-top: 30px; padding-left: 10px; border-left: 4px solid var(--text-color); }
-        .data-row { margin-bottom: 15px; padding: 20px; }
-        .data-label { font-weight: bold; font-size: 1em; margin-bottom: 10px; opacity: 0.9; }
+        /* Neumorphic Shadows (Light) */
+        --shadow-light-top: -6px -6px 12px #ffffff;
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
         
-        /* Highlighted Text Styles */
-        .highlight-plag { 
-            font-weight: bold; 
-            color: var(--accent-red); 
-            background-color: rgba(217, 48, 37, 0.15); 
-            padding: 2px 4px; 
-            border-radius: 4px; 
-            border-bottom: 2px solid var(--accent-red);
-        }
-        .original-passage-box {
-            padding: 15px; 
-            margin-bottom: 20px; 
-            white-space: pre-wrap; 
-            line-height: 1.8;
-            font-size: 0.95em;
-        }
+        --highlight-light: #ffffff;
+        --shadow-dark: #a3b1c6;
+        --active-color: #4c68ff;
+    }
 
-        /* Quotes */
-        .source-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--shadow-dark); }
-        .source-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .source-link { color: var(--accent-red); font-weight: bold; word-break: break-all; margin-bottom: 5px; }
-        .source-link a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-        .source-link a:hover { opacity: 0.8; }
-        .source-quote { font-style: italic; padding: 12px; border-left: 3px solid var(--accent-red); font-size: 0.95em; opacity: 0.9; }
+    /* Dark Theme (Nova Cosmic) */
+    [data-theme="dark"] {
+        --bg-color: #0a0a1a;
+        --text-color: #f0f3ff;
+        --text-secondary: #94a3b8;
+        --primary-color: #6940c7;
+        --secondary-bg: #0f0f23;
         
-        .tag-clean { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9em; color: var(--accent-green); }
+        /* Action Colors (Cosmic Dark) */
+        --danger-color: #ff6b6b;
+        --danger-bg: rgba(255, 107, 107, 0.15);
+        --success-color: #4ade80;
+        --warning-color: #fbbf24;
 
-        /* Custom Modal UI */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--modal-bg);
-            backdrop-filter: blur(5px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.show { display: flex; opacity: 1; }
-        .modal-box { padding: 40px; max-width: 400px; width: 80%; text-align: center; }
-        .modal-box h3 { margin-top: 0; font-size: 1.5em; margin-bottom: 15px; }
-        .modal-box p { margin-bottom: 25px; opacity: 0.9; }
-        .modal-btn { padding: 10px 30px; font-size: 16px; font-weight: bold; border: none; outline: none; color: var(--text-color); cursor: pointer; border-radius: 8px; }
-        .modal-btn:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
-    </style>
+        /* Glass & Lines */
+        --glass-color: rgba(15, 25, 45, 0.7);
+        --card-glass: rgba(20, 30, 55, 0.8);
+        --line-color: rgba(139, 92, 246, 0.2);
+        
+        /* Neumorphic Shadows (Cosmic Dark) */
+        --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+        
+        --highlight-light: #1e1a3a;
+        --shadow-dark: #03030c;
+        --active-color: #8b5cf6;
+    }
+
+    /* --- 2. GLOBAL STYLES --- */
+    * {
+        box-sizing: border-box;
+    }
+
+    body { 
+        font-family: var(--font-stack); 
+        background-color: var(--bg-color); 
+        color: var(--text-color); 
+        padding: 20px; 
+        max-width: 800px; 
+        margin: auto; 
+        line-height: 1.6; 
+        transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    h1 { 
+        text-align: center; 
+        margin-bottom: 5px; 
+        color: var(--active-color);
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+    
+    .subtitle { 
+        text-align: center; 
+        margin-bottom: 30px; 
+        color: var(--text-secondary); 
+    }
+
+    /* --- 3. NEUMORPHIC UTILITIES --- */
+    .neu-outset {
+        background: var(--bg-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .neu-inset {
+        background: var(--secondary-bg);
+        box-shadow: var(--shadow-inset-light);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    /* --- 4. INPUTS AND BUTTONS --- */
+    textarea { 
+        width: 100%; 
+        height: 200px; 
+        margin-bottom: 20px; 
+        padding: 20px; 
+        font-family: inherit; 
+        border: 1px solid transparent; 
+        border-radius: 12px;
+        outline: none; 
+        color: var(--text-color); 
+        resize: vertical;
+        font-size: 16px;
+        background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light);
+        transition: border-color 0.3s ease, background-color 0.4s ease;
+    }
+    
+    textarea:focus {
+        border-bottom: 2px solid var(--active-color);
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    button.action-btn { 
+        padding: 15px 20px; 
+        font-size: 16px; 
+        cursor: pointer; 
+        color: var(--text-color); 
+        background-color: var(--bg-color);
+        border: none; 
+        font-weight: bold; 
+        flex: 1;
+        outline: none;
+        border-radius: 12px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        transition: all 0.2s ease;
+    }
+
+    button.action-btn:hover:not(:disabled) {
+        color: var(--active-color);
+        transform: translateY(-2px);
+    }
+    
+    button.action-btn:active:not(:disabled) { 
+        box-shadow: var(--shadow-inset-light); 
+        transform: translateY(0);
+    }
+    
+    button.action-btn:disabled { 
+        opacity: 0.5; 
+        cursor: not-allowed; 
+        box-shadow: none;
+    }
+
+    /* --- 5. RESULTS DASHBOARD --- */
+    #results { 
+        display: none; 
+        padding: 30px; 
+        margin-top: 20px; 
+        border-radius: var(--border-radius);
+    }
+    
+    .score-dashboard { 
+        display: flex; 
+        justify-content: space-around; 
+        margin-bottom: 30px; 
+    }
+    
+    .score-box { 
+        text-align: center; 
+        padding: 20px; 
+        width: 35%; 
+        border-radius: 50%; 
+        aspect-ratio: 1; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+        background: var(--bg-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    
+    .score-number { font-size: 3.5em; font-weight: bold; margin: 0; }
+    .score-label { font-size: 1em; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 5px; color: var(--text-secondary);}
+    
+    /* Semantic Typography Colors */
+    .color-red { color: var(--danger-color); }
+    .color-orange { color: var(--warning-color); }
+    .color-green { color: var(--success-color); }
+
+    /* --- 6. DATA ROWS & HIGHLIGHTS --- */
+    .section-title { 
+        font-size: 1.2em; 
+        font-weight: bold; 
+        margin-bottom: 15px; 
+        margin-top: 30px; 
+        padding-left: 10px; 
+        border-left: 4px solid var(--active-color); 
+    }
+    
+    .data-row { margin-bottom: 15px; padding: 20px; }
+    .data-label { font-weight: bold; font-size: 1em; margin-bottom: 10px; color: var(--text-secondary); }
+    
+    .highlight-plag { 
+        font-weight: bold; 
+        color: var(--danger-color); 
+        background-color: var(--danger-bg); 
+        padding: 2px 4px; 
+        border-radius: 4px; 
+        border-bottom: 2px solid var(--danger-color);
+        transition: background-color 0.4s ease;
+    }
+    
+    .original-passage-box {
+        padding: 15px; 
+        margin-bottom: 20px; 
+        white-space: pre-wrap; 
+        line-height: 1.8;
+        font-size: 0.95em;
+        background-color: var(--secondary-bg);
+        box-shadow: var(--shadow-inset-light);
+        border-radius: 12px;
+    }
+
+    /* --- 7. QUOTES & SOURCES --- */
+    .source-item { 
+        margin-bottom: 15px; 
+        padding-bottom: 15px; 
+        border-bottom: 1px solid var(--line-color); 
+    }
+    
+    .source-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    
+    .source-link { 
+        color: var(--danger-color); 
+        font-weight: bold; 
+        word-break: break-all; 
+        margin-bottom: 5px; 
+    }
+    
+    .source-link a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+    .source-link a:hover { opacity: 0.8; }
+    
+    .source-quote { 
+        font-style: italic; 
+        padding: 12px; 
+        border-left: 3px solid var(--danger-color); 
+        font-size: 0.95em; 
+        color: var(--text-secondary); 
+    }
+    
+    .tag-clean { 
+        display: inline-block; 
+        padding: 8px 16px; 
+        border-radius: 20px; 
+        font-weight: bold; 
+        font-size: 0.9em; 
+        color: var(--success-color);
+        box-shadow: var(--shadow-inset-light);
+    }
+
+    /* --- 8. MODAL UI --- */
+    .modal-overlay {
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        background: var(--card-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        display: none; 
+        align-items: center; 
+        justify-content: center; 
+        z-index: 1000;
+        opacity: 0; 
+        transition: opacity 0.3s ease;
+    }
+    
+    .modal-overlay.show { display: flex; opacity: 1; }
+    
+    .modal-box { 
+        background: var(--bg-color);
+        padding: 40px; 
+        max-width: 400px; 
+        width: 80%; 
+        text-align: center; 
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        border: 1px solid var(--line-color);
+    }
+    
+    .modal-box h3 { margin-top: 0; font-size: 1.5em; margin-bottom: 15px; color: var(--active-color); }
+    .modal-box p { margin-bottom: 25px; color: var(--text-secondary); }
+    
+    .modal-btn { 
+        background: var(--bg-color);
+        padding: 10px 30px; 
+        font-size: 16px; 
+        font-weight: bold; 
+        border: none; 
+        outline: none; 
+        color: var(--text-color); 
+        cursor: pointer; 
+        border-radius: 8px; 
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        transition: all 0.2s ease;
+    }
+    
+    .modal-btn:hover { color: var(--active-color); transform: translateY(-2px); }
+    .modal-btn:active { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+</style>
 </head>
 <body>
 

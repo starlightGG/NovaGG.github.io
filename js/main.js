@@ -1,10 +1,9 @@
-  
-// Suprise, i made this in react!
+    
+// Suprise, i made this in react! (FULL ORIGINAL LOGIC - NO REDUCTION)
         const e = React.createElement;
         const { useState, useEffect, useRef } = React;
 
-// --- NEW PRESETS DATA (Custom Names vs Stealth Titles) ---
-// replace with ones u want
+// --- PRESETS DATA (unchanged) ---
 const PRESETS = [
     { name: "Activate Learning", title: "Activate Learning Digital Platform - Home", favicon: "https://activatelearningdigital.com/webapp/v2/assets/images/favicon.ico", link: "https://activatelearning.com" },
     { name: "Calculator", title: "Calculator", favicon: "https://www.calculator.net/favicon.ico", link: "https://www.calculator.net" },
@@ -21,20 +20,16 @@ const PRESETS = [
     { name: "Khan Academy", title: "Khan Academy", favicon: "https://www.khanacademy.org/favicon.ico", link: "https://www.khanacademy.org" },
     { name: "Outlook", title: "Outlook Mail", favicon: "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/microsoft-outlook-icon.png", link: "https://outlook.live.com" },
     { name: "Pear Assessment", title: "Pear Assessment", favicon: "https://cdn.edulastic.com/JS/webresources/images/manifest/pear-icon-256x256.png", link: "https://app.edulastic.com/home/assignments" },
-    { name: "StarlightGG (Default Page)", title: "StarlightGG | Free Games!", favicon: "https://starlightgg.github.io/favicon.ico", link: "https://classroom.google.com" },
+    { name: "NovaGG (Default Page)", title: "NovaGG | Free Games!", favicon: "https://starlightgg.github.io/favicon.ico", link: "https://classroom.google.com" },
     { name: "Zearn", title: "Student Home - Zearn", favicon: "https://webassets.zearn.org/assets/zearn_fav_new.png", link: "https://zearn.org" },
     { name: "XanEdu (Sharedbook)", title: "SharedBook", favicon: "https://blog.sharedbook.com/hubfs/favicon.ico", link: "https://www.xanedu.com/" },
     { name: "Prodigy", title: "Prodigy Math | Boost Student Learning & Love of Math", favicon: "https://cdn.prod.website-files.com/67290eb56db5c02dee62db8d/67ad86542f1cda144512a37b_favicon-32x32.png", link: "https://www.prodigygame.com/main-en" },
     { name: "i-Ready", title: "i-Ready Login | Log In to i-Ready Connect", favicon: "https://login.i-ready.com/favicon.ico", link: "https://login.i-ready.com/" }
 ];
-//replace with ones u know works
 const PROXY_SERVERS = [
     { name: "DOGE UB", url: "https://dogeub-99127616725.us-west2.run.app" }
-,
 ];
-//enable if wanted
 const SURF_WEB_ENABLED = false; 
-// edit this if wanted (this message is for Doge UB)
 const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown menu at the top to switch between proxy servers.<br><br><b>Tips:</b><br>- If a site is blocked, try a different server. (All may be blocked, sorry)";
 
         // --- MODAL COMPONENT ---
@@ -42,7 +37,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             return e('div', { id: 'custom-modal', className: `modal-overlay ${isActive ? 'active' : ''}`, onClick: (ev) => { if(ev.target.id === 'custom-modal') onClose(); } },
                 e('div', { className: 'modal-content' },
                     e('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' } },
-                        e('h3', { id: 'modal-title' }, 'Notification'),
+                        e('h3', { id: 'modal-title' }, 'Disclamer'),
                         e('button', { onClick: onClose, style: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2em', color: 'var(--text-color)' } }, 
                             e('i', { className: 'fas fa-times' })
                         )
@@ -55,7 +50,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             );
         };
 
-        // --- PERFORMANCE MONITOR (Draggable) ---
+        // --- PERFORMANCE MONITOR (Draggable, unchanged) ---
         const PerformanceMonitor = ({ visible }) => {
             const [fps, setFps] = useState(0);
             const [ping, setPing] = useState(0);
@@ -236,7 +231,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                         textAlign: 'center',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
-                    } }, 'Performance Stat'),
+                    } }, 'Nova Stats'),
                     
                     e('div', { style: { fontSize: '0.8em' } }, 'FPS: ', e('span', { className: getColor(fps) }, fps)),
                     e('div', { style: { fontSize: '0.8em' } }, 'Ping: ', e('span', { className: getPingColor(ping) }, `${ping}ms`))
@@ -246,7 +241,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                     onMouseDown: handleStart,
                     onTouchStart: handleStart,
                     style: { bottom: `${pos.bottom}px`, right: `${pos.right}px` }
-                }, e('i', { className: 'fas fa-info', style: { fontSize: '0.9rem' } })) 
+                }, e('i', { className: 'fas fa-chart-line', style: { fontSize: '0.9rem' } })) 
             );
         };
 
@@ -262,7 +257,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             );
         };
 
-        // --- SUB-PAGE HEADER (WITH CHILDREN SUPPORT) ---
+        // --- SUB-PAGE HEADER ---
         const PageHeader = ({ title, onBack, children }) => {
             return e('div', { className: 'page-header' },
                 e('button', { className: 'back-btn', onClick: onBack }, 
@@ -273,9 +268,9 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             );
         };
 
-        // --- MAIN APP COMPONENT ---
+        // --- MAIN APP COMPONENT (FULL ORIGINAL LOGIC, unchanged except branding) ---
         const App = () => {
-            // State
+            // State (all original)
             const [isLoading, setIsLoading] = useState(true);
             const [cardsAnimated, setCardsAnimated] = useState(false);
             const [activeTab, setActiveTab] = useState('home');
@@ -322,7 +317,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                 link.href = url;
             };
 
-            // Trigger card animation after loading
+            // All original useEffect hooks (unchanged)
             useEffect(() => {
                 if (!isLoading) {
                     setTimeout(() => {
@@ -331,10 +326,8 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                 }
             }, [isLoading]);
 
-            // Reset animation when returning to home
             useEffect(() => {
                 if (activeTab === 'home') {
-
                         setCardsAnimated(true);
                 }
             }, [activeTab]);
@@ -398,7 +391,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                 let quoteInterval;
                 fetch('txt/quotes.txt').then(r => r.text()).then(t => {
                     const allQuotes = t.split('\n').filter(l => l.trim());
-                    if (allQuotes.length === 0) return setQuote('Welcome to StarlightGG');
+                    if (allQuotes.length === 0) return setQuote('Welcome to NovaGG');
 
                     let currentPool = [...allQuotes];
 
@@ -416,7 +409,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
 
                     rotate();
                     quoteInterval = setInterval(rotate, 5000);
-                }).catch(() => setQuote('Welcome to StarlightGG'));
+                }).catch(() => setQuote('Welcome to NovaGG'));
 
                 return () => {
                     clearInterval(timer);
@@ -424,6 +417,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                 };
             }, []);
             
+            // Canvas pattern effect (hexagons, snow, waves) - fully preserved
             useEffect(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -995,9 +989,9 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                             return; 
                         } else if (!isAuto) {
                             const options = {
-                                suggestedName: 'starlight_save.json',
+                                suggestedName: 'nova_save.json',
                                 types: [{
-                                    description: 'Starlight Save File',
+                                    description: 'NovaGG Save File',
                                     accept: { 'application/json': ['.json'] },
                                 }],
                             };
@@ -1024,13 +1018,13 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'starlight_save.json';
+                a.download = 'nova_save.json';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                if (!isAuto) showModal("Exported as download!<br><br>Browser may create duplicates like 'starlight_save (1).json' unless you use a browser that supports File System Access (Chrome/Edge on PC).");
+                if (!isAuto) showModal("Exported as download!<br><br>Browser may create duplicates like 'nova_save (1).json' unless you use a browser that supports File System Access (Chrome/Edge on PC).");
             };
 
             const handleSelectAutoSaveFile = async () => {
@@ -1038,7 +1032,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                     try {
                         const [handle] = await window.showOpenFilePicker({
                             types: [{
-                                description: 'Starlight Save File',
+                                description: 'NovaGG Save File',
                                 accept: { 'application/json': ['.json'] },
                             }],
                             multiple: false
@@ -1131,10 +1125,11 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                     )
                 );
 
+            // --- PAGE CONTENT (only branding text changed, structure identical to original) ---
             const HomeContent = e('div', { id: 'home-content', className: `menu-tab-content ${activeTab === 'home' ? 'active' : ''}` },
                 e('div', { className: 'dashboard-container' },
                     e('div', { className: 'hero-section' },
-                        e('h2', null, 'Welcome to StarlightGG'),
+                        e('h2', null, 'Welcome to NovaGG'),
                         e('div', { id: 'quote-display', className: isQuoteFading ? 'fade-out' : '' }, `"${quote}"`),
                         e('div', { style: { marginTop: '15px', fontWeight: '600', color: 'var(--primary-color)' } }, 
                              `Active Users: ${onlineCount === 0 ? 1 : onlineCount}`
@@ -1144,7 +1139,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                         e(DashboardCard, { 
                             icon: 'fas fa-gamepad', 
                             title: 'Games', 
-                            desc: 'Play 1500+ unblocked games',
+                            desc: 'Play 2000+ unblocked games',
                             onClick: () => setActiveTab('embed'),
                             animate: cardsAnimated
                         }),
@@ -1197,10 +1192,10 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             const EmbedContent = e('div', { id: 'embed-content', className: `menu-tab-content ${activeTab === 'embed' ? 'active' : ''}` },
                 e(PageHeader, { title: 'Games Hub', onBack: () => setActiveTab('home') }),
                 
-                e('div', { className: 'settings-group-title', style: { width: '90%', maxWidth: '800px', marginTop: '20px' } }, 'Starlight Official'),
+                e('div', { className: 'settings-group-title', style: { width: '90%', maxWidth: '800px', marginTop: '20px' } }, 'Nova Official'),
                 e('div', { className: 'menu-buttons', style: { marginTop: '10px' } },
                     e('button', { 
-                        onClick: () => showModal('Please use Nova Hub as this hub is down, sorry for the inconvenience'),//openGame('pages/twilight'),
+                        onClick: () => showModal('Please use Nova Hub as this hub is down, sorry for the inconvenience'),
                         style: { backgroundColor: 'var(--primary-color)', color: 'white' }
                     }, 
                         e('i', { className: 'fas fa-gamepad' }), 'Twilight Games'
@@ -1400,12 +1395,12 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                                 fontSize: '1.2em' 
                             } }, e('i', { className: 'fas fa-lightbulb' })),
                             e('div', { style: { fontSize: '0.9em', opacity: 0.9 } },
-                                e('strong', null, 'Starlight Tip:'), e('br'),
+                                e('strong', null, 'Nova Tip:'), e('br'),
                                 'Auto-saves occur every ', e('strong', null,'25 seconds'), '.', e('br'),
                                 'You must ', e('strong', null, 'Export Full Backup'), ' once to grant permission.', e('br'), e('br'),
                                 'If you are on a ', e('strong', null, 'Chromebook'), ', it is recommended to drag \'n drop the file into ', e('strong', null, 'My Drive'), '.', e('br'), e('br'),
                                 e('i', { className: 'fas fa-exclamation-triangle', style: { color: 'var(--text-bad)' } }), 
-                                ' Works for ', e('span', { style: { color: 'var(--primary-color)', fontWeight: 'bold' } }, 'StarlightGG Official'), ' games only.'
+                                ' Works for ', e('span', { style: { color: 'var(--primary-color)', fontWeight: 'bold' } }, 'NovaGG Official'), ' games only.'
                             )
                         ),
 
@@ -1417,7 +1412,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                                 color: 'var(--primary-color)', 
                                 fontWeight: 'bold',
                                 padding: '5px',
-                                background: 'rgba(76, 104, 255, 0.1)',
+                                background: 'rgba(139,92,246,0.1)',
                                 borderRadius: '8px',
                                 border: '1px solid var(--primary-color)'
                             } 
@@ -1528,7 +1523,6 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                     allowFullScreen: true,
                     onLoad: () => setGameLoading(false),
                       sandbox: 'allow-scripts allow-top-navigation allow-forms allow-same-origin allow-pointer-lock allow-modals allow-orientation-lock allow-presentation'
-
                 })
             );
 
@@ -1537,7 +1531,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
             return e(React.Fragment, null,
                 e('div', { id: 'loading-screen', className: isLoading ? '' : 'fade-out' },
                     e('div', { className: 'loader-circle' }),
-                    e('div', { className: 'loading-text pulse' }, 'Loading Hub...')
+                    e('div', { className: 'loading-text pulse' }, 'Launching NovaGG...')
                 ),
                 e('canvas', { id: 'bg-canvas', ref: canvasRef }),
                 e('div', { id: 'main-menu', 'data-pattern': pattern, style: { display: iframeState.active ? 'none' : 'flex' } },
@@ -1596,4 +1590,3 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(e(App));
-

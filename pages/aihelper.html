@@ -13,240 +13,271 @@
     <script src="../js/fixing.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    /* --- 1. Core Variables (Light Default & Nova Cosmic Dark) --- */
+    :root {
+        /* Light Theme (Default) */
+        --bg-color: #e0e5ec;
+        --text-color: #333333;
+        --primary-color: #4c68ff;
+        --primary-light: #7c90ff;
+        --primary-dark: #3a50cc;
+        --secondary-bg: #e0e5ec;
+        --glass-color: rgba(255, 255, 255, 0.4);
+        --card-glass: rgba(255, 255, 255, 0.65);
+        --line-color: rgba(0, 0, 0, 0.07);
+        --star-color: #E5B500;
+        --toggle-size: 4rem;
+        --border-radius: 20px;
+        --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-    <style>
-        /* --- 1. Soft UI Theme Variables --- */
-        :root {
-            /* Light Mode Defaults */
-            --bg-color: #e0e5ec;
-            --text-color: #4a5568;
-            --text-secondary: #718096;
-            --card-bg: #e0e5ec;
-            
-            /* Neumorphism Shadows */
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            
-            /* Accents */
-            --primary-color: #4c68ff;
-            --user-msg-bg: #4c68ff;
-            --user-msg-text: #ffffff;
-            --bot-msg-bg: #e0e5ec;
-            
-            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        /* Dark Mode Overrides */
-        [data-theme="dark"] {
-            --bg-color: #292d32;
-            --text-color: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --card-bg: #292d32;
-            
-            --shadow-light: #353b42;
-            --shadow-dark: #1e2125;
-
-            --bot-msg-bg: #292d32;
-        }
+        /* Neumorphic Shadows (Light) */
+        --shadow-light-top: -6px -6px 12px #ffffff;
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
         
-        body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: background 0.3s ease;
-        }
+        --highlight-light: #ffffff;
+        --shadow-dark: #a3b1c6;
+        --active-color: #4c68ff; 
+    }
 
-        /* --- 2. Main Layout & Container --- */
-        .main-wrapper {
-            width: 100%;
-            max-width: 700px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+    /* Dark Theme (Nova cosmic) */
+    [data-theme="dark"] {
+        --bg-color: #0a0a1a;
+        --text-color: #f0f3ff;
+        --primary-color: #6940c7;
+        --primary-light: #a78bfa;
+        --primary-dark: #6620d4;
+        --secondary-bg: #0f0f23;
+        --glass-color: rgba(15, 25, 45, 0.7);
+        --card-glass: rgba(20, 30, 55, 0.8);
+        --line-color: rgba(139, 92, 246, 0.2);
+        --star-color: #c084fc;
+        
+        /* Neumorphic Shadows (Cosmic Dark) */
+        --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+        --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        
+        --highlight-light: #1e1a3a;
+        --shadow-dark: #03030c;
+        --active-color: #8b5cf6;
+    }
+    
+    /* --- 2. Base & Main Layout --- */
+    body {
+        font-family: var(--font-stack);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        transition: background 0.4s ease, color 0.4s ease;
+    }
 
-        h2 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--shadow-light);
-        }
+    .main-wrapper {
+        width: 100%;
+        max-width: 700px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
 
-        #chat-container {
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            /* Neumorphic Outset Shadow */
-            box-shadow: 
-                9px 9px 16px var(--shadow-dark), 
-                -9px -9px 16px var(--shadow-light);
-            display: flex;
-            flex-direction: column;
-            height: 600px;
-        }
+    h2 {
+        text-align: center;
+        color: var(--active-color);
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+        transition: color 0.3s ease;
+    }
 
-        /* --- 3. Chat Log (Recessed Screen) --- */
-        #chat-log {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            background-color: var(--bg-color);
-            
-            /* Neumorphic Inset Shadow (Recessed look) */
-            box-shadow: 
-                inset 6px 6px 12px var(--shadow-dark), 
-                inset -6px -6px 12px var(--shadow-light);
-        }
+    /* --- 3. Chat Container (Glassmorphism Elevated) --- */
+    #chat-container {
+        background: var(--card-glass);
+        backdrop-filter: blur(16px); /* Stronger blur for cosmic effect */
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--line-color);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        
+        /* Using your new deep card shadow */
+        box-shadow: var(--card-shadow);
+        
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        transition: all 0.4s ease;
+    }
 
-        /* Scrollbar Styling */
-        #chat-log::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-log::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #chat-log::-webkit-scrollbar-thumb {
-            background-color: var(--text-secondary);
-            border-radius: 4px;
-            opacity: 0.5;
-        }
+    /* --- 4. Chat Log (Recessed Screen) --- */
+    #chat-log {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+        padding: 20px;
+        border-radius: 15px;
+        background-color: var(--secondary-bg);
+        
+        /* Neumorphic Inset Shadow for recessed look */
+        box-shadow: var(--shadow-inset-light);
+        transition: background-color 0.4s ease, box-shadow 0.4s ease;
+    }
 
-        /* --- 4. Messages --- */
-        .message {
-            margin-bottom: 15px;
-            padding: 12px 18px;
-            border-radius: 12px;
-            max-width: 80%;
-            word-wrap: break-word;
-            line-height: 1.5;
-            font-size: 0.95em;
-            animation: fadeIn 0.3s ease;
-        }
+    /* Scrollbar Styling */
+    #chat-log::-webkit-scrollbar {
+        width: 8px;
+    }
+    #chat-log::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #chat-log::-webkit-scrollbar-thumb {
+        background-color: var(--active-color);
+        border-radius: 4px;
+        opacity: 0.4;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* --- 5. Messages --- */
+    .message {
+        margin-bottom: 15px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        max-width: 80%;
+        word-wrap: break-word;
+        line-height: 1.5;
+        font-size: 0.95em;
+        animation: fadeIn 0.3s ease;
+    }
 
-        .user-message {
-            margin-left: auto; /* Align right */
-            background-color: var(--user-msg-bg);
-            color: var(--user-msg-text);
-            border-bottom-right-radius: 2px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-        }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        .bot-message {
-            margin-right: auto; /* Align left */
-            background-color: var(--bot-msg-bg);
-            color: var(--text-color);
-            border-bottom-left-radius: 2px;
-            border: 1px solid var(--shadow-light);
-            /* Small pop-out effect for bot */
-            box-shadow: 
-                5px 5px 10px var(--shadow-dark), 
-                -5px -5px 10px var(--shadow-light);
-        }
+    .user-message {
+        margin-left: auto;
+        background-color: var(--primary-color);
+        color: #ffffff; /* Keeping white for contrast */
+        border-bottom-right-radius: 2px;
+        box-shadow: var(--shadow-light-bottom); /* Slight drop shadow */
+    }
 
-        /* Markdown Styles inside bot messages */
-        .bot-message p { margin: 0 0 10px 0; }
-        .bot-message p:last-child { margin-bottom: 0; }
-        .bot-message strong { color: var(--primary-color); }
-        .bot-message ul { margin: 5px 0; padding-left: 20px; }
+    .bot-message {
+        margin-right: auto;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        border-bottom-left-radius: 2px;
+        border: 1px solid var(--line-color);
+        
+        /* Popped out effect */
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
 
-        /* --- 5. Input Area --- */
-        #user-input {
-            display: flex;
-            gap: 15px;
-        }
+    /* Markdown Styles inside bot messages */
+    .bot-message p { margin: 0 0 10px 0; }
+    .bot-message p:last-child { margin-bottom: 0; }
+    .bot-message strong { color: var(--active-color); }
+    .bot-message ul { margin: 5px 0; padding-left: 20px; }
 
-        #user-message {
-            flex-grow: 1;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: inherit;
-            outline: none;
-            
-            /* Inset Shadow for Input */
-            box-shadow: 
-                inset 4px 4px 8px var(--shadow-dark), 
-                inset -4px -4px 8px var(--shadow-light);
-        }
+    /* --- 6. Input Area --- */
+    #user-input {
+        display: flex;
+        gap: 15px;
+    }
 
-        #send-button {
-            padding: 0 25px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            
-            /* Outset Shadow */
-            box-shadow: 
-                5px 5px 10px var(--shadow-dark), 
-                -5px -5px 10px var(--shadow-light);
-        }
+    #user-message {
+        flex-grow: 1;
+        padding: 15px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        background-color: var(--secondary-bg);
+        color: var(--text-color);
+        font-family: inherit;
+        outline: none;
+        
+        /* Recessed Input Field */
+        box-shadow: var(--shadow-inset-light);
+        transition: all 0.3s ease;
+    }
+    
+    #user-message:focus {
+        border-bottom: 2px solid var(--active-color);
+    }
+    
+    #user-message::placeholder {
+        color: var(--text-color);
+        opacity: 0.5;
+    }
 
-        #send-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 
-                7px 7px 14px var(--shadow-dark), 
-                -7px -7px 14px var(--shadow-light);
-        }
+    #send-button {
+        padding: 0 25px;
+        background-color: var(--primary-color);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s ease;
+        
+        /* Extruded Button */
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
 
-        #send-button:active:not(:disabled) {
-            transform: translateY(1px);
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
-        }
+    #send-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background-color: var(--primary-light);
+    }
 
-        #send-button:disabled {
-            background-color: var(--text-secondary);
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
+    #send-button:active:not(:disabled) {
+        transform: translateY(1px);
+        box-shadow: var(--shadow-inset-light);
+    }
 
-        /* --- 6. Footer / Misc --- */
-        .disclaimer {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.75em;
-            color: var(--text-secondary);
-        }
+    #send-button:disabled {
+        background-color: var(--primary-dark);
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-shadow: none;
+    }
 
-        .back-button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 10px;
-            background: var(--card-bg);
-            text-align: center;
-            
-            box-shadow: 
-                5px 5px 10px var(--shadow-dark), 
-                -5px -5px 10px var(--shadow-light);
-            transition: transform 0.2s;
-        }
-        .back-button:hover {
-            transform: translateY(-2px);
-            color: var(--primary-color);
-        }
-    </style>
+    /* --- 7. Footer / Misc --- */
+    .disclaimer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 0.75em;
+        color: var(--text-color);
+        opacity: 0.6;
+    }
+
+    .back-button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        color: var(--text-color);
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 10px;
+        background: var(--bg-color);
+        text-align: center;
+        
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        transition: all 0.2s ease;
+    }
+    
+    .back-button:hover {
+        transform: translateY(-2px);
+        color: var(--active-color);
+    }
+    
+    .back-button:active {
+        transform: translateY(1px);
+        box-shadow: var(--shadow-inset-light);
+    }
+</style>
 </head>
 <body>
 

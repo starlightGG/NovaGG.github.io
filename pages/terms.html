@@ -1,89 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
+    <title>Terms of Service · NovaGG</title>
     
     <script id="cloning-script" src="../js/cloner.js"></script>
-
+    
     <style>
-        /* --- 1. Soft UI Theme Variables --- */
+        /* --- CORE VARIABLES --- */
         :root {
-            /* Light Mode Defaults */
             --bg-color: #e0e5ec;
-            --text-color: #4a5568;
-            --text-secondary: #718096;
-            --card-bg: #e0e5ec;
-            
-            /* Neumorphism Shadows */
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            
-            /* Accents */
+            --text-color: #333333;
+            --text-secondary: #666666;
             --primary-color: #4c68ff;
+            --primary-light: #7c90ff;
+            --primary-dark: #3a50cc;
+            --secondary-bg: #e0e5ec;
+            --glass-color: rgba(255, 255, 255, 0.4);
+            --card-glass: rgba(255, 255, 255, 0.65);
+            --line-color: rgba(0, 0, 0, 0.07);
+            --star-color: #E5B500;
+            --border-radius: 20px;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            --shadow-light-top: -6px -6px 12px #ffffff;
+            --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --highlight-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --active-color: #4c68ff;
             --danger-color: #d93025;
-            
-            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-        /* Dark Mode Overrides */
+        /* DARK THEME - ACTIVATED BY data-theme="dark" on HTML */
         [data-theme="dark"] {
-            --bg-color: #292d32;
-            --text-color: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --card-bg: #292d32;
-            
-            --shadow-light: #353b42;
-            --shadow-dark: #1e2125;
+            --bg-color: #0a0a1a !important;
+            --text-color: #f0f3ff !important;
+            --text-secondary: #b0b0d0 !important;
+            --primary-color: #6940c7 !important;
+            --primary-light: #a78bfa !important;
+            --primary-dark: #6620d4 !important;
+            --secondary-bg: #0f0f23 !important;
+            --glass-color: rgba(15, 25, 45, 0.7) !important;
+            --card-glass: rgba(20, 30, 55, 0.8) !important;
+            --line-color: rgba(139, 92, 246, 0.2) !important;
+            --star-color: #c084fc !important;
+            --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02) !important;
+            --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5) !important;
+            --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02) !important;
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
+            --highlight-light: #1e1a3a !important;
+            --shadow-dark: #03030c !important;
+            --active-color: #8b5cf6 !important;
+            --danger-color: #ff6b6b !important;
         }
-        
+
         body {
             font-family: var(--font-stack);
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 20px;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         strong {
-            font-weight: 700; 
-            color: var(--primary-color); /* Highlight strong text slightly */
+            font-weight: 700;
+            color: var(--primary-color);
         }
 
-        /* --- 2. The Soft UI Card Container --- */
         .terms-container {
             max-width: 900px;
             margin: 40px auto;
             padding: 40px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            
-            /* The Neumorphic Effect */
-            box-shadow: 
-                9px 9px 16px var(--shadow-dark), 
-                -9px -9px 16px var(--shadow-light);
-            
+            background: var(--bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
             transition: all 0.3s ease;
         }
         
         h1 {
             color: var(--primary-color);
             font-size: 2.2em;
-            /* Soft text shadow */
-            text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--shadow-light);
-            border-bottom: 2px solid var(--shadow-dark);
+            border-bottom: 2px solid var(--line-color);
             padding-bottom: 15px;
             margin-bottom: 30px;
         }
         
         h2 {
-            color: var(--text-color);
+            color: var(--primary-color);
             font-size: 1.5em;
             margin-top: 35px;
             margin-bottom: 15px;
-            opacity: 0.9;
+            opacity: 0.95;
         }
         
         p, ul {
@@ -110,7 +120,6 @@
             font-style: italic;
         }
 
-        /* Highlight for Liability Section */
         .liability-warning {
             color: var(--danger-color);
             font-weight: bold;
@@ -119,80 +128,65 @@
             margin-top: 5px;
         }
 
-        /* Link Styling */
         a {
             color: var(--primary-color);
             text-decoration: none;
-            position: relative;
         }
+        
         a:hover {
             text-decoration: underline;
         }
 
-        /* --- 3. Footer and Soft Button --- */
         .footer-actions {
             margin-top: 50px;
             padding-top: 30px;
-            border-top: 1px solid var(--shadow-dark);
+            border-top: 1px solid var(--line-color);
             text-align: right;
         }
 
         .back-button {
-            padding: 12px 25px;
+            padding: 12px 28px;
             font-size: 1em;
-            font-weight: bold;
-            color: var(--bg-color); /* Text matches bg for contrast against primary */
+            font-weight: 600;
+            color: white;
             background-color: var(--primary-color);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
+            font-family: var(--font-stack);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            
-            /* Button Shadow */
-            box-shadow: 
-                5px 5px 10px var(--shadow-dark), 
-                -5px -5px 10px var(--shadow-light);
+            box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
         }
 
         .back-button:hover {
             transform: translateY(-2px);
-            box-shadow: 
-                7px 7px 14px var(--shadow-dark), 
-                -7px -7px 14px var(--shadow-light);
         }
-        
+
         .back-button:active {
             transform: translateY(1px);
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-inset-light);
+        }
+
+        @media (max-width: 600px) {
+            .terms-container {
+                padding: 24px;
+                margin: 20px auto;
+            }
+            h1 { font-size: 1.6em; }
+            h2 { font-size: 1.3em; }
         }
     </style>
 </head>
 <body>
 
-    <script>
-        // 1. APPLY THEME IMMEDIATELY
-        (function() {
-            try {
-                const storedTheme = localStorage.getItem('theme');
-                if (storedTheme === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                }
-            } catch (e) { console.log("LocalStorage access denied"); }
-        })();
-    </script>
-
     <div class="terms-container">
-        <h1>Terms of Service - Starlight Games</h1>
-        <span class="update-date">Last Updated: January 12, 2026</span>
+        <h1>Terms of Service · NovaGG</h1>
+        <span class="update-date">Last Updated: May 11, 2026</span>
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-            By accessing or using the Starlight Games application ("the Service"), you agree to be bound by these Terms of Service ("Terms"). 
-            If you disagree with any part of the terms, you <strong>must not</strong> use the Service.
+            By accessing or using the NovaGG application ("the Service"), you agree to be bound by these Terms of Service ("Terms"). 
+            If you disagree with any part of these Terms, you <strong>must not</strong> use the Service.
         </p>
 
         <h2>2. User Responsibility and Liability Waiver</h2>
@@ -201,73 +195,81 @@
         </p>
         <ul>
             <li>You are <strong>solely responsible</strong> for all activity that occurs during your use of the Service, including, but not limited to, any network or institutional policy violations.</li>
-            <li>You must comply with all local, state, national, and network usage policies.</li>
+            <li>You must comply with all local, state, national, and network usage policies applicable to your jurisdiction.</li>
             <li>
-                <span class="liability-warning">LIABILITY WAIVER: You agree that the creator/owner of Starlight Games assumes NO LIABILITY for your actions. You agree to hold the owner harmless from any claims, damages, or legal/disciplinary actions resulting from your use of the Service.</span>
+                <span class="liability-warning">⚠ LIABILITY WAIVER: You agree that the creator and owner of NovaGG assumes NO LIABILITY for your actions. You agree to hold the owner harmless from any claims, damages, or legal or disciplinary actions resulting from your use of the Service.</span>
             </li>
-            <li>You agree not to use the Service for any unlawful or prohibited activity.</li>
+            <li>You agree not to utilize the Service for any unlawful, prohibited, or unauthorized activity.</li>
         </ul>
 
-        <h2>3. Use of Proxy and External Services</h2>
+        <h2>3. Proxy Services and External Content Access</h2>
         <p>
-            The Service includes features designed to access external content, such as the "Surf Web Freely" button. These tools are provided strictly <strong>"as is" and without warranty</strong> regarding their availability or compliance with external networks. 
-            We do not monitor or control the content accessed via these external tools. Any attempt to use these features to bypass institutional security or content filtering is entirely your responsibility and is undertaken <strong>at your own risk</strong>.
+            The Service includes features designed to facilitate access to external content, including but not limited to the "Surf Web Freely" functionality. These tools are provided strictly <strong>"as is" and without any warranty</strong> regarding their availability, functionality, or compliance with external network policies. NovaGG does not monitor, control, or assume responsibility for the content accessed via these external tools. Any attempt to utilize these features to bypass institutional security measures, content filtering systems, or network restrictions is undertaken <strong>at your own risk</strong>, and you bear full and exclusive responsibility for any consequences arising from such actions.
         </p>
 
-        <h2>4. Content and Copyright</h2>
+        <h2>4. Intellectual Property and Third-Party Content</h2>
         <p>
-            Starlight Games does not host the external games or web content accessed through its platform. All third-party content, games, and links are the property of their respective owners. Starlight Games does not claim ownership or responsibility for the content, privacy policies, or practices of any third-party websites or services.
+            NovaGG does not host, store, or distribute the external games, web content, or third-party materials accessible through its platform. All third-party content, including games, trademarks, copyrighted materials, and external links, remain the exclusive property of their respective owners. NovaGG disclaims any ownership, affiliation, or responsibility for the content, privacy practices, data protection policies, or terms of service of any third-party websites, applications, or services referenced or linked through the platform.
         </p>
 
-        <h2>5. Termination</h2>
+        <h2>5. Suspension and Termination of Access</h2>
         <p>
-            We reserve the right to terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including, without limitation, if you breach these Terms.
+            NovaGG reserves the right, in its sole and absolute discretion, to suspend, restrict, or terminate your access to the Service immediately and without prior notice or liability for any reason whatsoever. Such reasons may include, but are not limited to, any actual or suspected violation of these Terms, engagement in prohibited activities, or any conduct that NovaGG determines, in its sole judgment, to be harmful to the Service, its users, or third parties.
         </p>
 
-        <h2>6. Changes to Terms</h2>
+        <h2>6. Modifications to Terms of Service</h2>
         <p>
-            We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will attempt to provide reasonable notice prior to any major revisions taking effect. By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms.
-        </p>
-        
-        <h2>7. Community Chat</h2>
-        <p>
-            We are <strong>NOT RESPONSIBLE</strong> for the chat logs in Starlight Games!
+            NovaGG reserves the right, at its sole discretion, to modify, amend, or replace these Terms at any time. Material revisions will be communicated through reasonable means, including but not limited to notices on the Service or via the last updated date at the top of this document. Your continued access to or use of the Service following the effective date of any such revisions constitutes your binding acceptance of the modified Terms. It is your responsibility to review these Terms periodically for changes.
         </p>
 
-        <h2>8. Music Playlist</h2>
+        <h2>7. Community Chat Feature</h2>
         <p>
-            We are <strong>NOT RESPONSIBLE</strong> for the 'My Playlist' button containing inappropriate songs that may affect you or others.
+            The Service may offer a community chat feature as a convenience to users. NovaGG <strong>expressly disclaims all responsibility and liability</strong> for any content, messages, communications, or interactions occurring within the community chat. Users are solely responsible for their own conduct and communications, and NovaGG does not monitor, moderate, or endorse any user-generated content within the chat feature.
         </p>
 
-        <h2>9. Cloak Info</h2>
+        <h2>8. Music Playlist Feature</h2>
         <p>
-            We are <strong>NOT RESPONSIBLE</strong> for taking other websites' names and favicons; this is for entertainment purposes only.
+            The "My Playlist" feature enables users to access or curate music content. NovaGG <strong>expressly disclaims all responsibility and liability</strong> for any audio content, including but not limited to songs, lyrics, or recordings that may be considered inappropriate, offensive, or otherwise objectionable by users or third parties. You acknowledge that you assume full responsibility for any consequences arising from your use of the music playlist feature.
+        </p>
+
+        <h2>9. Content Cloaking and Display Features</h2>
+        <p>
+            The Service includes content cloaking functionality, including but not limited to the display of external website names, favicons, and other identifying elements. NovaGG <strong>expressly disclaims all responsibility and liability</strong> for any third-party trademarks, branding, or intellectual property utilized through these features. Such features are provided strictly for entertainment and informational purposes and are not intended to mislead, impersonate, or claim affiliation with any third-party entity. Users are solely responsible for their use of these features and any potential legal or disciplinary consequences arising therefrom.
         </p>
 
         <h2>10. Contact Information</h2>
         <p>
-            If you have any questions about these Terms, please contact the owner/creator or visit:
+            Should you have any questions, concerns, or inquiries regarding these Terms of Service, please contact the service owner or administrator through the following resource:
         </p>
-        <a href="/pages/aihelper">Websites Chatbot assistant</a>
+        <a href="/pages/aihelper">📬 NovaGG Chatbot Assistant</a>
 
         <div class="footer-actions">
             <button class="back-button" onclick="redirectToApp()">
-                ← Back to App
+                ← Back to Application
             </button>
         </div>
-
     </div>
 
     <script>
         function redirectToApp() {
-            window.manualExitIntent = true; 
-
-            window.location.href = '../'; 
+            window.manualExitIntent = true;
+            window.location.href = '../';
         }
-
+        
+</script>
+    <script>
+        // 1. APPLY THEME IMMEDIATELY
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme == 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch (e) { console.log("LocalStorage access denied"); }
+        })();
     </script>
-    
-<!-- better global-->
     <script src="../js/global.js"></script>
 </body>
 </html>
