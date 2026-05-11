@@ -76,7 +76,7 @@ We are faster, stronger, and put less stress on your CPU.
 ---
 
 * **Setup** [Instructions](/setup.md).
-* 
+  
 ---
 
 ## 🛠️ Join the Organization
