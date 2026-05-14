@@ -30,7 +30,7 @@ const PRESETS = [
 const PROXY_SERVERS = [
     { name: "DOGE UB", url: "https://dogeub-99127616725.us-west2.run.app" }
 ];
-const SURF_WEB_ENABLED = false; 
+const SURF_WEB_ENABLED = true; 
 const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the settings menu at the top right to switch between proxy servers.<br><br><b>Tips:</b><br>- Choose the fastest wisp for faster browsing!";
 
         // --- MODAL COMPONENT ---
