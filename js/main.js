@@ -26,11 +26,12 @@ const PRESETS = [
     { name: "Prodigy", title: "Prodigy Math | Boost Student Learning & Love of Math", favicon: "https://cdn.prod.website-files.com/67290eb56db5c02dee62db8d/67ad86542f1cda144512a37b_favicon-32x32.png", link: "https://www.prodigygame.com/main-en" },
     { name: "i-Ready", title: "i-Ready Login | Log In to i-Ready Connect", favicon: "https://login.i-ready.com/favicon.ico", link: "https://login.i-ready.com/" }
 ];
+// PROXY_SERVERS is a old mechanic, for now it is useless 
 const PROXY_SERVERS = [
     { name: "DOGE UB", url: "https://dogeub-99127616725.us-west2.run.app" }
 ];
 const SURF_WEB_ENABLED = false; 
-const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown menu at the top to switch between proxy servers.<br><br><b>Tips:</b><br>- If a site is blocked, try a different server. (All may be blocked, sorry)";
+const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the settings menu at the top right to switch between proxy servers.<br><br><b>Tips:</b><br>- Choose the fastest wisp for faster browsing!";
 
         // --- MODAL COMPONENT ---
         const Modal = ({ message, isActive, onClose }) => {
@@ -1174,8 +1175,8 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the dropdown m
                                     showModal("This feature has been <b>Disabled by Host</b>.");
                                 } else {
                                     const lastServer = localStorage.getItem('SURF_LAST_SERVER');
-                                    const targetUrl = lastServer || 'pages/surfidle';
-                                    openGame(targetUrl, true);
+                                    const targetUrl = lastServer || './proxy';
+                                    openGame(targetUrl/*, true*/);
                                     
                                     if (!localStorage.getItem('surfInfoShown')) {
                                         showModal(SURF_INFO_MESSAGE);
