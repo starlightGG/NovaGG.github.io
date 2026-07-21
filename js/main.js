@@ -1196,7 +1196,7 @@ const SURF_INFO_MESSAGE = "<b>Welcome to Surf Web!</b><br><br>Use the settings m
                 e('div', { className: 'settings-group-title', style: { width: '90%', maxWidth: '800px', marginTop: '20px' } }, 'Nova Official'),
                 e('div', { className: 'menu-buttons', style: { marginTop: '10px' } },
                     e('button', { 
-                        onClick: () => showModal('Please use Nova Hub as this hub is down, sorry for the inconvenience'),
+                        onClick: () => openGame('pages/twilight'),
                         style: { backgroundColor: 'var(--primary-color)', color: 'white' }
                     }, 
                         e('i', { className: 'fas fa-gamepad' }), 'Twilight Games'
