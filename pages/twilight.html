@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StarlightGG</title>
+    <title>NovaGG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="media/favicon.png">
-    
+
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
       /* --- CORE VARIABLES --- */
       :root {
@@ -22,11 +22,11 @@
         --primary-color: #4c68ff;
         --secondary-bg: #e0e5ec;
         --danger-color: #ff4c4c;
-        
+
         /* Neumorphic Shadows (Light) */
         --shadow-outer: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
         --shadow-inner: inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8);
-        
+
         /* Button specific */
         --btn-shadow: 6px 6px 10px 0 rgba(163,177,198, 0.7), -6px -6px 10px 0 rgba(255,255,255, 0.8);
         --btn-shadow-active: inset 4px 4px 8px 0 rgba(163,177,198, 0.7), inset -4px -4px 8px 0 rgba(255,255,255, 0.8);
@@ -46,7 +46,7 @@
         /* Neumorphic Shadows (Dark) */
         --shadow-outer: 7px 7px 15px rgba(0,0,0,0.5), -7px -7px 15px rgba(255,255,255,0.05);
         --shadow-inner: inset 5px 5px 10px rgba(0,0,0,0.5), inset -5px -5px 10px rgba(255,255,255,0.05);
-        
+
         --btn-shadow: 6px 6px 10px rgba(0,0,0,0.5), -6px -6px 10px rgba(255,255,255,0.05);
         --btn-shadow-active: inset 4px 4px 8px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(255,255,255,0.05);
       }
@@ -59,12 +59,12 @@
       }
 
       /* --- NEUMORPHIC UTILITY CLASSES --- */
-      
+
       .neu-flat {
         background: var(--bg-color);
         box-shadow: var(--shadow-outer);
         border-radius: var(--border-radius);
-        border: 1px solid transparent; 
+        border: 1px solid transparent;
         transition: all 0.3s ease;
       }
 
@@ -82,29 +82,29 @@
 
       /* Standard Button */
       .neu-btn {
-        width: 45px; 
+        width: 45px;
         height: 45px;
         border-radius: 50%;
         background: var(--bg-color);
         box-shadow: var(--btn-shadow);
         display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; 
-        aspect-ratio: 1/1; 
+        flex-shrink: 0;
+        aspect-ratio: 1/1;
         color: var(--primary-color);
         transition: all 0.2s ease;
         cursor: pointer;
         border: none; outline: none;
       }
-      
+
       /* Mini Button for Cards */
       .neu-btn-sm {
-        width: 32px; 
+        width: 32px;
         height: 32px;
         border-radius: 50%;
         background: var(--bg-color);
         box-shadow: var(--btn-shadow);
         display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; 
+        flex-shrink: 0;
         aspect-ratio: 1/1;
         font-size: 0.8rem;
         color: var(--text-color);
@@ -167,17 +167,20 @@
 
   <body class="min-h-screen">
     <div x-data="gamesApp()" x-init="init()">
-      
+
       <header class="p-8 relative">
         <div class="flex flex-col items-center justify-center">
             <div class="neu-flat p-4 rounded-full mb-4" style="border-radius: 50%;">
-                <img src="/media/favicon.png" alt="Logo" class="w-12 h-12" />
+                <img src="./media/favicon.png" alt="Logo" class="w-12 h-12" />
             </div>
             <h1 class="text-4xl font-bold tracking-tight text-center">
-            Starlight<span style="color: var(--primary-color)">GG</span>
+            Nova<span style="color: var(--primary-color)">GG</span>
             </h1>
             <p class="mt-2 text-sm opacity-60 font-medium">Twilight Edition</p>
         </div>
+ <!--       <button @click="toggleTheme()" class="neu-btn absolute top-8 right-8" title="Toggle theme">
+          <i class="fa-solid" :class="theme === 'light' ? 'fa-moon' : 'fa-sun'"></i>-->
+        </button>
       </header>
 
       <main class="container mx-auto px-6 pb-12 max-w-7xl">
@@ -192,26 +195,19 @@
           </div>
 
           <div class="w-full md:w-64">
-            <select 
-              x-model="filterCategory" 
+            <select
+              x-model="filterCategory"
               class="neu-flat w-full px-6 py-4 outline-none cursor-pointer appearance-none font-medium"
             >
               <option value="all">All Games</option>
               <option value="recent">🕒 Recent Plays</option>
               <option value="favorites">❤️ Favorites</option>
-              <option value="top">🔥 Top Hits</option>
-              <option value="new">✨ New Releases</option>
             </select>
           </div>
         </div>
 
         <div class="text-center mb-8 opacity-50 text-sm font-semibold tracking-wide uppercase">
             <span x-text="filteredGames.length"></span> titles available
-        </div>
-
-        <div x-show="loading" class="text-center py-20">
-          <div class="loader"></div>
-          <p class="mt-4 opacity-60 font-medium">Syncing Library...</p>
         </div>
 
         <div x-show="!loading && filteredGames.length === 0" class="text-center py-20">
@@ -221,29 +217,29 @@
             <p class="opacity-60 font-medium" x-text="getEmptyMessage()"></p>
         </div>
 
-        <div x-show="!loading && displayedGames.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+        <div x-show="displayedGames.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
           <template x-for="(game, index) in displayedGames" :key="game.name + index">
-            
-            <div x-data="{ shown: false }" 
+
+            <div x-data="{ shown: false }"
                  x-intersect:enter.margin.200px="shown = true"
                  x-intersect:leave.margin.200px="shown = false"
-                 class="neu-flat p-4 cursor-pointer flex flex-col items-center group relative" 
+                 class="neu-flat p-4 cursor-pointer flex flex-col items-center group relative"
                  @click="openGame(game)">
-              
+
               <div class="absolute top-2 right-2 flex gap-2 z-20">
-                <button 
-                    @click.stop="toggleFavorite(game)" 
-                    class="neu-btn-sm" 
+                <button
+                    @click.stop="toggleFavorite(game)"
+                    class="neu-btn-sm"
                     :class="isFavorite(game) ? 'active-fav' : ''"
                     title="Add to Favorites"
                 >
                     <i class="fa-heart" :class="isFavorite(game) ? 'fa-solid' : 'fa-regular'"></i>
                 </button>
-                
+
                 <template x-if="filterCategory === 'recent'">
-                    <button 
-                        @click.stop="removeRecent(game)" 
-                        class="neu-btn-sm danger" 
+                    <button
+                        @click.stop="removeRecent(game)"
+                        class="neu-btn-sm danger"
                         title="Remove from Recent"
                     >
                         <i class="fa-solid fa-xmark"></i>
@@ -252,29 +248,25 @@
               </div>
 
               <div class="w-full aspect-square rounded-2xl overflow-hidden mb-4 relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#1a1c23]">
-                
-                <template x-if="shown && !popupOpen">
-                  <img 
-                    :src="getGameImage(game)" 
-                    @error="$el.src = 'https://tse2.mm.bing.net/th?q=' + encodeURIComponent(game.name + ' icon, square cropped')"
-                    :alt="game.name" 
-                    class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
-                  /> 
+
+                <template x-if="shown">
+                  <img
+                    :src="getGameImage(game)"
+                    @error="$el.src = 'https://tse2.mm.bing.net/th?q=' + encodeURIComponent(game.name + ' game logo')"
+                    :alt="game.name"
+                    loading="lazy"
+                    class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+                  />
                 </template>
-                
-                <div class="absolute top-2 left-2 flex flex-col gap-1">
-                  <template x-if="game.top"><span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-md font-bold shadow-md">HOT</span></template>
-                  <template x-if="game.new"><span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-md font-bold shadow-md">NEW</span></template>
-                </div>
               </div>
 
               <p class="text-sm font-semibold text-center truncate w-full px-2" x-text="game.name"></p>
             </div>
           </template>
         </div>
-        
-        <div x-show="!loading && displayedGames.length < filteredGames.length" 
-             x-intersect="loadMore()" 
+
+        <div x-show="displayedGames.length < filteredGames.length"
+             x-intersect="loadMore()"
              class="w-full text-center py-12 mt-8 opacity-60 font-medium">
              <div class="loader mb-4"></div>
              Loading more games...
@@ -284,10 +276,10 @@
       <div class="popup-overlay" x-show="popupOpen" x-cloak @click.self="closePopup()">
         <div class="popup-content">
             <div class="flex items-center justify-between px-6 py-4 bg-[var(--bg-color)] border-b border-[rgba(0,0,0,0.05)]">
-                <div style="width: 140px"></div> 
-                
+                <div style="width: 140px"></div>
+
                 <h2 class="text-lg font-bold truncate text-center flex-1" x-text="currentGame?.name"></h2>
-                
+
                 <div class="flex gap-4 w-[140px] justify-end">
                     <button class="neu-btn" @click="refreshGame()" title="Refresh">
                         <i class="fa-solid fa-rotate-right text-sm"></i>
@@ -305,25 +297,25 @@
                 <div x-show="gameLoading" class="absolute inset-0 flex items-center justify-center">
                     <div class="loader border-t-blue-500"></div>
                 </div>
-                <iframe x-ref="gameFrame" class="w-full h-full border-none block"></iframe>
+                <iframe x-ref="gameFrame" class="w-full h-full border-none block" allowfullscreen></iframe>
             </div>
         </div>
       </div>
 
     </div>
 
-    <script>
-      const cdnUrl = "https://lunaar.org";
-      const PROXY_URL = "https://api.codetabs.com/v1/proxy/?quest=";
+    <!-- Hardcoded game library. No JSON fetch, no proxy. -->
+    <script src="../games/Jsonfile.json"></script>
 
+    <script>
       function gamesApp() {
         return {
           allGames: [],
           recentGames: [],
-          favoriteGames: [], 
+          favoriteGames: [],
           filteredGames: [],
           displayLimit: 24, // Starting limit for infinite scroll
-          
+
           searchQuery: "",
           filterCategory: "all",
           searchPlaceholder: "Loading...",
@@ -338,11 +330,10 @@
               return this.filteredGames.slice(0, this.displayLimit);
           },
 
-          async init() {
+          init() {
             this.theme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', this.theme);
 
-            // ---> THE FIX: Watch for state changes and update securely <---
             this.$watch('filterCategory', () => {
                 this.applyFilters();
             });
@@ -356,30 +347,11 @@
             const savedFavs = localStorage.getItem('favoriteGames');
             if (savedFavs) this.favoriteGames = JSON.parse(savedFavs);
 
-            try {
-              const [localRes, extraRes] = await Promise.allSettled([
-                fetch("../json/games.json").then(r => r.json()),
-                fetch("../json/extragames.json").then(r => r.json())
-              ]);
+            // Games come straight from the hardcoded GAMES_LIST array (games_array.js)
+            this.allGames = [...GAMES_LIST].sort((a, b) => a.name.localeCompare(b.name));
 
-              let combined = [];
-              if (localRes.status === 'fulfilled') combined = [...combined, ...localRes.value];
-              if (extraRes.status === 'fulfilled') combined = [...combined, ...extraRes.value];
-
-              this.allGames = combined.sort((a, b) => {
-                if (a.top && !b.top) return -1;
-                if (!a.top && b.top) return 1;
-                if (a.new && !b.new) return -1;
-                if (!a.new && b.new) return 1;
-                return a.name.localeCompare(b.name);
-              });
-
-              this.applyFilters();
-            } catch (e) {
-              console.error("Load failed", e);
-            } finally {
-              this.loading = false;
-            }
+            this.applyFilters();
+            this.loading = false;
           },
 
           toggleTheme() {
@@ -399,7 +371,7 @@
                 this.favoriteGames.push(game);
             }
             localStorage.setItem('favoriteGames', JSON.stringify(this.favoriteGames));
-            
+
             if (this.filterCategory === 'favorites') {
                 this.applyFilters();
             }
@@ -408,15 +380,14 @@
           removeRecent(game) {
             this.recentGames = this.recentGames.filter(g => g.name !== game.name);
             localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
-            this.applyFilters(); 
+            this.applyFilters();
           },
 
           applyFilters() {
             const query = this.searchQuery.toLowerCase();
             let sourceList = [];
-            
-            // Explicitly set sourceList to avoid bleeding references
-            if (this.filterCategory === 'all' || this.filterCategory === 'top' || this.filterCategory === 'new') {
+
+            if (this.filterCategory === 'all') {
                 sourceList = this.allGames;
             } else if (this.filterCategory === 'recent') {
                 sourceList = this.recentGames;
@@ -424,24 +395,15 @@
                 sourceList = this.favoriteGames;
             }
 
-            this.filteredGames = sourceList.filter(g => {
-              const matchesSearch = g.name.toLowerCase().includes(query);
-              let matchesCategory = true;
-              
-              if (this.filterCategory === 'top') matchesCategory = g.top === true;
-              if (this.filterCategory === 'new') matchesCategory = g.new === true;
-              
-              return matchesSearch && matchesCategory;
-            });
-            
+            this.filteredGames = sourceList.filter(g => g.name.toLowerCase().includes(query));
+
             // Reset pagination limit anytime filters change
-            this.displayLimit = 24; 
+            this.displayLimit = 24;
             this.searchPlaceholder = `Search ${sourceList.length} games...`;
           },
-          
+
           loadMore() {
             if (this.displayLimit < this.filteredGames.length) {
-                // Short timeout to let the UI update and give a loading illusion safely
                 setTimeout(() => {
                     this.displayLimit += 24;
                 }, 200);
@@ -454,82 +416,36 @@
             return "No games found.";
           },
 
-         getGameImage(game) {
-          if (!game.image) {
-            return `https://tse2.mm.bing.net/th?q=${encodeURIComponent(game.name + ' logo icon')}`;
-          }
-          if (game.image?.startsWith("http")) return game.image;
-          if (game.proxy) return `${cdnUrl}/media/games/${game.image}`;
-          const folder = game.url?.split("/")[0] || "";
-          return `${cdnUrl}/cdn/${folder}/${game.image}`;
-         },
+          // Thumbnails are just a Bing image search for the game's name - no local
+          // image assets and no JSON metadata are used.
+          getGameImage(game) {
+            return `https://tse2.mm.bing.net/th?q=${encodeURIComponent(game.name + ' "game" icon')}`;
+          },
 
-          async openGame(game) {
+          openGame(game) {
             this.currentGame = game;
-            
+
             this.recentGames = this.recentGames.filter(g => g.name !== game.name);
             this.recentGames.unshift(game);
             if (this.recentGames.length > 50) this.recentGames.pop();
             localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
 
-            // Setting this immediately triggers the background images to unmount
             this.popupOpen = true;
             this.gameLoading = true;
-            await this.$nextTick();
-            
-            let targetUrl = game.url;
-            if (!targetUrl.startsWith('http')) {
-               targetUrl = game.proxy ? targetUrl : `${cdnUrl}/cdn/${game.url}/`;
-            }
-            this.loadWithProxyLogic(targetUrl);
-          },
 
-          async loadWithProxyLogic(url) {
-            const frame = this.$refs.gameFrame;
-            try {
-                if (url.includes("jsdelivr")) {
-                    const res = await fetch(url);
-                    const html = await res.text();
-                    const frameDoc = frame.contentDocument || frame.contentWindow.document;
-                    frameDoc.open();
-                    frameDoc.write(html);
-                    frameDoc.close();
-                } else {
-                    const response = await fetch(PROXY_URL + encodeURIComponent(url));
-                    const html = await response.text();
-                    const frameDoc = frame.contentDocument || frame.contentWindow.document;
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    let base = doc.createElement('base');
-                    base.href = url;
-                    doc.head.prepend(base);
-                    frameDoc.open();
-                    frameDoc.write(doc.documentElement.innerHTML);
-                    frameDoc.close();
-                    frameDoc.querySelectorAll('a').forEach(link => {
-                        link.onclick = (e) => {
-                            if(link.href.startsWith('http')) {
-                                e.preventDefault();
-                                this.loadWithProxyLogic(link.href);
-                            }
-                        };
-                    });
-                }
-                this.gameLoading = false;
-            } catch (err) {
-                console.error("Proxy Load Error", err);
-                frame.src = PROXY_URL + encodeURIComponent(url);
-                this.gameLoading = false;
-            }
+            // Load the game's URL directly into the iframe. No proxy fetching or
+            // HTML rewriting - the iframe just navigates straight to game.url.
+            this.$nextTick(() => {
+              const frame = this.$refs.gameFrame;
+              frame.onload = () => { this.gameLoading = false; };
+              frame.src = game.url;
+            });
           },
 
           refreshGame() {
             this.gameLoading = true;
-            let targetUrl = this.currentGame.url;
-            if (!targetUrl.startsWith('http')) {
-               targetUrl = `${cdnUrl}/cdn/${this.currentGame.url}/`;
-            }
-            this.loadWithProxyLogic(targetUrl);
+            const frame = this.$refs.gameFrame;
+            frame.src = this.currentGame.url;
           },
 
           closePopup() {
