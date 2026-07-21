@@ -14,39 +14,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-      /* --- CORE VARIABLES --- */
       :root {
-        /* Light Theme (Default) */
         --bg-color: #e0e5ec;
         --text-color: #4a5568;
-        --primary-color: #4c68ff;
+        --primary-color: #a76cff;
         --secondary-bg: #e0e5ec;
         --danger-color: #ff4c4c;
-
-        /* Neumorphic Shadows (Light) */
         --shadow-outer: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
         --shadow-inner: inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8);
-
-        /* Button specific */
         --btn-shadow: 6px 6px 10px 0 rgba(163,177,198, 0.7), -6px -6px 10px 0 rgba(255,255,255, 0.8);
         --btn-shadow-active: inset 4px 4px 8px 0 rgba(163,177,198, 0.7), inset -4px -4px 8px 0 rgba(255,255,255, 0.8);
-
         --border-radius: 20px;
         --font-stack: 'Inter', sans-serif;
       }
 
-      /* Dark Mode Overrides */
       [data-theme="dark"] {
         --bg-color: #212529;
         --text-color: #e2e8f0;
-        --primary-color: #6c80ff;
+        --primary-color: #a76cff;
         --secondary-bg: #212529;
         --danger-color: #ff6b6b;
-
-        /* Neumorphic Shadows (Dark) */
+      
         --shadow-outer: 7px 7px 15px rgba(0,0,0,0.5), -7px -7px 15px rgba(255,255,255,0.05);
         --shadow-inner: inset 5px 5px 10px rgba(0,0,0,0.5), inset -5px -5px 10px rgba(255,255,255,0.05);
-
+      
         --btn-shadow: 6px 6px 10px rgba(0,0,0,0.5), -6px -6px 10px rgba(255,255,255,0.05);
         --btn-shadow-active: inset 4px 4px 8px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(255,255,255,0.05);
       }
@@ -58,8 +49,6 @@
         transition: background-color 0.1s ease, color 0.1s ease;
       }
 
-      /* --- NEUMORPHIC UTILITY CLASSES --- */
-
       .neu-flat {
         background: var(--bg-color);
         box-shadow: var(--shadow-outer);
@@ -67,10 +56,7 @@
         border: 1px solid transparent;
         transition: all 0.3s ease;
       }
-
-      .neu-flat:hover {
-        transform: translateY(-3px);
-      }
+      .neu-flat:hover { transform: translateY(-2px); }
 
       .neu-pressed {
         background: var(--bg-color);
@@ -80,37 +66,27 @@
         color: var(--text-color);
       }
 
-      /* Standard Button */
       .neu-btn {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
+        width: 45px; height: 45px; border-radius: 50%;
         background: var(--bg-color);
         box-shadow: var(--btn-shadow);
         display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-        aspect-ratio: 1/1;
+        flex-shrink: 0; aspect-ratio: 1/1;
         color: var(--primary-color);
         transition: all 0.2s ease;
-        cursor: pointer;
-        border: none; outline: none;
+        cursor: pointer; border: none; outline: none;
       }
 
-      /* Mini Button for Cards */
       .neu-btn-sm {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
+        width: 32px; height: 32px; border-radius: 50%;
         background: var(--bg-color);
         box-shadow: var(--btn-shadow);
         display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-        aspect-ratio: 1/1;
+        flex-shrink: 0; aspect-ratio: 1/1;
         font-size: 0.8rem;
         color: var(--text-color);
         transition: all 0.2s ease;
-        cursor: pointer;
-        border: none; outline: none;
+        cursor: pointer; border: none; outline: none;
         z-index: 10;
       }
 
@@ -119,14 +95,8 @@
         transform: scale(0.95);
       }
 
-      .neu-btn-sm.active-fav {
-        color: #e91e63; /* Pink for favorites */
-        box-shadow: var(--btn-shadow-active);
-      }
-
-      .neu-btn-sm.danger:hover {
-        color: var(--danger-color);
-      }
+      .neu-btn-sm.active-fav { color: #e91e63; box-shadow: var(--btn-shadow-active); }
+      .neu-btn-sm.danger:hover { color: var(--danger-color); }
 
       select {
         background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%234c68ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
@@ -135,7 +105,6 @@
         background-size: 1em;
       }
 
-      /* Popup System */
       .popup-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.8);
@@ -162,6 +131,39 @@
         margin: 0 auto;
       }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+      /* --- GAME BAR (LIST ROW) STYLES --- */
+      .game-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+      }
+      .game-bar-index {
+        width: 2.5rem;
+        text-align: center;
+        font-weight: 700;
+        opacity: 0.35;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+      }
+      .game-bar-icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        color: var(--primary-color);
+        background: var(--bg-color);
+        box-shadow: var(--shadow-inner);
+      }
+      .game-bar-name {
+        flex: 1;
+        font-weight: 600;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     </style>
   </head>
 
@@ -178,12 +180,9 @@
             </h1>
             <p class="mt-2 text-sm opacity-60 font-medium">Twilight Edition</p>
         </div>
- <!--       <button @click="toggleTheme()" class="neu-btn absolute top-8 right-8" title="Toggle theme">
-          <i class="fa-solid" :class="theme === 'light' ? 'fa-moon' : 'fa-sun'"></i>-->
-        </button>
       </header>
 
-      <main class="container mx-auto px-6 pb-12 max-w-7xl">
+      <main class="container mx-auto px-6 pb-12 max-w-4xl">
         <div class="mb-10 flex flex-col md:flex-row gap-6 items-center">
           <div class="flex-1 w-full">
             <input
@@ -217,16 +216,20 @@
             <p class="opacity-60 font-medium" x-text="getEmptyMessage()"></p>
         </div>
 
-        <div x-show="displayedGames.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+        <div x-show="displayedGames.length > 0" class="flex flex-col gap-3">
           <template x-for="(game, index) in displayedGames" :key="game.name + index">
 
-            <div x-data="{ shown: false }"
-                 x-intersect:enter.margin.200px="shown = true"
-                 x-intersect:leave.margin.200px="shown = false"
-                 class="neu-flat p-4 cursor-pointer flex flex-col items-center group relative"
-                 @click="openGame(game)">
+            <div class="neu-flat game-bar group" @click="openGame(game)">
 
-              <div class="absolute top-2 right-2 flex gap-2 z-20">
+              <span class="game-bar-index" x-text="index + 1"></span>
+
+              <div class="game-bar-icon">
+                <i class="fa-solid fa-gamepad"></i>
+              </div>
+
+              <p class="game-bar-name" x-text="game.name"></p>
+
+              <div class="flex gap-2 flex-shrink-0">
                 <button
                     @click.stop="toggleFavorite(game)"
                     class="neu-btn-sm"
@@ -245,22 +248,11 @@
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </template>
+
+                <button class="neu-btn-sm" title="Play" @click.stop="openGame(game)">
+                    <i class="fa-solid fa-play"></i>
+                </button>
               </div>
-
-              <div class="w-full aspect-square rounded-2xl overflow-hidden mb-4 relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#1a1c23]">
-
-                <template x-if="shown">
-                  <img
-                    :src="getGameImage(game)"
-                    @error="$el.src = 'https://tse2.mm.bing.net/th?q=' + encodeURIComponent(game.name + ' game logo')"
-                    :alt="game.name"
-                    loading="lazy"
-                    class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-                </template>
-              </div>
-
-              <p class="text-sm font-semibold text-center truncate w-full px-2" x-text="game.name"></p>
             </div>
           </template>
         </div>
@@ -277,9 +269,7 @@
         <div class="popup-content">
             <div class="flex items-center justify-between px-6 py-4 bg-[var(--bg-color)] border-b border-[rgba(0,0,0,0.05)]">
                 <div style="width: 140px"></div>
-
                 <h2 class="text-lg font-bold truncate text-center flex-1" x-text="currentGame?.name"></h2>
-
                 <div class="flex gap-4 w-[140px] justify-end">
                     <button class="neu-btn" @click="refreshGame()" title="Refresh">
                         <i class="fa-solid fa-rotate-right text-sm"></i>
@@ -314,7 +304,7 @@
           recentGames: [],
           favoriteGames: [],
           filteredGames: [],
-          displayLimit: 24, // Starting limit for infinite scroll
+          displayLimit: 40,
 
           searchQuery: "",
           filterCategory: "all",
@@ -325,7 +315,6 @@
           currentGame: null,
           theme: 'light',
 
-          // Computes just the slice of games to display to avoid DOM overloading
           get displayedGames() {
               return this.filteredGames.slice(0, this.displayLimit);
           },
@@ -334,12 +323,8 @@
             this.theme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', this.theme);
 
-            this.$watch('filterCategory', () => {
-                this.applyFilters();
-            });
-            this.$watch('searchQuery', () => {
-                this.applyFilters();
-            });
+            this.$watch('filterCategory', () => { this.applyFilters(); });
+            this.$watch('searchQuery', () => { this.applyFilters(); });
 
             const savedRecents = localStorage.getItem('recentGames');
             if (savedRecents) this.recentGames = JSON.parse(savedRecents);
@@ -347,7 +332,6 @@
             const savedFavs = localStorage.getItem('favoriteGames');
             if (savedFavs) this.favoriteGames = JSON.parse(savedFavs);
 
-            // Games come straight from the hardcoded GAMES_LIST array (games_array.js)
             this.allGames = [...GAMES_LIST].sort((a, b) => a.name.localeCompare(b.name));
 
             this.applyFilters();
@@ -397,15 +381,14 @@
 
             this.filteredGames = sourceList.filter(g => g.name.toLowerCase().includes(query));
 
-            // Reset pagination limit anytime filters change
-            this.displayLimit = 24;
+            this.displayLimit = 40;
             this.searchPlaceholder = `Search ${sourceList.length} games...`;
           },
 
           loadMore() {
             if (this.displayLimit < this.filteredGames.length) {
                 setTimeout(() => {
-                    this.displayLimit += 24;
+                    this.displayLimit += 40;
                 }, 200);
             }
           },
@@ -414,12 +397,6 @@
             if (this.filterCategory === 'recent') return "You haven't played any games yet!";
             if (this.filterCategory === 'favorites') return "No favorites yet. Click the heart on a game to add it!";
             return "No games found.";
-          },
-
-          // Thumbnails are just a Bing image search for the game's name - no local
-          // image assets and no JSON metadata are used.
-          getGameImage(game) {
-            return `https://tse2.mm.bing.net/th?q=${encodeURIComponent(game.name + ' "game" icon')}`;
           },
 
           openGame(game) {
@@ -433,8 +410,6 @@
             this.popupOpen = true;
             this.gameLoading = true;
 
-            // Load the game's URL directly into the iframe. No proxy fetching or
-            // HTML rewriting - the iframe just navigates straight to game.url.
             this.$nextTick(() => {
               const frame = this.$refs.gameFrame;
               frame.onload = () => { this.gameLoading = false; };
