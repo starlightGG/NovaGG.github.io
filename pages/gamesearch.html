@@ -679,26 +679,26 @@ function applyTheme(theme) {
     }
 }
 
-function loadSavedTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme== 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    } else if (savedTheme === 'light') {
-        document.documentElement.removeAttribute('data-theme');
-    } else {
-        // optional: check system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-        }
-    }
-}
-
-// Call this when DOM loads
-loadSavedTheme();
+        // 1. APPLY THEME IMMEDIATELY
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme == 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch (e) { console.log("LocalStorage access denied"); }
+        })();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+        });
         searchBar.addEventListener('keyup', filterGames);
         categoryFilter.addEventListener('change', filterGames);
         filterGames();
