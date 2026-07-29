@@ -405,24 +405,26 @@
         let isCooldown = false;
         let lastReportData = null; // Store data for copying
 
-        // --- Iframe Theme Logic ---
-        function applyTheme() {
-            const currentTheme = localStorage.getItem('theme');
-            if (currentTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-        }
-
-        applyTheme();
-
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'theme') {
-                applyTheme();
+        // 1. APPLY THEME IMMEDIATELY
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme == 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch (e) { console.log("LocalStorage access denied"); }
+        })();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
             }
         });
-
         // --- Custom Modal Logic ---
         function showModal(title, message) {
             document.getElementById('modalTitle').innerText = title;
