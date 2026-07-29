@@ -611,8 +611,8 @@ const App = () => {
         e('div', { className: 'settings-group-title', style: { width: '90%', maxWidth: '800px', marginTop: '30px' } }, 'System & Tools'),
         e('div', { className: 'menu-buttons', style: { marginTop: '10px' } },
             e('button', { onClick: () => openGame('pages/diagnostic') }, e('i', { className: 'fas fa-chart-bar' }), 'Diagnostics'),
-            e('button', { onClick: () => window.open('pages/aihelper.html') }, e('i', { className: 'fas fa-robot' }), 'AI Helper'),
-            e('button', { onClick: () => window.location.href = 'pages/terms.html' }, e('i', { className: 'fas fa-file-contract' }), 'Terms')
+            e('button', { onClick: () => openGame('pages/aihelper.html',true) }, e('i', { className: 'fas fa-robot' }), 'AI Helper'),
+            e('button', { onClick: () => openGame('pages/terms.html',true) }, e('i', { className: 'fas fa-file-contract' }), 'Terms')
         )
     );
 
