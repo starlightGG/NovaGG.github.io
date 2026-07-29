@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loading...</title>
     
-<!-- better global-->
-    
-    <script src="../js/global.js"></script>
-    <script src="../js/settings.js"></script>
-    <script id="cloning-script" src="../js/cloner.js"></script>  
-    <script src="../js/fixing.js"></script>
+
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
@@ -282,15 +277,26 @@
 <body>
 
     <script>
-        // 1. APPLY THEME IMMEDIATELY (Prevents Flash)
+        // 1. APPLY THEME IMMEDIATELY
         (function() {
             try {
                 const storedTheme = localStorage.getItem('theme');
-                if (storedTheme === 'dark') {
+                if (storedTheme == 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
                 }
-            } catch (e) {}
+            } catch (e) { console.log("LocalStorage access denied"); }
         })();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+        });
     </script>
 
     <div class="main-wrapper">
