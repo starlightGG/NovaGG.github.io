@@ -461,9 +461,7 @@
       }
     });
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (!localStorage.getItem('theme')) applyTheme();
-    });
+
 
     // --- Utilities ---
     const $ = s => document.querySelector(s);
