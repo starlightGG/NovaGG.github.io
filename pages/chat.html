@@ -7,7 +7,6 @@
     <script src="../js/global.js"></script>
     <script id="cloning-script" src="../js/cloner.js"></script>
     <script src="../js/settings.js"></script>
-    <script src="../js/fixing.js"></script>
 
 <style>
     /* --- 1. Core Variables (Light Default & Nova Cosmic Dark) --- */
@@ -368,14 +367,26 @@
 <body>
 
     <script>
+        // 1. APPLY THEME IMMEDIATELY
         (function() {
             try {
                 const storedTheme = localStorage.getItem('theme');
-                if (storedTheme === 'dark') {
+                if (storedTheme == 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
                 }
-            } catch (e) {}
+            } catch (e) { console.log("LocalStorage access denied"); }
         })();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+        });
     </script>
 
     <div class="main-app-container">
