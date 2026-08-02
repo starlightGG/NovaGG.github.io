@@ -1,440 +1,519 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NovaGG</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
     <link rel="icon" type="image/png" href="media/favicon.png">
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js">
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+    </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-      :root {
-        --bg-color: #e0e5ec;
-        --text-color: #4a5568;
-        --primary-color: #6c93ff;
-        --secondary-bg: #e0e5ec;
-        --danger-color: #ff4c4c;
-        --shadow-outer: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
-        --shadow-inner: inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8);
-        --btn-shadow: 6px 6px 10px 0 rgba(163,177,198, 0.7), -6px -6px 10px 0 rgba(255,255,255, 0.8);
-        --btn-shadow-active: inset 4px 4px 8px 0 rgba(163,177,198, 0.7), inset -4px -4px 8px 0 rgba(255,255,255, 0.8);
-        --border-radius: 20px;
-        --font-stack: 'Inter', sans-serif;
-      }
+        /* ----- CORE VARIABLES (matches Nova Hub exactly) ----- */
+        :root {
+            --bg-color: #e0e5ec;
+            --text-color: #333333;
+            --primary-color: #4c68ff;
+            --primary-light: #7c90ff;
+            --primary-dark: #3a50cc;
+            --secondary-bg: #e0e5ec;
+            --glass-color: rgba(255, 255, 255, 0.4);
+            --card-glass: rgba(255, 255, 255, 0.65);
+            --line-color: rgba(0, 0, 0, 0.07);
+            --star-color: #E5B500;
+            --text-secondary: #666666;
+            --fav-color: #e91e63;
+            --danger-color: #ff4c4c;
+            --border-radius: 20px;
+            --font-stack: 'Inter', sans-serif;
 
-      [data-theme="dark"] {
-        --bg-color: #212529;
-        --text-color: #e2e8f0;
-        --primary-color: #a76cff;
-        --secondary-bg: #212529;
-        --danger-color: #ff6b6b;
-      
-        --shadow-outer: 7px 7px 15px rgba(0,0,0,0.5), -7px -7px 15px rgba(255,255,255,0.05);
-        --shadow-inner: inset 5px 5px 10px rgba(0,0,0,0.5), inset -5px -5px 10px rgba(255,255,255,0.05);
-      
-        --btn-shadow: 6px 6px 10px rgba(0,0,0,0.5), -6px -6px 10px rgba(255,255,255,0.05);
-        --btn-shadow-active: inset 4px 4px 8px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(255,255,255,0.05);
-      }
+            --shadow-outer: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+            --shadow-inner: inset 6px 6px 10px 0 rgba(163, 177, 198, 0.7), inset -6px -6px 10px 0 rgba(255, 255, 255, 0.8);
+            --btn-shadow: 6px 6px 10px 0 rgba(163, 177, 198, 0.7), -6px -6px 10px 0 rgba(255, 255, 255, 0.8);
+            --btn-shadow-active: inset 4px 4px 8px 0 rgba(163, 177, 198, 0.7), inset -4px -4px 8px 0 rgba(255, 255, 255, 0.8);
+        }
 
-      body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        font-family: var(--font-stack);
-        transition: background-color 0.1s ease, color 0.1s ease;
-      }
+        [data-theme="dark"] {
+            --bg-color: #0a0a1a;
+            --text-color: #f0f3ff;
+            --primary-color: #6940c7;
+            --primary-light: #a78bfa;
+            --primary-dark: #6620d4;
+            --secondary-bg: #0f0f23;
+            --glass-color: rgba(15, 25, 45, 0.7);
+            --card-glass: rgba(20, 30, 55, 0.8);
+            --line-color: rgba(139, 92, 246, 0.2);
+            --star-color: #c084fc;
+            --text-secondary: #b0b0d0;
+            --fav-color: #ff6b8b;
+            --danger-color: #ff6b6b;
 
-      .neu-flat {
-        background: var(--bg-color);
-        box-shadow: var(--shadow-outer);
-        border-radius: var(--border-radius);
-        border: 1px solid transparent;
-        transition: all 0.3s ease;
-      }
-      .neu-flat:hover { transform: translateY(-2px); }
+            --shadow-outer: 7px 7px 15px rgba(0, 0, 0, 0.5), -7px -7px 15px rgba(255, 255, 255, 0.05);
+            --shadow-inner: inset 5px 5px 10px rgba(0, 0, 0, 0.5), inset -5px -5px 10px rgba(255, 255, 255, 0.05);
+            --btn-shadow: 6px 6px 10px rgba(0, 0, 0, 0.5), -6px -6px 10px rgba(255, 255, 255, 0.05);
+            --btn-shadow-active: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+        }
 
-      .neu-pressed {
-        background: var(--bg-color);
-        box-shadow: var(--shadow-inner);
-        border-radius: var(--border-radius);
-        border: none;
-        color: var(--text-color);
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      .neu-btn {
-        width: 45px; height: 45px; border-radius: 50%;
-        background: var(--bg-color);
-        box-shadow: var(--btn-shadow);
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; aspect-ratio: 1/1;
-        color: var(--primary-color);
-        transition: all 0.2s ease;
-        cursor: pointer; border: none; outline: none;
-      }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-stack);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            min-height: 100vh;
+        }
 
-      .neu-btn-sm {
-        width: 32px; height: 32px; border-radius: 50%;
-        background: var(--bg-color);
-        box-shadow: var(--btn-shadow);
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; aspect-ratio: 1/1;
-        font-size: 0.8rem;
-        color: var(--text-color);
-        transition: all 0.2s ease;
-        cursor: pointer; border: none; outline: none;
-        z-index: 10;
-      }
+        .neu-flat {
+            background: var(--bg-color);
+            box-shadow: var(--shadow-outer);
+            border-radius: var(--border-radius);
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .neu-flat:hover {
+            transform: translateY(-2px);
+        }
 
-      .neu-btn:active, .neu-btn.active, .neu-btn-sm:active {
-        box-shadow: var(--btn-shadow-active);
-        transform: scale(0.95);
-      }
+        .neu-pressed {
+            background: var(--bg-color);
+            box-shadow: var(--shadow-inner);
+            border-radius: var(--border-radius);
+            border: none;
+            color: var(--text-color);
+        }
 
-      .neu-btn-sm.active-fav { color: #e91e63; box-shadow: var(--btn-shadow-active); }
-      .neu-btn-sm.danger:hover { color: var(--danger-color); }
+        .neu-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            box-shadow: var(--btn-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            aspect-ratio: 1/1;
+            color: var(--primary-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
 
-      select {
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%234c68ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
-        background-repeat: no-repeat;
-        background-position: right 1rem center;
-        background-size: 1em;
-      }
+        .neu-btn-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            box-shadow: var(--btn-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            aspect-ratio: 1/1;
+            font-size: 0.8rem;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            z-index: 10;
+        }
 
-      .popup-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8);
-        z-index: 50;
-        backdrop-filter: blur(5px);
-        display: flex; align-items: center; justify-content: center;
-      }
+        .neu-btn:active,
+        .neu-btn.active,
+        .neu-btn-sm:active {
+            box-shadow: var(--btn-shadow-active);
+            transform: scale(0.95);
+        }
 
-      .popup-content {
-        width: 95%; height: 90%;
-        background: var(--bg-color);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-        display: flex; flex-direction: column;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      }
+        .neu-btn-sm.active-fav {
+            color: var(--fav-color);
+            box-shadow: var(--btn-shadow-active);
+        }
+        .neu-btn-sm.danger:hover {
+            color: var(--danger-color);
+        }
 
-      .loader {
-        border: 4px solid transparent;
-        border-top: 4px solid var(--primary-color);
-        border-radius: 50%;
-        width: 40px; height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* ----- DROPDOWN — using the same clean method as gamesearch ----- */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+            /* Remove default arrow completely */
+            cursor: pointer;
+            position: relative;
+        }
 
-      /* --- GAME BAR (LIST ROW) STYLES --- */
-      .game-bar {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem 1.25rem;
-        cursor: pointer;
-      }
-      .game-bar-index {
-        width: 2.5rem;
-        text-align: center;
-        font-weight: 700;
-        opacity: 0.35;
-        flex-shrink: 0;
-        font-size: 0.9rem;
-      }
-      .game-bar-icon {
-        width: 40px; height: 40px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-        color: var(--primary-color);
-        background: var(--bg-color);
-        box-shadow: var(--shadow-inner);
-      }
-      .game-bar-name {
-        flex: 1;
-        font-weight: 600;
-        font-size: 1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+        /* Custom arrow wrapper using pseudo-element approach */
+        .select-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .select-wrapper::after {
+            content: "▾";
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        [data-theme="dark"] .select-wrapper::after {
+            color: var(--primary-color);
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding-right: 3.5rem;
+            /* Make room for the custom arrow */
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-content {
+            width: 95%;
+            height: 90%;
+            background: var(--bg-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .loader {
+            border: 4px solid transparent;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .game-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+        }
+        .game-bar-index {
+            width: 2.5rem;
+            text-align: center;
+            font-weight: 700;
+            opacity: 0.35;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        .game-bar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--primary-color);
+            background: var(--bg-color);
+            box-shadow: var(--shadow-inner);
+        }
+        .game-bar-name {
+            flex: 1;
+            font-weight: 600;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
-  </head>
+</head>
 
-  <body class="min-h-screen">
+<body>
     <div x-data="gamesApp()" x-init="init()">
 
-      <header class="p-8 relative">
-        <div class="flex flex-col items-center justify-center">
-            <div class="neu-flat p-4 rounded-full mb-4" style="border-radius: 50%;">
-                <img src="../media/favicon.png" alt="Logo" class="w-12 h-12" />
+        <header class="p-8 relative">
+            <div class="flex flex-col items-center justify-center">
+                <div class="neu-flat p-4 rounded-full mb-4" style="border-radius: 50%;">
+                    <img src="../media/favicon.png" alt="Logo" class="w-12 h-12" />
+                </div>
+                <h1 class="text-4xl font-bold tracking-tight text-center">
+                    Nova<span style="color: var(--primary-color)">GG</span>
+                </h1>
+                <p class="mt-2 text-sm opacity-60 font-medium">Twilight Edition</p>
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-center">
-            Nova<span style="color: var(--primary-color)">GG</span>
-            </h1>
-            <p class="mt-2 text-sm opacity-60 font-medium">Twilight Edition</p>
-        </div>
-      </header>
+        </header>
 
-      <main class="container mx-auto px-6 pb-12 max-w-4xl">
-        <div class="mb-10 flex flex-col md:flex-row gap-6 items-center">
-          <div class="flex-1 w-full">
-            <input
-              type="text"
-              x-model="searchQuery"
-              :placeholder="searchPlaceholder"
-              class="neu-pressed w-full px-6 py-4 outline-none transition text-lg"
-            />
-          </div>
+        <main class="container mx-auto px-6 pb-12 max-w-4xl">
+            <div class="mb-10 flex flex-col md:flex-row gap-6 items-center">
+                <div class="flex-1 w-full">
+                    <input type="text" x-model="searchQuery" :placeholder="searchPlaceholder"
+                    class="neu-pressed w-full px-6 py-4 outline-none transition text-lg" />
+                </div>
 
-          <div class="w-full md:w-64">
-            <select
-              x-model="filterCategory"
-              class="neu-flat w-full px-6 py-4 outline-none cursor-pointer appearance-none font-medium"
-            >
-              <option value="all">All Games</option>
-              <option value="recent">🕒 Recent Plays</option>
-              <option value="favorites">❤️ Favorites</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="text-center mb-8 opacity-50 text-sm font-semibold tracking-wide uppercase">
-            <span x-text="filteredGames.length"></span> titles available
-        </div>
-
-        <div x-show="!loading && filteredGames.length === 0" class="text-center py-20">
-            <div class="neu-flat inline-flex p-6 rounded-full text-4xl opacity-40 mb-4" style="border-radius: 50%">
-                <i class="fa-solid fa-ghost"></i>
+                <div class="w-full md:w-64 select-wrapper">
+                    <select x-model="filterCategory" class="neu-flat w-full px-6 py-4 outline-none font-medium">
+                        <option value="all">All Games</option>
+                        <option value="recent">🕒 Recent Plays</option>
+                        <option value="favorites">❤️ Favorites</option>
+                    </select>
+                </div>
             </div>
-            <p class="opacity-60 font-medium" x-text="getEmptyMessage()"></p>
-        </div>
 
-        <div x-show="displayedGames.length > 0" class="flex flex-col gap-3">
-          <template x-for="(game, index) in displayedGames" :key="game.name + index">
+            <div class="text-center mb-8 opacity-50 text-sm font-semibold tracking-wide uppercase">
+                <span x-text="filteredGames.length"></span> titles available
+            </div>
 
-            <div class="neu-flat game-bar group" @click="openGame(game)">
+            <div x-show="!loading && filteredGames.length === 0" class="text-center py-20">
+                <div class="neu-flat inline-flex p-6 rounded-full text-4xl opacity-40 mb-4" style="border-radius: 50%">
+                    <i class="fa-solid fa-ghost"></i>
+                </div>
+                <p class="opacity-60 font-medium" x-text="getEmptyMessage()"></p>
+            </div>
 
-              <span class="game-bar-index" x-text="index + 1"></span>
-
-              <div class="game-bar-icon">
-                <i class="fa-solid fa-gamepad"></i>
-              </div>
-
-              <p class="game-bar-name" x-text="game.name"></p>
-
-              <div class="flex gap-2 flex-shrink-0">
-                <button
-                    @click.stop="toggleFavorite(game)"
-                    class="neu-btn-sm"
-                    :class="isFavorite(game) ? 'active-fav' : ''"
-                    title="Add to Favorites"
-                >
-                    <i class="fa-heart" :class="isFavorite(game) ? 'fa-solid' : 'fa-regular'"></i>
-                </button>
-
-                <template x-if="filterCategory === 'recent'">
-                    <button
-                        @click.stop="removeRecent(game)"
-                        class="neu-btn-sm danger"
-                        title="Remove from Recent"
-                    >
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+            <div x-show="displayedGames.length > 0" class="flex flex-col gap-3">
+                <template x-for="(game, index) in displayedGames" :key="game.name + index">
+                    <div class="neu-flat game-bar group" @click="openGame(game)">
+                        <span class="game-bar-index" x-text="index + 1"></span>
+                        <div class="game-bar-icon">
+                            <i class="fa-solid fa-gamepad"></i>
+                        </div>
+                        <p class="game-bar-name" x-text="game.name"></p>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button @click.stop="toggleFavorite(game)" class="neu-btn-sm" :class="isFavorite(game) ? 'active-fav' : ''" title="Add to Favorites">
+                                <i class="fa-heart" :class="isFavorite(game) ? 'fa-solid' : 'fa-regular'"></i>
+                            </button>
+                            <template x-if="filterCategory === 'recent'">
+                                <button @click.stop="removeRecent(game)" class="neu-btn-sm danger" title="Remove from Recent">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </template>
+                            <button class="neu-btn-sm" title="Play" @click.stop="openGame(game)">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
                 </template>
-
-                <button class="neu-btn-sm" title="Play" @click.stop="openGame(game)">
-                    <i class="fa-solid fa-play"></i>
-                </button>
-              </div>
             </div>
-          </template>
-        </div>
 
-        <div x-show="displayedGames.length < filteredGames.length"
-             x-intersect="loadMore()"
-             class="w-full text-center py-12 mt-8 opacity-60 font-medium">
-             <div class="loader mb-4"></div>
-             Loading more games...
-        </div>
-      </main>
+            <div x-show="displayedGames.length < filteredGames.length" x-intersect="loadMore()" class="w-full text-center py-12 mt-8 opacity-60 font-medium">
+                <div class="loader mb-4"></div>
+                Loading more games…
+            </div>
+        </main>
 
-      <div class="popup-overlay" x-show="popupOpen" x-cloak @click.self="closePopup()">
-        <div class="popup-content">
-            <div class="flex items-center justify-between px-6 py-4 bg-[var(--bg-color)] border-b border-[rgba(0,0,0,0.05)]">
-                <div style="width: 140px"></div>
-                <h2 class="text-lg font-bold truncate text-center flex-1" x-text="currentGame?.name"></h2>
-                <div class="flex gap-4 w-[140px] justify-end">
-                    <button class="neu-btn" @click="refreshGame()" title="Refresh">
-                        <i class="fa-solid fa-rotate-right text-sm"></i>
-                    </button>
-                    <button class="neu-btn" @click="fullscreenPopup()" title="Fullscreen">
-                        <i class="fa-solid fa-expand text-sm"></i>
-                    </button>
-                    <button class="neu-btn text-red-500" @click="closePopup()" title="Close">
-                        <i class="fa-solid fa-times text-lg"></i>
-                    </button>
+        <!-- POPUP -->
+        <div class="popup-overlay" x-show="popupOpen" x-cloak @click.self="closePopup()">
+            <div class="popup-content">
+                <div class="flex items-center justify-between px-6 py-4 bg-[var(--bg-color)] border-b border-[var(--line-color)]">
+                    <div style="width: 140px"></div>
+                    <h2 class="text-lg font-bold truncate text-center flex-1" x-text="currentGame?.name"></h2>
+                    <div class="flex gap-4 w-[140px] justify-end">
+                        <button class="neu-btn" @click="refreshGame()" title="Refresh">
+                            <i class="fa-solid fa-rotate-right text-sm"></i>
+                        </button>
+                        <button class="neu-btn" @click="fullscreenPopup()" title="Fullscreen">
+                            <i class="fa-solid fa-expand text-sm"></i>
+                        </button>
+                        <button class="neu-btn text-red-500" @click="closePopup()" title="Close">
+                            <i class="fa-solid fa-times text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative flex-1 bg-black w-full h-full">
+                    <div x-show="gameLoading" class="absolute inset-0 flex items-center justify-center">
+                        <div class="loader border-t-[var(--primary-color)]"></div>
+                    </div>
+                    <iframe x-ref="gameFrame" class="w-full h-full border-none block" allowfullscreen></iframe>
                 </div>
             </div>
-
-            <div class="relative flex-1 bg-black w-full h-full">
-                <div x-show="gameLoading" class="absolute inset-0 flex items-center justify-center">
-                    <div class="loader border-t-blue-500"></div>
-                </div>
-                <iframe x-ref="gameFrame" class="w-full h-full border-none block" allowfullscreen></iframe>
-            </div>
         </div>
-      </div>
 
     </div>
 
-    <!-- Hardcoded game library. No JSON fetch, no proxy. -->
-    <script src="../games2/Jsonfile.json"></script>
+    <!-- Hardcoded game library — no JSON fetch, no proxy -->
+    <script src="../games2/Jsonfile.json">
+    </script>
 
     <script>
-      function gamesApp() {
-        return {
-          allGames: [],
-          recentGames: [],
-          favoriteGames: [],
-          filteredGames: [],
-          displayLimit: 40,
+        function gamesApp() {
+            return {
+                allGames: [],
+                recentGames: [],
+                favoriteGames: [],
+                filteredGames: [],
+                displayLimit: 40,
 
-          searchQuery: "",
-          filterCategory: "all",
-          searchPlaceholder: "Loading...",
-          loading: true,
-          popupOpen: false,
-          gameLoading: false,
-          currentGame: null,
-          theme: 'light',
+                searchQuery: "",
+                filterCategory: "all",
+                searchPlaceholder: "Loading…",
+                loading: true,
+                popupOpen: false,
+                gameLoading: false,
+                currentGame: null,
+                theme: 'light',
 
-          get displayedGames() {
-              return this.filteredGames.slice(0, this.displayLimit);
-          },
+                get displayedGames() {
+                    return this.filteredGames.slice(0, this.displayLimit);
+                },
 
-          init() {
-            this.theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', this.theme);
+                init() {
+                    // Restore theme from localStorage
+                    this.theme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', this.theme);
 
-            this.$watch('filterCategory', () => { this.applyFilters(); });
-            this.$watch('searchQuery', () => { this.applyFilters(); });
+                    this.$watch('filterCategory', () => { this.applyFilters(); });
+                    this.$watch('searchQuery', () => { this.applyFilters(); });
 
-            const savedRecents = localStorage.getItem('recentGames');
-            if (savedRecents) this.recentGames = JSON.parse(savedRecents);
+                    const savedRecents = localStorage.getItem('recentGames');
+                    if (savedRecents) this.recentGames = JSON.parse(savedRecents);
 
-            const savedFavs = localStorage.getItem('favoriteGames');
-            if (savedFavs) this.favoriteGames = JSON.parse(savedFavs);
+                    const savedFavs = localStorage.getItem('favoriteGames');
+                    if (savedFavs) this.favoriteGames = JSON.parse(savedFavs);
 
-            this.allGames = [...GAMES_LIST].sort((a, b) => a.name.localeCompare(b.name));
+                    this.allGames = [...GAMES_LIST].sort((a, b) => a.name.localeCompare(b.name));
 
-            this.applyFilters();
-            this.loading = false;
-          },
+                    this.applyFilters();
+                    this.loading = false;
+                },
 
-          toggleTheme() {
-            this.theme = this.theme === 'light' ? 'dark' : 'light';
-            localStorage.setItem('theme', this.theme);
-            document.documentElement.setAttribute('data-theme', this.theme);
-          },
+                toggleTheme() {
+                    // Kept for internal use (no button)
+                },
 
-          isFavorite(game) {
-            return this.favoriteGames.some(g => g.name === game.name);
-          },
+                isFavorite(game) {
+                    return this.favoriteGames.some(g => g.name === game.name);
+                },
 
-          toggleFavorite(game) {
-            if (this.isFavorite(game)) {
-                this.favoriteGames = this.favoriteGames.filter(g => g.name !== game.name);
-            } else {
-                this.favoriteGames.push(game);
+                toggleFavorite(game) {
+                    if (this.isFavorite(game)) {
+                        this.favoriteGames = this.favoriteGames.filter(g => g.name !== game.name);
+                    } else {
+                        this.favoriteGames.push(game);
+                    }
+                    localStorage.setItem('favoriteGames', JSON.stringify(this.favoriteGames));
+                    if (this.filterCategory === 'favorites') {
+                        this.applyFilters();
+                    }
+                },
+
+                removeRecent(game) {
+                    this.recentGames = this.recentGames.filter(g => g.name !== game.name);
+                    localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
+                    this.applyFilters();
+                },
+
+                applyFilters() {
+                    const query = this.searchQuery.toLowerCase();
+                    let sourceList = [];
+
+                    if (this.filterCategory === 'all') {
+                        sourceList = this.allGames;
+                    } else if (this.filterCategory === 'recent') {
+                        sourceList = this.recentGames;
+                    } else if (this.filterCategory === 'favorites') {
+                        sourceList = this.favoriteGames;
+                    }
+
+                    this.filteredGames = sourceList.filter(g => g.name.toLowerCase().includes(query));
+                    this.displayLimit = 40;
+                    this.searchPlaceholder = `Search ${sourceList.length} games…`;
+                },
+
+                loadMore() {
+                    if (this.displayLimit < this.filteredGames.length) {
+                        setTimeout(() => {
+                            this.displayLimit += 40;
+                        }, 200);
+                    }
+                },
+
+                getEmptyMessage() {
+                    if (this.filterCategory === 'recent') return "You haven't played any games yet!";
+                    if (this.filterCategory === 'favorites') return "No favorites yet. Click the heart on a game to add it!";
+                    return "No games found.";
+                },
+
+                openGame(game) {
+                    this.currentGame = game;
+
+                    this.recentGames = this.recentGames.filter(g => g.name !== game.name);
+                    this.recentGames.unshift(game);
+                    if (this.recentGames.length > 50) this.recentGames.pop();
+                    localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
+
+                    this.popupOpen = true;
+                    this.gameLoading = true;
+
+                    this.$nextTick(() => {
+                        const frame = this.$refs.gameFrame;
+                        frame.onload = () => { this.gameLoading = false; };
+                        frame.src = game.url;
+                    });
+                },
+
+                refreshGame() {
+                    this.gameLoading = true;
+                    const frame = this.$refs.gameFrame;
+                    frame.src = this.currentGame.url;
+                },
+
+                closePopup() {
+                    this.popupOpen = false;
+                    this.$refs.gameFrame.src = "about:blank";
+                },
+
+                fullscreenPopup() {
+                    this.$refs.gameFrame.requestFullscreen?.();
+                }
             }
-            localStorage.setItem('favoriteGames', JSON.stringify(this.favoriteGames));
-
-            if (this.filterCategory === 'favorites') {
-                this.applyFilters();
-            }
-          },
-
-          removeRecent(game) {
-            this.recentGames = this.recentGames.filter(g => g.name !== game.name);
-            localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
-            this.applyFilters();
-          },
-
-          applyFilters() {
-            const query = this.searchQuery.toLowerCase();
-            let sourceList = [];
-
-            if (this.filterCategory === 'all') {
-                sourceList = this.allGames;
-            } else if (this.filterCategory === 'recent') {
-                sourceList = this.recentGames;
-            } else if (this.filterCategory === 'favorites') {
-                sourceList = this.favoriteGames;
-            }
-
-            this.filteredGames = sourceList.filter(g => g.name.toLowerCase().includes(query));
-
-            this.displayLimit = 40;
-            this.searchPlaceholder = `Search ${sourceList.length} games...`;
-          },
-
-          loadMore() {
-            if (this.displayLimit < this.filteredGames.length) {
-                setTimeout(() => {
-                    this.displayLimit += 40;
-                }, 200);
-            }
-          },
-
-          getEmptyMessage() {
-            if (this.filterCategory === 'recent') return "You haven't played any games yet!";
-            if (this.filterCategory === 'favorites') return "No favorites yet. Click the heart on a game to add it!";
-            return "No games found.";
-          },
-
-          openGame(game) {
-            this.currentGame = game;
-
-            this.recentGames = this.recentGames.filter(g => g.name !== game.name);
-            this.recentGames.unshift(game);
-            if (this.recentGames.length > 50) this.recentGames.pop();
-            localStorage.setItem('recentGames', JSON.stringify(this.recentGames));
-
-            this.popupOpen = true;
-            this.gameLoading = true;
-
-            this.$nextTick(() => {
-              const frame = this.$refs.gameFrame;
-              frame.onload = () => { this.gameLoading = false; };
-              frame.src = game.url;
-            });
-          },
-
-          refreshGame() {
-            this.gameLoading = true;
-            const frame = this.$refs.gameFrame;
-            frame.src = this.currentGame.url;
-          },
-
-          closePopup() {
-            this.popupOpen = false;
-            this.$refs.gameFrame.src = "about:blank";
-          },
-
-          fullscreenPopup() {
-            this.$refs.gameFrame.requestFullscreen?.();
-          }
         }
-      }
-      
 
+        // Listen for theme changes from other tabs
         window.addEventListener('storage', function(e) {
             if (e.key === 'theme') {
                 if (e.newValue === 'dark') {
@@ -445,5 +524,5 @@
             }
         });
     </script>
-  </body>
+</body>
 </html>
