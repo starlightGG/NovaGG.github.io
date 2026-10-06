@@ -21,17 +21,37 @@ if (!localStorage.getItem("proxServer")) {
     localStorage.setItem("proxServer", DEFAULT_WISP);
 }
 
+// Enable Auto-Skip Loading Screen by default if not previously configured
+if (localStorage.getItem('disableLoadingScreen') === null) {
+    localStorage.setItem('disableLoadingScreen', 'true');
+}
+
 // Helper to get all servers (config + custom)
 function getAllWispServers() {
     const customWisps = getStoredWisps();
     return [...WISP_SERVERS, ...customWisps];
 }
 
+// Helper to get search engine query URL
+function getSearchUrl(query) {
+    const engine = localStorage.getItem('searchEngine') || 'duckduckgo';
+    const encoded = encodeURIComponent(query);
+    
+    switch (engine) {
+        case 'brave':
+            return `https://search.brave.com/search?q=${encoded}`;
+        case 'google':
+            return `https://www.google.com/search?q=${encoded}`;
+        case 'duckduckgo':
+        default:
+            return `https://duckduckgo.com/?q=${encoded}`;
+    }
+}
+
 // =====================================================
 // PROACTIVE SERVER HEALTH CHECKING
 // =====================================================
 
-// Ping a wisp server to check if it's responsive
 async function pingWispServer(url, timeout = 2000) {
     return new Promise((resolve) => {
         const start = Date.now();
@@ -60,16 +80,13 @@ async function pingWispServer(url, timeout = 2000) {
     });
 }
 
-// Find the best (fastest working) server from the list
 async function findBestWispServer(servers, currentUrl) {
     if (!servers || servers.length === 0) return currentUrl;
 
-    // Ping all servers in parallel (faster than sequential)
     const results = await Promise.all(
         servers.map(s => pingWispServer(s.url, 2000))
     );
 
-    // Filter to only working servers and sort by latency
     const working = results
         .filter(r => r.success)
         .sort((a, b) => a.latency - b.latency);
@@ -78,11 +95,9 @@ async function findBestWispServer(servers, currentUrl) {
         return working[0].url;
     }
 
-    // If none working, return current or first
     return currentUrl || servers[0]?.url;
 }
 
-// Proactively check and switch to best server on init
 async function initializeWithBestServer() {
     const autoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
     const allServers = getAllWispServers();
@@ -92,8 +107,6 @@ async function initializeWithBestServer() {
     }
 
     const currentUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
-    
-    // Check if current server is working, if not find a better one
     const currentCheck = await pingWispServer(currentUrl, 2000);
     
     if (currentCheck.success) {
@@ -101,7 +114,6 @@ async function initializeWithBestServer() {
         return;
     }
 
-    // Current server is bad, find the fastest working server
     console.log("Init: Current server not responding, finding better server...");
     const best = await findBestWispServer(allServers, currentUrl);
     
@@ -118,7 +130,6 @@ async function initializeWithBestServer() {
 // =====================================================
 const BareMux = window.BareMux ?? { BareMuxConnection: class { setTransport() {} } };
 
-// SINGLETON: Shared resources for all tabs (prevents connection exhaustion)
 let sharedScramjet = null;
 let sharedConnection = null;
 let sharedConnectionReady = false;
@@ -169,11 +180,8 @@ async function getSharedScramjet() {
     try {
         await sharedScramjet.init();
     } catch (err) {
-        // Handle IndexedDB schema errors by clearing cache and retrying
         if (err.message && err.message.includes('IDBDatabase') || err.message && err.message.includes('object stores')) {
             console.warn('Scramjet IndexedDB error, clearing cache and retrying...');
-            
-            // Clear IndexedDB for Scramjet
             try {
                 const dbNames = ['scramjet-data', 'scrambase', 'ScramjetData'];
                 for (const dbName of dbNames) {
@@ -184,8 +192,6 @@ async function getSharedScramjet() {
             } catch (clearErr) {
                 console.warn('Failed to clear IndexedDB:', clearErr);
             }
-            
-            // Reset shared instance and retry
             sharedScramjet = null;
             return getSharedScramjet();
         }
@@ -223,6 +229,7 @@ async function initializeBrowser() {
                     <input class="bar" id="address-bar" autocomplete="off" placeholder="Search or enter URL">
                     <button id="home-btn-nav" title="Home"><i class="fa-solid fa-house"></i></button>
                 </div>
+                <button id="fullscreen-btn" title="Fullscreen Tab"><i class="fa-solid fa-expand"></i></button>
                 <button id="devtools-btn" title="DevTools"><i class="fa-solid fa-code"></i></button>
                 <button id="wisp-settings-btn" title="Proxy Settings"><i class="fa-solid fa-gear"></i></button>
             </div>
@@ -245,7 +252,6 @@ async function initializeBrowser() {
             </div>
         </div>`;
 
-    // Cache DOM elements
     const elements = {
         backBtn: document.getElementById('back-btn'),
         fwdBtn: document.getElementById('fwd-btn'),
@@ -254,7 +260,6 @@ async function initializeBrowser() {
         skipBtn: document.getElementById('skip-btn')
     };
 
-    // Bind navigation events
     elements.backBtn.onclick = () => getActiveTab()?.frame.back();
     elements.fwdBtn.onclick = () => getActiveTab()?.frame.forward();
     elements.reloadBtn.onclick = () => getActiveTab()?.frame.reload();
@@ -263,25 +268,21 @@ async function initializeBrowser() {
         if (!tab) return;
     
         const localUrl = getBasePath() + 'NT.html';
-        
-        // Directly set the raw iframe src (bypasses proxy)
         tab.frame.frame.src = localUrl;
         
-        // Manually update tab state so UI doesn’t get confused
         tab.url = localUrl;
         tab.loading = false;
         tab.title = "New Tab";
         tab.favicon = null;
         
-        // Hide loading indicator and refresh UI
         showIframeLoading(false);
         updateTabsUI();
         updateAddressBar();
     };
+    document.getElementById('fullscreen-btn').onclick = toggleTabFullscreen;
     document.getElementById('devtools-btn').onclick = toggleDevTools;
     document.getElementById('wisp-settings-btn').onclick = openSettings;
 
-    // Skip button logic
     elements.skipBtn.onclick = () => {
         const tab = getActiveTab();
         if (tab) {
@@ -290,11 +291,9 @@ async function initializeBrowser() {
         }
     };
 
-    // Address bar events
     elements.addrBar.onkeyup = (e) => e.key === 'Enter' && handleSubmit();
     elements.addrBar.onfocus = () => elements.addrBar.select();
 
-    // Handle navigation messages
     window.addEventListener('message', (e) => {
         if (e.data?.type === 'navigate') handleSubmit(e.data.url);
     });
@@ -302,6 +301,46 @@ async function initializeBrowser() {
     createTab(true);
     checkHashParameters();
 }
+
+function toggleTabFullscreen() {
+    const tab = getActiveTab();
+    if (!tab || !tab.frame || !tab.frame.frame) return;
+
+    const iframe = tab.frame.frame;
+    const btnIcon = document.querySelector('#fullscreen-btn i');
+
+    if (!document.fullscreenElement) {
+        const requestFS = iframe.requestFullscreen || 
+                          iframe.webkitRequestFullscreen || 
+                          iframe.mozRequestFullScreen || 
+                          iframe.msRequestFullscreen;
+
+        if (requestFS) {
+            requestFS.call(iframe).then(() => {
+                if (btnIcon) btnIcon.className = "fa-solid fa-compress";
+            }).catch(err => console.error("Fullscreen error:", err));
+        }
+    } else {
+        const exitFS = document.exitFullscreen || 
+                       document.webkitExitFullscreen || 
+                       document.mozCancelFullScreen || 
+                       document.msExitFullscreen;
+
+        if (exitFS) {
+            exitFS.call(document).then(() => {
+                if (btnIcon) btnIcon.className = "fa-solid fa-expand";
+            }).catch(err => console.error("Exit fullscreen error:", err));
+        }
+    }
+}
+
+// Sync fullscreen button icon when exiting via Esc key
+document.addEventListener('fullscreenchange', () => {
+    const btnIcon = document.querySelector('#fullscreen-btn i');
+    if (btnIcon) {
+        btnIcon.className = document.fullscreenElement ? "fa-solid fa-compress" : "fa-solid fa-expand";
+    }
+});
 
 // =====================================================
 // TAB MANAGEMENT
@@ -382,8 +421,15 @@ function createTab(makeActive = true) {
 }
 
 function showIframeLoading(show, url = '') {
+    const disableLoadingScreen = localStorage.getItem('disableLoadingScreen') !== 'false';
     const loader = document.getElementById("loading");
     if (!loader) return;
+
+    if (disableLoadingScreen && show) {
+        loader.style.display = "none";
+        getActiveTab()?.frame.frame.classList.remove('loading');
+        return;
+    }
 
     loader.style.display = show ? "flex" : "none";
     getActiveTab()?.frame.frame.classList.toggle('loading', show);
@@ -476,10 +522,10 @@ function handleSubmit(url) {
     let input = url ?? document.getElementById("address-bar").value.trim();
     if (!input) return;
 
-    if (!input.startsWith('http')) {
+    if (!input.startsWith('http://') && !input.startsWith('https://')) {
         input = input.includes('.') && !input.includes(' ') 
             ? `https://${input}`
-            : `https://search.brave.com/search?q=${encodeURIComponent(input)}`;
+            : getSearchUrl(input);
     }
     
     tab.loading = true;
@@ -548,7 +594,7 @@ function renderServerList() {
         checkServerHealth(server.url, item);
     });
 
-    // Add Autoswitch Toggle
+    // 1. Autoswitch Toggle
     const isAutoswitch = localStorage.getItem('wispAutoswitch') !== 'false';
     const toggleContainer = document.createElement('div');
     toggleContainer.className = 'wisp-option';
@@ -561,7 +607,18 @@ function renderServerList() {
             </div>
         </div>
     `;
-    // Add AdBlock Toggle (exact same format as autoswitch)
+
+    toggleContainer.onclick = () => {
+        const newState = !isAutoswitch;
+        localStorage.setItem('wispAutoswitch', newState);
+        document.getElementById('autoswitch-toggle').classList.toggle('active', newState);
+
+        navigator.serviceWorker.controller?.postMessage({ type: 'config', autoswitch: newState });
+        notify('success', 'Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
+        renderServerList();
+    };
+
+    // 2. AdBlock Toggle
     const isAdBlockEnabled = localStorage.getItem('ADBLOCKPROXY') === 'true';
     const adblockContainer = document.createElement('div');
     adblockContainer.className = 'wisp-option';
@@ -579,25 +636,59 @@ function renderServerList() {
         const newState = !isAdBlockEnabled;
         localStorage.setItem('ADBLOCKPROXY', newState.toString());
         document.getElementById('adblock-toggle').classList.toggle('active', newState);
-    
+
         navigator.serviceWorker.controller?.postMessage({ type: 'config', adblock: newState });
         notify('success', 'Settings Saved', `AdBlock ${newState ? 'Enabled' : 'Disabled'}`);
-        location.reload();
+        renderServerList();
     };
 
-    toggleContainer.onclick = () => {
-        const newState = !isAutoswitch;
-        localStorage.setItem('wispAutoswitch', newState);
-        document.getElementById('autoswitch-toggle').classList.toggle('active', newState);
+    // 3. Disable Loading Screen Toggle (Defaults to ON)
+    const isDisableLoading = localStorage.getItem('disableLoadingScreen') !== 'false';
+    const disableLoadingContainer = document.createElement('div');
+    disableLoadingContainer.className = 'wisp-option';
+    disableLoadingContainer.style.cssText = 'margin-top: 10px; cursor: default;';
+    disableLoadingContainer.innerHTML = `
+        <div class="wisp-option-header" style="justify-content: space-between;">
+            <div class="wisp-option-name"><i class="fa-solid fa-forward" style="margin-right:8px"></i> Auto-Skip Loading Screen</div>
+            <div class="toggle-switch ${isDisableLoading ? 'active' : ''}" id="disable-loading-toggle">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    `;
 
-        navigator.serviceWorker.controller?.postMessage({ type: 'config', autoswitch: newState });
-        notify('success', 'Settings Saved', `Autoswitch ${newState ? 'Enabled' : 'Disabled'}`);
-        location.reload();
+    disableLoadingContainer.onclick = () => {
+        const newState = !isDisableLoading;
+        localStorage.setItem('disableLoadingScreen', newState.toString());
+        document.getElementById('disable-loading-toggle').classList.toggle('active', newState);
+        notify('success', 'Settings Saved', `Auto-skip loading screen ${newState ? 'Enabled' : 'Disabled'}`);
+        renderServerList();
     };
+
+    // 4. Default Search Engine Dropdown/Selector
+    const currentEngine = localStorage.getItem('searchEngine') || 'duckduckgo';
+    const engineContainer = document.createElement('div');
+    engineContainer.className = 'wisp-option';
+    engineContainer.style.cssText = 'margin-top: 10px; cursor: default;';
+    engineContainer.innerHTML = `
+        <div class="wisp-option-header" style="justify-content: space-between; align-items: center;">
+            <div class="wisp-option-name"><i class="fa-solid fa-magnifying-glass" style="margin-right:8px"></i> Search Engine</div>
+            <select id="search-engine-select" style="background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; outline: none;">
+                <option value="duckduckgo" ${currentEngine === 'duckduckgo' ? 'selected' : ''}>DuckDuckGo</option>
+                <option value="brave" ${currentEngine === 'brave' ? 'selected' : ''}>Brave Search</option>
+                <option value="google" ${currentEngine === 'google' ? 'selected' : ''}>Google</option>
+            </select>
+        </div>
+    `;
 
     list.appendChild(toggleContainer);
-  list.appendChild(adblockContainer);
+    list.appendChild(adblockContainer);
+    list.appendChild(disableLoadingContainer);
+    list.appendChild(engineContainer);
 
+    document.getElementById('search-engine-select').onchange = (e) => {
+        localStorage.setItem('searchEngine', e.target.value);
+        notify('success', 'Settings Saved', `Search engine set to ${e.target.options[e.target.selectedIndex].text}`);
+    };
 }
 
 function saveCustomWisp() {
@@ -620,9 +711,7 @@ function saveCustomWisp() {
     customWisps.push(newServer);
     localStorage.setItem('customWisps', JSON.stringify(customWisps));
     
-    // Switch to the newly added server
     setWisp(url);
-    
     input.value = '';
 }
 
@@ -663,7 +752,6 @@ async function checkServerHealth(url, element) {
         dot.classList.add('status-success');
         text.textContent = `${Date.now() - start}ms`;
     } catch {
-        // Fallback: quick WebSocket test
         try {
             const wsTest = new WebSocket(url);
             wsTest.onopen = () => {
@@ -703,7 +791,6 @@ function toggleDevTools() {
     const win = typeof getActiveTab === 'function' ? getActiveTab()?.frame.frame.contentWindow : window;
     if (!win) return;
 
-    // 1. If Eruda is already initialized, toggle using a custom state tracker
     if (win.eruda) {
         if (win._erudaVisible) {
             win.eruda.hide();
@@ -715,13 +802,12 @@ function toggleDevTools() {
         return;
     }
 
-    // 2. Load Eruda if not present
     const script = win.document.createElement('script');
     script.src = "https://cdn.jsdelivr.net/npm/eruda";
     script.onload = () => {
         win.eruda.init();
         win.eruda.show();
-        win._erudaVisible = true; // Initialize our state tracker
+        win._erudaVisible = true;
     };
     win.document.body.appendChild(script);
 }
@@ -739,7 +825,6 @@ async function checkHashParameters() {
 // =====================================================
 document.addEventListener('DOMContentLoaded', async function () {
     try {
-        // Proactively find the best server before initializing
         await initializeWithBestServer();
         
         await getSharedScramjet();
@@ -748,7 +833,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         if ('serviceWorker' in navigator) {
             const reg = await navigator.serviceWorker.register(getBasePath() + 'sw.js', { scope: getBasePath() });
             
-            // Wait for SW to be ready
             await navigator.serviceWorker.ready;
             
             const wispUrl = localStorage.getItem("proxServer") ?? DEFAULT_WISP;
@@ -762,7 +846,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 autoswitch: autoswitch
             };
 
-            // Send config to SW
             const sendConfig = async () => {
                 const sw = reg.active || navigator.serviceWorker.controller;
                 if (sw) {
@@ -771,7 +854,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             };
 
-            // Try sending immediately, then retry if needed
             sendConfig();
             setTimeout(sendConfig, 500);
             setTimeout(sendConfig, 1500);
