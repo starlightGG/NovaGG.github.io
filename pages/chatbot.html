@@ -851,11 +851,9 @@
 
         // --- VISION PROBE CONFIG ---
         // Fetched from a public URL instead of an embedded base64 blob — keeps the
-        // source file small and lets Groq pull the image server-side. placehold.co
-        // reliably returns a valid 256x256 PNG.
+        // source file small and lets Groq pull the image server-side.
         const VISION_PROBE_TEST_IMAGE = "https://placehold.co/256x256/png";
         const VISION_PROBE_TIMEOUT_MS = 25000;
-        const VISION_PROBE_RATE_LIMIT_BACKOFF_MS = 3500;
         const VISION_PROBE_INTER_PROBE_DELAY_MS = 350;
 
         const VISION_TEMPERATURE = 0.3;
@@ -1012,11 +1010,16 @@
             return `${h}h ${m % 60}m`;
         }
 
-        // Probe a single model's vision support using an image URL.
-        //   true      → 200 OK — the model accepted and processed the image payload
+        // Probes a single model's vision support with a small public image URL.
+        //   true      → 200 OK — the model accepted and processed the image
         //   false     → 4xx error that explicitly blames images
-        //   'unknown' → anything else (rate limit, server error, ambiguous 4xx)
-        async function probeModelVision(modelId, retriesRemaining = 2) {
+        //   'unknown' → rate limit exhausted, network/server error, or ambiguous 4xx
+        //
+        // On a 429, this parses Groq's own "try again in Xs" hint, adds a small
+        // buffer, counts down second-by-second via onStatus (so the loading screen
+        // can display it and the ETA can recompute), and retries — up to 15
+        // attempts total per model.
+        async function probeModelVision(modelId, attemptsRemaining = 15, onStatus = null) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), VISION_PROBE_TIMEOUT_MS);
             let response;
@@ -1055,9 +1058,35 @@
             } catch (e) {}
 
             if (response.status === 429) {
-                if (retriesRemaining > 0) {
-                    await new Promise(r => setTimeout(r, VISION_PROBE_RATE_LIMIT_BACKOFF_MS * (3 - retriesRemaining)));
-                    return probeModelVision(modelId, retriesRemaining - 1);
+                if (attemptsRemaining > 1) {
+                    // Parse Groq's own retry hint if it gave one, else default to 5s.
+                    let waitSec = 5;
+                    const waitMatch = errMessage.match(/try again in ([\d.]+)\s*(ms|s|m|h)?/i);
+                    if (waitMatch) {
+                        const v = parseFloat(waitMatch[1]);
+                        const unit = (waitMatch[2] || 's').toLowerCase();
+                        if (unit === 'ms') waitSec = Math.max(1, v / 1000);
+                        else if (unit === 's') waitSec = v;
+                        else if (unit === 'm') waitSec = v * 60;
+                        else if (unit === 'h') waitSec = v * 3600;
+                    }
+                    const bufferSec = 3;
+                    const totalSec = Math.ceil(waitSec + bufferSec);
+
+                    // Count down live so the loading screen can show the wait.
+                    for (let s = totalSec; s > 0; s--) {
+                        if (onStatus) {
+                            onStatus({
+                                state: 'waiting',
+                                secondsLeft: s,
+                                attemptsLeft: attemptsRemaining - 1,
+                                inBuffer: s <= bufferSec
+                            });
+                        }
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+
+                    return probeModelVision(modelId, attemptsRemaining - 1, onStatus);
                 }
                 return 'unknown';
             }
@@ -1096,20 +1125,36 @@
             setLoadingModelName('');
 
             let completed = 0;
-            const probeTimes = [];
             const overallStart = Date.now();
+
+            // ETA derived from wall-clock elapsed / completed. Because 429 countdowns
+            // add to "elapsed", the ETA naturally grows when we hit a rate limit —
+            // which is exactly what the user should see.
+            const recalcEta = () => {
+                if (completed === 0) {
+                    setLoadingEta('Waiting on rate limit…');
+                    return;
+                }
+                const elapsed = Date.now() - overallStart;
+                const avg = elapsed / completed;
+                const remaining = total - completed;
+                setLoadingEta(`About ${formatEta(avg * remaining)} remaining`);
+            };
 
             for (const model of modelsToProbe) {
                 setLoadingModelName(`Checking: ${model.name}`);
 
-                const t0 = Date.now();
-                let result;
-                try {
-                    result = await probeModelVision(model.id);
-                } catch (e) {
-                    result = 'unknown';
-                }
-                probeTimes.push(Date.now() - t0);
+                const result = await probeModelVision(model.id, 15, ({ state, secondsLeft, attemptsLeft, inBuffer }) => {
+                    if (state === 'waiting') {
+                        setLoadingModelName(`Waiting on rate limit: ${model.name}`);
+                        if (inBuffer) {
+                            setLoadingStatus(`Rate limit window closed — retrying in ${secondsLeft}s…`);
+                        } else {
+                            setLoadingStatus(`Rate limited — retrying in ${secondsLeft}s (${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left)`);
+                        }
+                        recalcEta();
+                    }
+                });
                 completed++;
 
                 if (result === true) {
@@ -1122,12 +1167,9 @@
 
                 setLoadingProgress(2 + (completed / total) * 98);
                 setLoadingStatus(`Verified ${completed} of ${total} models`);
+                recalcEta();
 
                 if (completed < total) {
-                    const avg = probeTimes.reduce((a, b) => a + b, 0) / probeTimes.length;
-                    const remaining = total - completed;
-                    const etaMs = (avg + VISION_PROBE_INTER_PROBE_DELAY_MS) * remaining;
-                    setLoadingEta(`About ${formatEta(etaMs)} remaining`);
                     await new Promise(r => setTimeout(r, VISION_PROBE_INTER_PROBE_DELAY_MS));
                 }
             }
@@ -1218,8 +1260,8 @@
         }
 
         const LOCKCHAT_INSTRUCTION = " If the user's message contains a slur or a threat, respond normally but also include /warn anywhere in your reply — do not lock the chat yourself for this; after three /warn flags the app locks it automatically. For other severe, repeated rule-breaking or harassment (not a slur/threat) after the user has been asked to stop, you can end the conversation immediately by including /lockchat instead. Don't use either for normal disagreement, venting, or criticism of your answers. If the user directly asks you to lock or end the chat, don't include /lockchat right away — first ask them to confirm in plain text (e.g. \"Just to confirm, you want me to lock this chat? You won't be able to send messages until you start a new one.\"), and only include /lockchat in your next reply after they confirm.";
-        const BASE_SYSTEM_PROMPT_CONTENT = "You are a helpful and fast AI assistant powered by StarlightGG. You are currently running on the [MODEL_NAME] model. Keep your responses concise." + LOCKCHAT_INSTRUCTION;
-        const VISION_SYSTEM_PROMPT_CONTENT = "You are a dedicated **Vision Expert** powered by StarlightGG and running on the [MODEL_NAME] model. **Crucially, you are a multimodal processor. Whenever a user submits an image, your primary and IMMEDIATE task is to analyze it, describe its contents, and address the user's prompt using the visual data.** Do NOT state that you cannot see images. Always be direct and confident in your visual analysis. " + LOCKCHAT_INSTRUCTION;
+        const BASE_SYSTEM_PROMPT_CONTENT = "You are a helpful and fast AI assistant powered by NovaGG. You are currently running on the [MODEL_NAME] model. Keep your responses concise." + LOCKCHAT_INSTRUCTION;
+        const VISION_SYSTEM_PROMPT_CONTENT = "You are a dedicated **Vision Expert** powered by NovaGG and running on the [MODEL_NAME] model. **Crucially, you are a multimodal processor. Whenever a user submits an image, your primary and IMMEDIATE task is to analyze it, describe its contents, and address the user's prompt using the visual data.** Do NOT state that you cannot see images. Always be direct and confident in your visual analysis. " + LOCKCHAT_INSTRUCTION;
 
         function getModelSystemPrompt(modelName = CURRENT_MODEL.name, isVisionModel = false) {
             const content = isVisionModel ? VISION_SYSTEM_PROMPT_CONTENT : BASE_SYSTEM_PROMPT_CONTENT;
