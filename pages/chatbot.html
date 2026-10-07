@@ -1017,9 +1017,9 @@
         //
         // On a 429, this parses Groq's own "try again in Xs" hint, adds a small
         // buffer, counts down second-by-second via onStatus (so the loading screen
-        // can display it and the ETA can recompute), and retries — up to 15
+        // can display it and the ETA can recompute), and retries — up to 3
         // attempts total per model.
-        async function probeModelVision(modelId, attemptsRemaining = 15, onStatus = null) {
+        async function probeModelVision(modelId, attemptsRemaining = 3, onStatus = null) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), VISION_PROBE_TIMEOUT_MS);
             let response;
