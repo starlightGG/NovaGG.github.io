@@ -61,7 +61,7 @@ var cg = {
      height: 960,
      autosize: true,
      circle: {
-       count: 1.75, // per 10,000 px2
+       count: 3, // per 10,000 px2
        minRadius: 5, // or 35 less than player
        maxRadius: 55, // or 15 more than player
        playerRadius: 10,
@@ -78,7 +78,7 @@ var cg = {
      this.dispText = function() {
        this.ctx.font = '40pt Verdana'
        this.ctx.fillStyle = 'white'
-       w = this.ctx.measureText(t = 'You dead').width
+       w = this.ctx.measureText(t = 'You Died').width
        this.ctx.fillText(t, (this.config.width - w)/2, cg.config.height / 2)
 
        w = this.ctx.measureText(t = (pts - cg.config.circle.playerRadius) + ' pts').width
