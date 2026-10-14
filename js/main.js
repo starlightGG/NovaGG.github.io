@@ -510,7 +510,7 @@ const App = () => {
             ),
             e('div', { className: 'settings-item' },
                 e('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-                    e('label', null, 'Lag Reducer:'),
+                    e('label', null, 'Lag Protection:'),
                     e('i', { className: 'fas fa-question-circle', style: { cursor: 'pointer', opacity: 0.7 }, onClick: () => showModal("<strong>Lag Reducer Protection</strong><br><br>Prevents browser crashes by monitoring performance.<br><br><b>Triggers if:</b><br>1. Browser freezes for > 7.5s.<br>2. Sustained lag (low FPS) for 2.5s.<br><br><b>Action:</b><br>- Exits game immediately.<br>- If still frozen, attempts to close tab.") })
                 ),
                 renderSwitch(prefix + 'lag-reducer-switch', lagReducerEnabled, () => handleToggle('lagReducerState', lagReducerEnabled, setLagReducerEnabled), 'fas fa-tachometer-alt', 'fas fa-times')
