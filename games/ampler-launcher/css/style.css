@@ -164,24 +164,28 @@ blockquote, dd, dl, figure, h1, h2, h3, h4, h5, h6, hr, p, pre {
 .dropdownMenu {
     position: absolute;
     left: 1vw;
+    bottom: 4.5vw;              /* ← sits on top of the 4.5vw selection bar */
+    display: flex;              /* ← NEW: stack children */
+    flex-direction: column;     /* ← NEW: vertical stack (first child = top) */
+    z-index: 999;               /* ← NEW: above the hero background */
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dropdownOptions {
-    position: absolute;
+    position: relative;         /* was: absolute — this is the key change */
     display: flex;
     height: 5vw;
     width: 27vw;
     align-items: center;
     color: white;
     background-color: #131313;
-    z-index: 999;
     font-size: 1.1vw;
 }
 
 .dropdownOptions:hover {
     background-color: #008542;
 }
+
 
 .dropdownOption {
     position: absolute;
@@ -289,19 +293,7 @@ blockquote, dd, dl, figure, h1, h2, h3, h4, h5, h6, hr, p, pre {
 }
 .gameHeader {    padding: 1.8vw 1.8vw 0;}
 
-.dropdown1 {bottom: 0;}
-.dropdown2 {bottom: 5vw;}
-.dropdown3 {bottom: 0vw;}
-.dropdown4 {bottom: 5vw; }
-.dropdown5 {bottom: 10vw;}
-.dropdown6 {bottom: 15vw;}
-.dropdown7 {bottom: 20vw;}
-.dropdown8 {bottom: 0;}
-.dropdown9 {bottom: 5vw;}
-.dropdown10 {bottom: 10vw;}
-.dropdown11 {bottom: 10vw;}
-.dropdown12 {bottom: 15vw;}
-.dropdown13 {bottom: 20vw;}
+
 
 .zoom-out {
     animation: zoomed 0.2s linear forwards;
