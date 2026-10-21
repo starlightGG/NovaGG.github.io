@@ -13,7 +13,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-    <!-- Discord-->
     <meta content="Ampler Launcher" property="og:title">
     <meta content="A minecraft themed launcher for Eaglercraft!" property="og:description">
     <meta content="https://irv77.github.io/AmplerLauncher/" property="og:url">
@@ -22,6 +21,7 @@
 </head>
 
 <body style="font-family: 'Roboto', sans-serif;">
+
     <div id="naerror" class="error">
         <div>
             <p style="margin-left: 1vw;" class="bolded">SORRY!</p>
@@ -34,68 +34,102 @@
             <p>Currently this screen resolution is buggy.</p>
         </div>
     </div>
+
+    <!-- ================= SIDEBAR ================= -->
     <div class="sidebar" id="sidebar">
-        <div id="gtabs1" class="sidebarOptions" style="gap: 1vw;" onclick="location.href='https://discord.gg/xuu8TnSY4b'">
-            <img src="./images/m-discord.png"
-                 alt><div class="gTabsText"><p>Discord</p></div>
+
+        <div id="gtabs1" class="sidebarOptions" style="gap: 1vw;"
+             onclick="location.href='https://discord.gg/xuu8TnSY4b'">
+            <img src="./images/m-discord.png" alt>
+            <div class="gTabsText"><p>Discord</p></div>
         </div>
-        <div onclick="webedition()" id="gtabs2" style="font-weight: 700; border-left: #008542 solid 0.4vw;"
-             class="sidebarOptions">
+
+        <!-- EDITION TABS: add data-edition / data-default / data-bg / data-header-img / data-label -->
+        <div id="gtabs2" class="sidebarOptions"
+             style="font-weight: 700; border-left: #008542 solid 0.4vw;"
+             data-edition="web"
+             data-initial="true"
+             data-default="latestrelease"
+             data-bg="./images/web-edition.jpg"
+             data-header-img="./images/web-title.png"
+             data-label="EAGLERCRAFT WEB EDITION">
             <img src="./images/i-web.png" alt>
             <div class="gTabsText">
                 <p class="eaglercraftText"> EAGLERCRAFT : </p>
                 <p>Web Edition </p>
             </div>
         </div>
-        <div onclick="moddededition()" id="gtabs3" class="sidebarOptions">
-            <img src="./images/i-modded.png"
-                 alt>
+
+        <div id="gtabs3" class="sidebarOptions"
+             data-edition="modded"
+             data-default="eaglerforge"
+             data-bg="./images/modded-edition.jpg"
+             data-header-img="./images/modded-title.png"
+             data-label="EAGLERCRAFT MODDED">
+            <img src="./images/i-modded.png" alt>
             <div class="gTabsText">
                 <p class="eaglercraftText"> EAGLERCRAFT : </p>
                 <p>Modded Editions </p>
             </div>
         </div>
-        <div onclick="eaglercontrols()" id="gtabs4" class="sidebarOptions">
-            <img src="./images/i-controls.png"
-                 alt>
+
+        <div id="gtabs4" class="sidebarOptions"
+             data-edition="controls"
+             data-default="dogomobile"
+             data-bg="./images/controls-edition.jpg"
+             data-header-img="./images/controls-title.png"
+             data-label="EAGLERCRAFT MOBILE/CONTROLLER">
+            <img src="./images/i-controls.png" alt>
             <div class="gTabsText">
                 <p class="eaglercraftText"> EAGLERCRAFT : </p>
                 <p>Mobile/Controller </p>
             </div>
         </div>
+
         <div id="gtabs5" class="sidebarOptions sidebarBottom" onclick="errorNA()">
-            <img src="./images/m-credits.png" alt><div class="gTabsText"><p> Credits</p></div>
+            <img src="./images/m-credits.png" alt>
+            <div class="gTabsText"><p> Credits</p></div>
         </div>
         <div id="gtabs6" class="sidebarOptions sidebarBottom" onclick="errorNA()">
-            <img src="./images/m-settings.png" alt><div class="gTabsText"><p> Settings</p></div>
+            <img src="./images/m-settings.png" alt>
+            <div class="gTabsText"><p> Settings</p></div>
         </div>
         <div id="gtabs9" class="launcherVersion">
             <p>v1.2.00</p>
         </div>
     </div>
+
+    <!-- ================= MAIN PAGE ================= -->
     <div class="mainPage">
         <div id="gameheader" class="gameHeader">
             <p id="gameedition" class="currentGame bolded">EAGLERCRAFT WEB EDITION</p>
+
             <div id="javatabs">
                 <ul class="gameTabs">
                     <li id="header1" class="headerButtonSelected">Play</li>
-                    <li id="header2" style="display: none;" class="headerButtons" onclick="errorNA()">Mods</li>
-                    <li id="header3" class="headerButtons" onclick="errorNA()">FAQ</li>
-                    <li id="header4" class="headerButtons" onclick="errorNA()">Installations</li>
-                    <li id="header5" class="headerButtons" onclick="errorNA()">Skins</li>
-                    <li id="header6" class="headerButtons" onclick="errorNA()">Patch Notes</li>
+                    <li id="header2" class="headerButtons" style="display: none;"
+                        data-editions="modded" onclick="errorNA()">Mods</li>
+                    <li id="header3" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">FAQ</li>
+                    <li id="header4" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">Installations</li>
+                    <li id="header5" class="headerButtons"
+                        data-editions="web" onclick="errorNA()">Skins</li>
+                    <li id="header6" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">Patch Notes</li>
                 </ul>
             </div>
         </div>
+
         <div id="game-bg" class="gameBg" style="background-image: url(./images/web-edition.jpg);">
             <div class="gameLogo">
-                <img id="game-header" src="./images/web-title.png" style="width: 40vw;"
-                     alt="eaglercraft">
+                <img id="game-header" src="./images/web-title.png" style="width: 40vw;" alt="eaglercraft">
             </div>
         </div>
+
         <div id="gameselection" class="gameSelection">
             <div class="versionSelector">
-                <div id="drop" class="dropdownSelector" onclick="dropdowntoggle()">
+                <div id="drop" class="dropdownSelector">
                     <div style="display: flex; gap: 1vw;">
                         <div class="centeredIcon">
                             <img id="gameicon" src="./images/m-logo1.png" style="width: 2.5vw;" />
@@ -117,158 +151,135 @@
                     </div>
                 </div>
             </div>
+
             <div id="dropdn" class="dropdownMenu" style="visibility: hidden;">
-                <div id="dropdown13" class="dropdownOptions dropdown13" onclick="latestrelease(); dropdowntoggle();">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo1.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Latest release</p>
-                            <p>1.12.2-u2</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown12" class="dropdownOptions dropdown12" onclick="latestreleasewasm(); dropdowntoggle();">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo1.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Latest release WASM</p>
-                            <p>1.12.2-u2-wasm</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown11" class="dropdownOptions dropdown11" onclick="previousrelease(); dropdowntoggle();">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo2.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Previous release</p>
-                            <p>1.8.8-u50</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown10" class="dropdownOptions dropdown10" onclick="dogomobile(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo10.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">FlamedDogo's Mobile UI</p>
-                            <p>1.8.8-v3.0.5b</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown9" class="dropdownOptions dropdown9" onclick="redmobile(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo9.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Red's Mobile UI</p>
-                            <p>1.8.8-v1.40</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown8" class="dropdownOptions dropdown8" onclick="redcontroller(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo8.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Red's Controller Support</p>
-                            <p>1.8.8-v1.1</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown7" class="dropdownOptions dropdown7" onclick="astraclient(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo7.png" style="width: 2.5vw;">
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Astra Client</p>
-                            <p>1.8.8-v1.5</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown6" class="dropdownOptions dropdown6" onclick="starlike(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo6.png" style="width: 2.5vw;">
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Starlike</p>
-                            <p>1.8.8-v0.3.1</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown5" class="dropdownOptions dropdown5" onclick="eaglerforge(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo5.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Eaglerforge</p>
-                            <p>1.8.8-v1.3.2</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown4" class="dropdownOptions dropdown4" onclick="resentclient(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo4.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Resent Client</p>
-                            <p>1.8.8-v4.0.p4</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown3" class="dropdownOptions dropdown3" onclick="shadowclient(); dropdowntoggle();" style="display: none;">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo3.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Shadow Client</p>
-                            <p>1.8.8-v4.5-u34</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown2" class="dropdownOptions dropdown2" onclick="previousreleasewasm(); dropdowntoggle();">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo2.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Previous release WASM</p>
-                            <p>1.8.8-u50-wasm</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="dropdown1" class="dropdownOptions dropdown1" onclick="olderrelease(); dropdowntoggle();">
-                    <div class="dropdownOption">
-                        <div class="centeredIcon">
-                            <img src="./images/m-logo11.png" style="width: 2.5vw;" />
-                        </div>
-                        <div class="dropdownOptionText">
-                            <p class="bolded">Older release</p>
-                            <p>1.5.2-sp2.01</p>
-                        </div>
-                    </div>
-                </div>
+
+                <!--
+                  ======================================================
+                  HOW TO ADD A GAME — copy one <div> below and edit data-*:
+                      data-game="unique-id"
+                      data-editions="web modded controls"   (which editions show it)
+                      data-title="..."
+                      data-version="..."
+                      data-icon="./images/..."
+                      data-href="mc/..."
+                  JS automatically renders the icon, title, version inside.
+                  ======================================================
+                -->
+
+                <div class="dropdownOptions"
+                     data-game="latestrelease"
+                     data-editions="web"
+                     data-title="Latest release"
+                     data-version="1.12.2-u2"
+                     data-icon="./images/m-logo1.png"
+                     data-href="mc/1.12.2/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="latestreleasewasm"
+                     data-editions="web"
+                     data-title="Latest release WASM"
+                     data-version="1.12.2-u2-wasm"
+                     data-icon="./images/m-logo1.png"
+                     data-href="mc/1.12.2-wasm/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="previousrelease"
+                     data-editions="web"
+                     data-title="Previous release"
+                     data-version="1.8.8-u50"
+                     data-icon="./images/m-logo2.png"
+                     data-href="mc/1.8.8/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="previousreleasewasm"
+                     data-editions="web"
+                     data-title="Previous release WASM"
+                     data-version="1.8.8-u50-wasm"
+                     data-icon="./images/m-logo2.png"
+                     data-href="mc/1.8.8-wasm/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="olderrelease"
+                     data-editions="web"
+                     data-title="Older release"
+                     data-version="1.5.2-sp2.01"
+                     data-icon="./images/m-logo11.png"
+                     data-href="mc/1.5.2/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="astraclient"
+                     data-editions="modded"
+                     data-title="Astra Client"
+                     data-version="1.8.8-v1.5"
+                     data-icon="./images/m-logo7.png"
+                     data-href="mc/astraclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="starlike"
+                     data-editions="modded"
+                     data-title="Starlike"
+                     data-version="1.8.8-v0.3.1"
+                     data-icon="./images/m-logo6.png"
+                     data-href="mc/starlikeclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="eaglerforge"
+                     data-editions="modded"
+                     data-title="Eaglerforge"
+                     data-version="1.8.8-v1.3.2"
+                     data-icon="./images/m-logo5.png"
+                     data-href="mc/eaglerforge/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="resentclient"
+                     data-editions="modded"
+                     data-title="Resent Client"
+                     data-version="1.8.8-v4.0.p4"
+                     data-icon="./images/m-logo4.png"
+                     data-href="mc/resentclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="shadowclient"
+                     data-editions="modded"
+                     data-title="Shadow Client"
+                     data-version="1.8.8-v4.5-u34"
+                     data-icon="./images/m-logo3.png"
+                     data-href="mc/shadowclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="dogomobile"
+                     data-editions="controls"
+                     data-title="FlamedDogo's Mobile UI"
+                     data-version="1.8.8-v3.0.5b"
+                     data-icon="./images/m-logo10.png"
+                     data-href="mc/1.8.8/?userscript=flameddogo99-eaglermobile.js"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="redmobile"
+                     data-editions="controls"
+                     data-title="Red's Mobile UI"
+                     data-version="1.8.8-v1.40"
+                     data-icon="./images/m-logo9.png"
+                     data-href="mc/1.8.8/?userscript=irv77-eaglercraft-mobile.js"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="redcontroller"
+                     data-editions="controls"
+                     data-title="Red's Controller Support"
+                     data-version="1.8.8-v1.1"
+                     data-icon="./images/m-logo8.png"
+                     data-href="mc/1.8.8/?userscript=irv77-eaglerconsole.js"></div>
             </div>
+
             <a id="playbutton" href="mc/1.12.2"><div id="mainbutton" class="playButton"></div></a>
             <div class="username centeredIcon bolded">
                 <p class="usernameText">Generic User</p>
             </div>
         </div>
     </div>
+
     <script src="./js/index.js"></script>
-    <Script>alert("When you are running minecraft, click screen then press the button 'tab' on your chromebook to enable typing!");</Script>
+    <script>alert("When you are running minecraft, click screen then press the button 'tab' on your chromebook to enable typing!");</script>
 </body>
 </html>
