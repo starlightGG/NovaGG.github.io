@@ -278,8 +278,26 @@
             </div>
         </div>
     </div>
+<!-- ================= FIRST-RUN NOTICE (desktop only) ================= -->
+<div id="notice-modal" class="notice-overlay">
+    <div class="notice-box">
+        <div class="notice-header">
+            <span class="notice-icon">⚠</span>
+            <h2>Before You Play</h2>
+        </div>
 
+<div class="notice-content" id="notice-content">
+    <p>When you are running Minecraft, click the screen then press the button
+       <code>Tab</code> on your <strong id="notice-device">device</strong> to enable typing!</p>
+
+    <div class="notice-filler" aria-hidden="true"></div>
+</div>
+
+        <button id="notice-confirm" class="notice-confirm" disabled>
+            Scroll down to continue
+        </button>
+    </div>
+</div>
     <script src="./js/index.js"></script>
-    <script>alert("When you are running minecraft, click screen then press the button 'tab' on your chromebook to enable typing!");</script>
 </body>
 </html>
