@@ -171,3 +171,68 @@
     document.querySelector('.sidebarOptions[data-edition]');
   if (initialTab) selectEdition(initialTab);
 })();
+
+
+/* ============================================================
+   FIRST-RUN NOTICE — desktop only, per-device, scroll to confirm
+   ============================================================ */
+(function () {
+  const modal = document.getElementById('notice-modal');
+  if (!modal) return;
+
+  /* ---------- 1. Desktop-only guard ---------- */
+  function isMobileDevice() {
+    const ua = navigator.userAgent || '';
+    if (navigator.userAgentData && navigator.userAgentData.mobile === true) return true;
+    if (/Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|BlackBerry|Windows Phone|Tablet|Kindle|Silk/i.test(ua)) return true;
+    if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+  if (isMobileDevice()) { modal.remove(); return; }
+
+  /* ---------- 2. Detect device ---------- */
+  const ua = navigator.userAgent || '';
+  function detectDevice() {
+    if (/CrOS/i.test(ua))               return 'Chromebook';
+    if (/Windows/i.test(ua))            return 'Windows PC';
+    if (/Mac OS X|Macintosh/i.test(ua)) return 'Mac';
+    if (/Linux/i.test(ua))              return 'Linux machine';
+    return 'device';
+  }
+  const device = detectDevice();
+  const deviceEl = document.getElementById('notice-device');
+  if (deviceEl) deviceEl.textContent = device;
+
+  /* ---------- 3. Per-device flag ---------- */
+  const KEY = 'ampler_notice_read_v1_' + device.toLowerCase().replace(/\s+/g, '_');
+  let alreadyRead = false;
+  try { alreadyRead = localStorage.getItem(KEY) === '1'; } catch (_) {}
+  if (alreadyRead) { modal.remove(); return; }
+
+  /* ---------- 4. Scroll-to-enable ---------- */
+  const content = document.getElementById('notice-content');
+  const btn     = document.getElementById('notice-confirm');
+
+  const enable = () => {
+    if (btn.disabled) {
+      btn.disabled = false;
+      btn.textContent = "I've read this — Continue";
+    }
+  };
+
+  function checkScroll() {
+    const atBottom =
+      content.scrollTop + content.clientHeight >= content.scrollHeight - 8;
+    if (atBottom) enable();
+  }
+
+  content.addEventListener('scroll', checkScroll, { passive: true });
+  content.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+
+  /* ---------- 5. Confirm ---------- */
+  btn.addEventListener('click', () => {
+    try { localStorage.setItem(KEY, '1'); } catch (_) {}
+    modal.classList.add('notice-hide');
+    setTimeout(() => modal.remove(), 300);
+  });
+})();
