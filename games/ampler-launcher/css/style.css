@@ -1,0 +1,497 @@
+*, ::after, ::before {
+    box-sizing: border-box;
+}
+
+html {
+    display: block;
+    line-height: 1.5;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    overflow: hidden;
+    height: 100%;
+}
+
+body {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    background-color: #303030;
+    margin: 0;
+    line-height: inherit;
+    overflow: hidden;
+    height: 100%;
+}
+
+menu, ol, ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+blockquote, dd, dl, figure, h1, h2, h3, h4, h5, h6, hr, p, pre {
+    margin: 0;
+}
+
+.bolded {
+    font-weight: 800;
+}
+
+.error {
+    display: none;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+    padding: 0.5vw 1vw;
+    margin: 1vw 0.5vw;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 2.5vw;
+    font-style: italic;
+    transition: 0.3s;
+    animation: drop .5s linear forwards;
+    font-size: 1.5vw;
+}
+
+#naerror {
+    display: none;
+    color: gold;
+    border: gold solid 0.2vw;
+}
+
+#screenerror {
+    right: 35%;
+    padding: 0.25vw 4vw;
+    display: none;
+    color: darkred;
+    font-size: 1vw;
+    border: red solid 0.1vw;
+}
+
+.gameTabs {
+    display: flex;
+    align-items: center;
+}
+
+.mainPage {
+    width: 100%;
+    color: white;
+    background-color: #1e1e1e;
+}
+
+.headerButtons {
+    padding: 0.6vw 1.1vw;
+    color: #cccccc;
+    font-size: 0.95vw;
+    line-height: 1.7vw;
+    transition: 0.3s;
+}
+
+.headerButtons:hover {
+    cursor: pointer;
+    color: white
+}
+
+.headerButtonSelected {
+    cursor: default;
+    padding: 0.6vw 1.1vw;
+    color: white;
+    font-weight: 800;
+    border-bottom: #008542 solid 0.21vw;
+    font-size: 0.95vw;
+    line-height: 1.7vw;
+}
+
+.gameBg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+}
+
+.gameLogo {
+    position: absolute;
+    left: 23%;
+    width: 100%;
+    top: 6%;
+    animation: drop .5s linear forwards;
+    color: purple;
+}
+
+.gameSelection {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 4.5vw;
+    justify-content: space-around;
+    display: flex;
+    background-color: #1e1e1e;
+}
+
+.versionSelector {
+    display: flex;
+    position: absolute;
+    left: 1vw;
+    bottom: 0;
+    top: 0;
+    align-items: center;
+}
+
+.dropdownSelector {
+    position: relative;
+    display: flex;
+    height: 4.5vw;
+    width: 27vw;
+    align-items: center;
+    justify-content: space-around;
+    color: white;
+    transition: 0.3s;
+}
+
+.dropdownSelector:hover {
+    cursor: pointer;
+    background-color: #353535;
+}
+
+.dropdownIcon {
+    color: white;
+    width: 1.75vw;
+}
+
+.dropdownMenu {
+    position: absolute;
+    left: 1vw;
+    bottom: 4.5vw;              /* ← sits on top of the 4.5vw selection bar */
+    display: flex;              /* ← NEW: stack children */
+    flex-direction: column;     /* ← NEW: vertical stack (first child = top) */
+    z-index: 999;               /* ← NEW: above the hero background */
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdownOptions {
+    position: relative;         /* was: absolute — this is the key change */
+    display: flex;
+    height: 5vw;
+    width: 27vw;
+    align-items: center;
+    color: white;
+    background-color: #131313;
+    font-size: 1.1vw;
+}
+
+.dropdownOptions:hover {
+    background-color: #008542;
+}
+
+
+.dropdownOption {
+    position: absolute;
+    left: 2vw;
+    display: flex;
+    gap: 1vw;
+}
+
+.dropdownOptionText {
+    display: grid;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.centeredIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.versionText {
+    margin-right: 4.25vw;
+    display: grid;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 1.1vw;
+}
+
+.playButton {
+    position: absolute;
+    left: 33%;
+    bottom: 0.5vw;
+    display: flex;
+    align-items: center;
+    width: 21.5vw;
+    height: 5vw;
+    background-image: url(../images/play.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: 0.1s;
+}
+
+.playButton:hover {
+    cursor: pointer;
+    background-image: url(../images/play-hover.png);
+    transform: scale(1.05);
+}
+
+.username {
+    position: absolute;
+    bottom: 0;
+    right: 17vw;
+    top: 0;
+}
+
+.usernameText {
+    font-size: 1.35vw;
+}
+
+.sidebar {
+    position: relative;
+    float: left;
+    height: 100vh;
+    width: 18vw;
+    color: white;
+    background-color: #1e1e1e;
+}
+
+.eaglercraftText {
+    font-size: 1.1vw;
+}
+
+.sidebarOptions {
+    display: flex;
+    height: 5vw;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.5vw;
+    padding-left: 1.5vw;
+    font-size: 1vw;
+    line-height: 1.5vw;
+    transition: 0.3s;
+}
+
+.sidebarOptions:hover {
+    cursor: pointer;
+    background-color: #353535;
+}
+
+.sidebarOptions.sidebarBottom {
+    position: absolute;
+}
+
+.launcherVersion {
+    position: absolute;
+    bottom: 0.25vw;
+    left: 0;
+    right: 0;
+    padding-left: 1.25vw;
+    z-index: 1;
+    font-size: 1.1vw;
+    color: #cccccc;
+}
+.gameHeader {    padding: 1.8vw 1.8vw 0;}
+
+
+
+.zoom-out {
+    animation: zoomed 0.2s linear forwards;
+}
+
+.currentGame {
+    font-size: 1.2vw;
+}
+
+#gtabs1 img {width: 3vw;}
+#gtabs2 img, #gtabs3 img, #gtabs4 img {width: 2.5vw;}
+#gtabs5 {bottom: 7.5vw;}
+#gtabs6 {bottom: 2.5vw;}
+#gtabs5 img, #gtabs6 img {width: 2vw;}
+
+@keyframes drop {
+    0% {
+        transform: translateY(-300px) scaleY(0.9);
+        opacity: 0;
+    }
+
+    5% {
+        opacity: .7;
+    }
+
+    50% {
+        transform: translateY(0) scaleY(1);
+        opacity: 1;
+    }
+
+    65% {
+        transform: translateY(-17px) scaleY(.9);
+        opacity: 1;
+    }
+
+    75% {
+        transform: translateY(-22px) scaleY(.9);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0) scaleY(1);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomed {
+    100% {
+        transform: translateY(10px) scale(0);
+        display: none;
+    }
+}
+/* ================= FIRST-RUN NOTICE ================= */
+.notice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.notice-box {
+    display: flex;
+    flex-direction: column;
+    width: min(90vw, 900px);
+    max-height: 85vh;
+    background: #1e1e1e;
+    color: white;
+    border: 2px solid #008542;
+    border-radius: clamp(8px, 1vw, 16px);
+    box-shadow: 0 0 40px rgba(0, 133, 66, 0.35);
+    animation: drop 0.5s linear;
+}
+
+.notice-header {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    padding: clamp(14px, 1.5vw, 24px) clamp(16px, 2vw, 32px);
+    border-bottom: 1px solid #353535;
+}
+
+.notice-icon {
+    font-size: clamp(20px, 1.8vw, 30px);
+}
+
+.notice-header h2 {
+    font-size: clamp(18px, 1.5vw, 28px);
+    font-weight: 800;
+    color: #008542;
+}
+
+.notice-content {
+    flex: 1;
+    min-height: 0;                 /* CRITICAL — allows flex child to scroll */
+    overflow-y: auto;
+    padding: clamp(14px, 1.5vw, 24px) clamp(16px, 2vw, 32px);
+    font-size: clamp(12px, 1vw, 16px);
+    line-height: 1.7;
+    color: #cccccc;
+    touch-action: pan-y;           /* lets mobile users scroll this box */
+    scrollbar-width: thin;
+    scrollbar-color: #008542 #131313;
+}
+
+.notice-content::-webkit-scrollbar       { width: clamp(6px, 0.5vw, 10px); }
+.notice-content::-webkit-scrollbar-track { background: #131313; border-radius: 4px; }
+.notice-content::-webkit-scrollbar-thumb { background: #008542; border-radius: 4px; }
+
+.notice-content h3 {
+    color: white;
+    margin-top: 1.5vw;
+    margin-bottom: 0.5vw;
+    font-size: clamp(13px, 1.15vw, 18px);
+}
+
+.notice-content h3:first-child { margin-top: 0; }
+.notice-content p              { margin-bottom: 1vw; }
+.notice-content strong         { color: #008542; }
+
+.notice-content code {
+    background: #131313;
+    padding: 0.15vw 0.4vw;
+    border-radius: 0.25vw;
+    color: gold;
+    font-family: monospace;
+    font-size: 0.95em;
+}
+
+.notice-confirm {
+    margin: 0 clamp(16px, 2vw, 32px) clamp(14px, 1.5vw, 24px);
+    padding: clamp(10px, 1vw, 16px);
+    background: #353535;
+    color: #666;
+    border: none;
+    border-radius: clamp(4px, 0.5vw, 8px);
+    font-family: inherit;
+    font-size: clamp(13px, 1.1vw, 18px);
+    font-weight: 800;
+    cursor: not-allowed;
+    transition: 0.3s;
+}
+
+.notice-confirm:not(:disabled) {
+    background: #008542;
+    color: white;
+    cursor: pointer;
+}
+
+.notice-confirm:not(:disabled):hover {
+    background: #00a352;
+    transform: scale(1.02);
+}
+
+.notice-hide {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; }
+}
+.notice-header h2 span { color: #008542; }
+.notice-box {
+    display: flex;
+    flex-direction: column;
+    width: min(90vw, 900px);
+    height: min(75vh, 600px);          /* ← was max-height; FIXED height is the key */
+    background: #1e1e1e;
+    color: white;
+    border: 2px solid #008542;
+    border-radius: clamp(8px, 1vw, 16px);
+    box-shadow: 0 0 40px rgba(0, 133, 66, 0.35);
+    animation: drop 0.5s linear;
+    overflow: hidden;
+}
+
+.notice-content {
+    flex: 1 1 auto;
+    min-height: 0;                      /* lets flex child scroll */
+    overflow-y: auto;
+    padding: clamp(14px, 1.5vw, 24px) clamp(16px, 2vw, 32px);
+    font-size: clamp(12px, 1vw, 16px);
+    line-height: 1.7;
+    color: #cccccc;
+    touch-action: pan-y;
+    scrollbar-width: thin;
+    scrollbar-color: #008542 #131313;
+}
+
+.notice-filler {
+    height: 80vh;                       /* taller than the visible content area → scroll required */
+    pointer-events: none;
+}

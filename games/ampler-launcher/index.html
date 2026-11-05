@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampler Launcher</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" media="screen and (max-width: 1100px)" href="css/screensize.css">
+    <link rel="stylesheet" media="screen and (max-height: 550px)" href="css/screensize.css">
+    <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <meta content="Ampler Launcher" property="og:title">
+    <meta content="A minecraft themed launcher for Eaglercraft!" property="og:description">
+    <meta content="https://irv77.github.io/AmplerLauncher/" property="og:url">
+    <meta content="https://irv77.github.io/AmplerLauncher/images/logo.png" property="og:image">
+    <meta content="#786d81" data-react-helmet="true" name="theme-color">
+</head>
+
+<body style="font-family: 'Roboto', sans-serif;">
+
+    <div id="naerror" class="error">
+        <div>
+            <p style="margin-left: 1vw;" class="bolded">SORRY!</p>
+            <p style="color: goldenrod;">This feature hasn't been made yet.</p>
+        </div>
+    </div>
+    <div id="screenerror" class="error">
+        <div>
+            <p style="margin-left: 1vw;" class="bolded">ERROR!</p>
+            <p>Currently this screen resolution is buggy.</p>
+        </div>
+    </div>
+
+    <!-- ================= SIDEBAR ================= -->
+    <div class="sidebar" id="sidebar">
+
+        <div id="gtabs1" class="sidebarOptions" style="gap: 1vw;"
+             onclick="location.href='https://discord.gg/xuu8TnSY4b'">
+            <img src="./images/m-discord.png" alt>
+            <div class="gTabsText"><p>Discord</p></div>
+        </div>
+
+        <!-- EDITION TABS: add data-edition / data-default / data-bg / data-header-img / data-label -->
+        <div id="gtabs2" class="sidebarOptions"
+             style="font-weight: 700; border-left: #008542 solid 0.4vw;"
+             data-edition="web"
+             data-initial="true"
+             data-default="latestrelease"
+             data-bg="./images/web-edition.jpg"
+             data-header-img="./images/web-title.png"
+             data-label="EAGLERCRAFT WEB EDITION">
+            <img src="./images/i-web.png" alt>
+            <div class="gTabsText">
+                <p class="eaglercraftText"> EAGLERCRAFT : </p>
+                <p>Web Edition </p>
+            </div>
+        </div>
+
+        <div id="gtabs3" class="sidebarOptions"
+             data-edition="modded"
+             data-default="eaglerforge"
+             data-bg="./images/modded-edition.jpg"
+             data-header-img="./images/modded-title.png"
+             data-label="EAGLERCRAFT MODDED">
+            <img src="./images/i-modded.png" alt>
+            <div class="gTabsText">
+                <p class="eaglercraftText"> EAGLERCRAFT : </p>
+                <p>Modded Editions </p>
+            </div>
+        </div>
+
+        <div id="gtabs4" class="sidebarOptions"
+             data-edition="controls"
+             data-default="dogomobile"
+             data-bg="./images/controls-edition.jpg"
+             data-header-img="./images/controls-title.png"
+             data-label="EAGLERCRAFT MOBILE/CONTROLLER">
+            <img src="./images/i-controls.png" alt>
+            <div class="gTabsText">
+                <p class="eaglercraftText"> EAGLERCRAFT : </p>
+                <p>Mobile/Controller </p>
+            </div>
+        </div>
+
+        <div id="gtabs5" class="sidebarOptions sidebarBottom" onclick="errorNA()">
+            <img src="./images/m-credits.png" alt>
+            <div class="gTabsText"><p> Credits</p></div>
+        </div>
+        <div id="gtabs6" class="sidebarOptions sidebarBottom" onclick="errorNA()">
+            <img src="./images/m-settings.png" alt>
+            <div class="gTabsText"><p> Settings</p></div>
+        </div>
+        <div id="gtabs9" class="launcherVersion">
+            <p>v1.2.00</p>
+        </div>
+    </div>
+
+    <!-- ================= MAIN PAGE ================= -->
+    <div class="mainPage">
+        <div id="gameheader" class="gameHeader">
+            <p id="gameedition" class="currentGame bolded">EAGLERCRAFT WEB EDITION</p>
+
+            <div id="javatabs">
+                <ul class="gameTabs">
+                    <li id="header1" class="headerButtonSelected">Play</li>
+                    <li id="header2" class="headerButtons" style="display: none;"
+                        data-editions="modded" onclick="errorNA()">Mods</li>
+                    <li id="header3" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">FAQ</li>
+                    <li id="header4" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">Installations</li>
+                    <li id="header5" class="headerButtons"
+                        data-editions="web" onclick="errorNA()">Skins</li>
+                    <li id="header6" class="headerButtons"
+                        data-editions="web modded controls" onclick="errorNA()">Patch Notes</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="game-bg" class="gameBg" style="background-image: url(./images/web-edition.jpg);">
+            <div class="gameLogo">
+                <img id="game-header" src="./images/web-title.png" style="width: 40vw;" alt="eaglercraft">
+            </div>
+        </div>
+
+        <div id="gameselection" class="gameSelection">
+            <div class="versionSelector">
+                <div id="drop" class="dropdownSelector">
+                    <div style="display: flex; gap: 1vw;">
+                        <div class="centeredIcon">
+                            <img id="gameicon" src="./images/m-logo1.png" style="width: 2.5vw;" />
+                        </div>
+                        <div class="versionText">
+                            <p id="gametitle" class="bolded">Latest release</p>
+                            <p id="gameversion">1.12.2-u2</p>
+                        </div>
+                        <div class="centeredIcon">
+                            <span id="dropdownuparrow">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                     viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round" class="dropdownIcon">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M6 9l6 6l6 -6" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dropdn" class="dropdownMenu" style="visibility: hidden;">
+
+                <!--
+                  ======================================================
+                  HOW TO ADD A GAME — copy one <div> below and edit data-*:
+                      data-game="unique-id"
+                      data-editions="web modded controls"   (which editions show it)
+                      data-title="..."
+                      data-version="..."
+                      data-icon="./images/..."
+                      data-href="mc/..."
+                  JS automatically renders the icon, title, version inside.
+                  ======================================================
+                -->
+
+                <div class="dropdownOptions"
+                     data-game="latestrelease"
+                     data-editions="web"
+                     data-title="Latest release"
+                     data-version="1.12.2-u2"
+                     data-icon="./images/m-logo1.png"
+                     data-href="mc/1.12.2/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="latestreleasewasm"
+                     data-editions="web"
+                     data-title="Latest release WASM"
+                     data-version="1.12.2-u2-wasm"
+                     data-icon="./images/m-logo1.png"
+                     data-href="mc/1.12.2-wasm/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="previousrelease"
+                     data-editions="web"
+                     data-title="Previous release"
+                     data-version="1.8.8-u50"
+                     data-icon="./images/m-logo2.png"
+                     data-href="mc/1.8.8/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="previousreleasewasm"
+                     data-editions="web"
+                     data-title="Previous release WASM"
+                     data-version="1.8.8-u50-wasm"
+                     data-icon="./images/m-logo2.png"
+                     data-href="mc/1.8.8-wasm/"></div>
+
+                <div class="dropdownOptions"
+                     data-game="olderrelease"
+                     data-editions="web"
+                     data-title="Older release"
+                     data-version="1.5.2-sp2.01"
+                     data-icon="./images/m-logo11.png"
+                     data-href="mc/1.5.2/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="astraclient"
+                     data-editions="modded"
+                     data-title="Astra Client"
+                     data-version="1.8.8-v1.5"
+                     data-icon="./images/m-logo7.png"
+                     data-href="mc/astraclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="starlike"
+                     data-editions="modded"
+                     data-title="Starlike"
+                     data-version="1.8.8-v0.3.1"
+                     data-icon="./images/m-logo6.png"
+                     data-href="mc/starlikeclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="eaglerforge"
+                     data-editions="modded"
+                     data-title="Eaglerforge"
+                     data-version="1.8.8-v1.3.2"
+                     data-icon="./images/m-logo5.png"
+                     data-href="mc/eaglerforge/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="resentclient"
+                     data-editions="modded"
+                     data-title="Resent Client"
+                     data-version="1.8.8-v4.0.p4"
+                     data-icon="./images/m-logo4.png"
+                     data-href="mc/resentclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="shadowclient"
+                     data-editions="modded"
+                     data-title="Shadow Client"
+                     data-version="1.8.8-v4.5-u34"
+                     data-icon="./images/m-logo3.png"
+                     data-href="mc/shadowclient/"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="dogomobile"
+                     data-editions="controls"
+                     data-title="FlamedDogo's Mobile UI"
+                     data-version="1.8.8-v3.0.5b"
+                     data-icon="./images/m-logo10.png"
+                     data-href="mc/1.8.8/?userscript=flameddogo99-eaglermobile.js"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="redmobile"
+                     data-editions="controls"
+                     data-title="Red's Mobile UI"
+                     data-version="1.8.8-v1.40"
+                     data-icon="./images/m-logo9.png"
+                     data-href="mc/1.8.8/?userscript=irv77-eaglercraft-mobile.js"></div>
+
+                <div class="dropdownOptions" style="display: none;"
+                     data-game="redcontroller"
+                     data-editions="controls"
+                     data-title="Red's Controller Support"
+                     data-version="1.8.8-v1.1"
+                     data-icon="./images/m-logo8.png"
+                     data-href="mc/1.8.8/?userscript=irv77-eaglerconsole.js"></div>
+            </div>
+
+            <a id="playbutton" href="mc/1.12.2"><div id="mainbutton" class="playButton"></div></a>
+            <div class="username centeredIcon bolded">
+                <p class="usernameText">Generic User</p>
+            </div>
+        </div>
+    </div>
+<!-- ================= FIRST-RUN NOTICE (desktop only) ================= -->
+<div id="notice-modal" class="notice-overlay">
+    <div class="notice-box">
+        <div class="notice-header">
+            <span class="notice-icon">⚠</span>
+            <h2>Before You Play</h2>
+        </div>
+
+<div class="notice-content" id="notice-content">
+    <p>When you are running Minecraft, click the screen then press the button
+       <code>Tab</code> on your <strong id="notice-device">device</strong> to enable typing!</p>
+
+    <div class="notice-filler" aria-hidden="true"></div>
+</div>
+
+        <button id="notice-confirm" class="notice-confirm" disabled>
+            Scroll down to continue
+        </button>
+    </div>
+</div>
+    <script src="./js/index.js"></script>
+</body>
+</html>
