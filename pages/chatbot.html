@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlighter AI</title>
+    
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+<script>
+  let mathTimeout;
+  function safeRefreshMath(content) {
+    if (content && !containsMath(content)) return;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      clearTimeout(mathTimeout);
+      mathTimeout = setTimeout(() => {
+        MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
+      }, 100);
+    }
+  }
+  const mathDelimiters = ['$$', '$', '\\(', '\\)', '\\[', '\\]'];
+  function containsMath(text) {
+    if (!text) return false;
+    return mathDelimiters.some(delim => text.includes(delim));
+  }
+  const observer = new MutationObserver((mutations) => {
+    let shouldRender = false;
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+            if (containsMath(node.textContent)) shouldRender = true;
+          } else if (node.nodeType === Node.TEXT_NODE) {
+            if (containsMath(node.textContent)) shouldRender = true;
+          }
+        });
+      } else if (mutation.type === 'characterData') {
+        if (containsMath(mutation.target.textContent)) shouldRender = true;
+      }
+      if (shouldRender) break;
+    }
+    if (shouldRender) safeRefreshMath();
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  });
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+    :root {
+        --bg-color: #e0e5ec;
+        --text-color: #333333;
+        --text-secondary: #555555;
+        --primary-color: #4c68ff;
+        --primary-light: #7c90ff;
+        --primary-dark: #3a50cc;
+        --secondary-bg: #e0e5ec;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --glass-color: rgba(255, 255, 255, 0.4);
+        --card-glass: rgba(255, 255, 255, 0.65);
+        --line-color: rgba(0, 0, 0, 0.07);
+        --star-color: #E5B500;
+        --toggle-size: 4rem;
+        --border-radius: 20px;
+        --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        --shadow-light-top: -6px -6px 12px #ffffff;
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.15);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px #ffffff;
+        --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        --highlight-light: #ffffff;
+        --shadow-dark: #a3b1c6;
+        --active-color: #4c68ff;
+    }
+    [data-theme="dark"] {
+        --bg-color: #0a0a1a;
+        --text-color: #f0f3ff;
+        --text-secondary: #94a3b8;
+        --primary-color: #6940c7;
+        --primary-light: #a78bfa;
+        --primary-dark: #6620d4;
+        --secondary-bg: #0f0f23;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --glass-color: rgba(15, 25, 45, 0.7);
+        --card-glass: rgba(20, 30, 55, 0.8);
+        --line-color: rgba(139, 92, 246, 0.2);
+        --star-color: #c084fc;
+        --shadow-light-top: -6px -6px 12px rgba(255,255,255,0.02);
+        --shadow-light-bottom: 6px 6px 12px rgba(0, 0, 0, 0.5);
+        --shadow-inset-light: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255,255,255,0.02);
+        --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        --highlight-light: #1e1a3a;
+        --shadow-dark: #03030c;
+        --active-color: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+        font-family: var(--font-stack);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        height: 100vh;
+        overflow: hidden;
+    }
+    body, .sidebar, .input-area, .chat-box, .message, .chat-item,
+    button, input, textarea, select, .modal-content, .latex-btn {
+        transition: background-color 0.4s ease, color 0.4s ease, 
+                    border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.3s ease;
+    }
+    input[type="text"]:hover, button:hover, input[type="submit"]:hover,
+    input[type="button"]:hover, select:hover, label:hover { cursor: pointer; }
+    .app-container { display: flex; height: 100%; width: 100%; }
+    .main-content { flex-grow: 1; display: flex; flex-direction: column; height: 100%; }
+    .sidebar {
+        width: 280px; background-color: var(--secondary-bg);
+        display: flex; flex-direction: column; padding: 15px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        flex-shrink: 0; z-index: 10;
+    }
+    .sidebar-header { padding: 10px 0 16px; margin-bottom: 10px; text-align: center; }
+    .sidebar-header h2 {
+        display: inline-flex; align-items: center; gap: 8px;
+        color: var(--active-color); font-size: 1.5em; font-weight: 700;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+    .sidebar-header-mark {
+        display: inline-block; color: var(--star-color);
+        filter: drop-shadow(0 0 4px color-mix(in srgb, var(--star-color) 60%, transparent));
+        font-size: 0.85em; line-height: 1;
+    }
+    .sidebar-header-tagline {
+        margin-top: 4px; font-size: 0.7em; font-weight: 500;
+        letter-spacing: 0.02em; color: var(--text-secondary);
+    }
+    .new-chat-button {
+        width: 100%; padding: 12px; background-color: var(--primary-color);
+        color: #ffffff; border: none; border-radius: var(--border-radius);
+        font-size: 1em; font-weight: 600; margin-bottom: 20px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .new-chat-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .new-chat-button:active { box-shadow: var(--shadow-inset-light); transform: scale(0.98); }
+    .chat-list { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+    .chat-item {
+        position: relative; padding: 10px 10px 10px 16px; margin-bottom: 10px;
+        border-radius: var(--border-radius); font-size: 0.9em;
+        color: var(--text-secondary); overflow: hidden; white-space: nowrap;
+        text-overflow: ellipsis; background: var(--bg-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .chat-item::before {
+        content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+        width: 3px; border-radius: 3px; background: var(--active-color);
+        opacity: 0; transition: opacity 0.2s ease;
+    }
+    .chat-item.active { box-shadow: var(--shadow-inset-light); color: var(--active-color); font-weight: 600; }
+    .chat-item.active::before { opacity: 1; }
+    .chat-item:hover:not(.active) { color: var(--text-color); transform: translateY(-1px); }
+    .sidebar-footer {
+        padding: 10px 0; font-size: 0.8em; color: var(--text-secondary);
+        border-top: 1px solid var(--line-color);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--active-color); border-radius: 3px; opacity: 0.4; }
+    .start-page {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--bg-color);
+        background-image: radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--active-color) 12%, transparent), transparent 60%);
+        display: flex; justify-content: center; align-items: center;
+        flex-direction: column; text-align: center; padding: 20px; z-index: 100;
+    }
+    .start-page h1 {
+        color: var(--active-color); font-size: 3em; margin-bottom: 6px;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+    .start-page > p { color: var(--text-secondary); font-size: 1em; }
+    .model-selector-container {
+        margin-top: 30px; display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 15px; max-height: 60vh; overflow-y: auto; padding: 5px;
+        width: 100%; max-width: 900px;
+    }
+    .model-button {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 18px 16px; border: none; border-radius: var(--border-radius);
+        font-size: 1em; font-weight: 600; background-color: var(--secondary-bg);
+        color: var(--text-color); box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        pointer-events: none; position: relative;
+    }
+    .model-button:hover:not(.selected) { transform: translateY(-2px); color: var(--active-color); }
+    .model-button.selected { box-shadow: var(--shadow-inset-light); color: var(--active-color); }
+    .model-button-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+    .model-badge {
+        display: inline-block; font-size: 0.62em; font-weight: 700;
+        letter-spacing: 0.02em; padding: 2px 7px; border-radius: 6px; color: #fff;
+    }
+    .model-badge-vision { background: var(--primary-color); }
+    .model-badge-reasoning { background: var(--star-color); color: #2a1e00; }
+    .model-load-error {
+        grid-column: 1 / -1; display: flex; flex-direction: column;
+        align-items: center; gap: 10px; padding: 20px;
+    }
+    .model-load-error-title { font-weight: 700; color: var(--text-color); }
+    .model-load-error-detail { font-size: 0.85em; color: var(--text-secondary); max-width: 420px; word-break: break-word; }
+    .retry-button {
+        padding: 10px 26px; border: none; border-radius: var(--border-radius);
+        background-color: var(--danger-color); color: #ffffff; font-weight: 600;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .retry-button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-2px); }
+    .retry-button:active:not(:disabled) { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+    .retry-button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .chat-container { display: flex; flex-direction: column; flex-grow: 1; min-height: 0; }
+    .chat-box {
+        flex-grow: 1; overflow-y: auto; padding: 20px;
+        background-color: var(--bg-color); box-shadow: var(--shadow-inset-light);
+    }
+    .welcome-prompt { text-align: center; padding: 50px; color: var(--text-secondary); }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .message {
+        margin-bottom: 15px; padding: 12px 18px; border-radius: 18px;
+        line-height: 1.5; max-width: 80%; font-size: 1em;
+        animation: fadeIn 0.4s ease-out backwards;
+    }
+    .message-content strong { color: var(--active-color); font-weight: 700; }
+    .user-message {
+        position: relative; background-color: var(--primary-color);
+        color: #ffffff; margin-left: auto; border-bottom-right-radius: 4px;
+        box-shadow: var(--shadow-light-bottom); overflow-x: auto;
+    }
+    .ai-message {
+        position: relative; background-color: var(--secondary-bg);
+        color: var(--text-color); margin-right: auto; border-bottom-left-radius: 4px;
+        border: 1px solid var(--line-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        overflow-x: auto;
+    }
+    .reasoning-block {
+        margin-bottom: 10px; padding: 10px 12px; border-radius: 12px;
+        background: var(--bg-color); box-shadow: var(--shadow-inset-light);
+        color: var(--text-secondary); font-size: 0.85em;
+        font-style: italic; white-space: pre-wrap;
+    }
+    .reasoning-block summary {
+        cursor: pointer; font-weight: 600; font-style: normal; color: var(--active-color);
+    }
+    .thinking-indicator {
+        display: inline-flex; align-items: center; gap: 8px;
+        color: var(--text-secondary); font-style: italic;
+    }
+    .thinking-word {
+        display: inline-block; min-width: 100px;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .thinking-dots { display: inline-flex; gap: 4px; align-items: center; }
+    .thinking-dots span {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: var(--active-color); display: inline-block;
+        animation: thinkBounce 1.2s infinite ease-in-out both;
+    }
+    .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0s; }
+    @keyframes thinkBounce {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+    .copy-button {
+        position: absolute; top: 6px; right: 6px; border: none;
+        padding: 4px 8px; border-radius: 6px; font-size: 0.7em;
+        font-weight: 600; opacity: 0; z-index: 10;
+        background: var(--bg-color); color: var(--text-secondary);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .ai-message:hover .copy-button { opacity: 0.8; }
+    .copy-button:hover { color: var(--active-color); transform: translateY(-1px); opacity: 1; }
+    .copy-button:active, .copy-button.copied {
+        box-shadow: var(--shadow-inset-light); color: var(--success-color); transform: scale(0.95);
+    }
+    .input-area {
+        display: flex; flex-direction: column; padding: 15px;
+        background-color: var(--secondary-bg); box-shadow: var(--shadow-light-top);
+        flex-shrink: 0; gap: 8px; z-index: 10;
+    }
+    .model-select-bar {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 0.9rem; color: var(--text-secondary); flex-wrap: wrap;
+    }
+    #model-select-dropdown {
+        padding: 6px 10px; border: none; border-radius: 8px;
+        background-color: var(--bg-color); box-shadow: var(--shadow-inset-light);
+        color: var(--text-color); appearance: none; outline: none;
+    }
+    #model-select-dropdown:focus-visible, button:focus-visible,
+    input:focus-visible, select:focus-visible, textarea:focus-visible {
+        outline: 2px solid var(--active-color); outline-offset: 2px;
+    }
+    .reasoning-panel {
+        display: flex; align-items: center; gap: 12px;
+        padding: 6px 12px; border-radius: 14px;
+        background-color: var(--bg-color); box-shadow: var(--shadow-inset-light);
+    }
+    .reasoning-panel-label {
+        font-size: 0.8em; font-weight: 600;
+        color: var(--text-secondary); white-space: nowrap;
+    }
+    .effort-segmented {
+        display: flex; gap: 2px; background-color: var(--secondary-bg);
+        border-radius: 10px; padding: 3px; box-shadow: var(--shadow-inset-light);
+    }
+    .effort-option {
+        border: none; background: transparent; padding: 5px 12px;
+        font-size: 0.78em; font-weight: 600;
+        color: var(--text-secondary); border-radius: 8px;
+    }
+    .effort-option:hover:not(.active) { color: var(--active-color); }
+    .effort-option.active {
+        background-color: var(--active-color); color: #ffffff;
+        box-shadow: var(--shadow-light-bottom);
+    }
+    .reasoning-switch {
+        display: flex; align-items: center; gap: 7px;
+        font-size: 0.8em; font-weight: 600;
+        color: var(--text-secondary); white-space: nowrap;
+    }
+    .reasoning-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .reasoning-switch-track {
+        position: relative; width: 34px; height: 18px;
+        border-radius: 999px; background-color: var(--secondary-bg);
+        box-shadow: var(--shadow-inset-light); flex-shrink: 0;
+    }
+    .reasoning-switch-thumb {
+        position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+        border-radius: 50%; background-color: var(--text-secondary);
+        transition: transform 0.25s ease, background-color 0.25s ease;
+    }
+    .reasoning-switch input:checked ~ .reasoning-switch-track {
+        background-color: var(--active-color); box-shadow: none;
+    }
+    .reasoning-switch input:checked ~ .reasoning-switch-track .reasoning-switch-thumb {
+        transform: translateX(16px); background-color: #ffffff;
+    }
+    .reasoning-switch input:focus-visible ~ .reasoning-switch-track {
+        outline: 2px solid var(--active-color); outline-offset: 2px;
+    }
+    .input-controls { display: flex; align-items: flex-end; gap: 10px; }
+    #user-input {
+        flex-grow: 1; padding: 12px 18px; border: 1px solid transparent;
+        border-radius: 25px; font-size: 1em; font-family: inherit;
+        background-color: var(--bg-color); box-shadow: var(--shadow-inset-light);
+        resize: none; min-height: 48px; max-height: 150px; overflow-y: auto;
+        color: var(--text-color); line-height: 1.4;
+    }
+    #user-input:focus { border-bottom: 2px solid var(--active-color); outline: none; }
+    .send-button, .upload-button, .math-button {
+        background-color: var(--success-color); color: #ffffff;
+        font-size: 1.2em; border: none; border-radius: 25px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+        padding: 12px 20px;
+    }
+    .math-button { background-color: var(--secondary-bg); color: var(--text-color); }
+    .math-button:hover { color: var(--active-color); transform: translateY(-1px); }
+    .send-button:hover, .upload-button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .send-button:active:not(:disabled), .upload-button:active:not(:disabled), .math-button:active:not(:disabled) {
+        box-shadow: var(--shadow-inset-light); transform: scale(0.95);
+    }
+    .send-button:disabled, .upload-button:disabled, .math-button:disabled {
+        background-color: var(--primary-dark); opacity: 0.5;
+        cursor: not-allowed; box-shadow: none;
+    }
+    .stop-mode { background-color: var(--danger-color) !important; animation: fadeIn 0.2s ease; }
+    .file-display-area {
+        display: none; align-items: center; padding: 8px 15px;
+        background-color: var(--bg-color); border-radius: 12px;
+        box-shadow: var(--shadow-inset-light); color: var(--text-secondary); margin-top: 5px;
+    }
+    .chat-locked-banner {
+        padding: 10px 15px; border-radius: 12px; background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light); color: var(--danger-color);
+        font-size: 0.85em; text-align: center; margin-bottom: 8px;
+    }
+    .chat-locked-banner strong { color: var(--danger-color); }
+    #selected-file-name {
+        flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .clear-file-button {
+        background: none; border: none; color: var(--danger-color);
+        font-weight: bold; padding: 0 5px;
+    }
+    .fraction-builder {
+        display: none; flex-direction: column; align-items: center;
+        gap: 15px; margin-top: 10px; padding: 10px;
+    }
+    .fraction-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .fraction-stack { display: flex; flex-direction: column; align-items: center; width: 80px; }
+    .fraction-input {
+        width: 100%; padding: 8px; text-align: center; border: none;
+        border-radius: 8px; background: var(--bg-color);
+        box-shadow: var(--shadow-inset-light); outline: none; color: var(--text-color);
+    }
+    .fraction-line {
+        width: 100%; height: 2px; background-color: var(--active-color);
+        margin: 5px 0; border-radius: 2px;
+    }
+    .fraction-whole { width: 60px; height: 40px; }
+    .latex-picker { width: 450px; }
+    .latex-grid {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+        margin: 15px 0; max-height: 300px; overflow-y: auto; padding-right: 5px;
+    }
+    .latex-btn {
+        background: var(--bg-color); color: var(--text-color); border: none;
+        padding: 12px; border-radius: 8px;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .latex-btn:hover { color: var(--active-color); transform: translateY(-2px); }
+    .latex-btn:active { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+    .latex-category {
+        grid-column: span 5; font-size: 0.85em; color: var(--active-color);
+        margin-top: 15px; margin-bottom: 5px; font-weight: 700;
+        text-transform: uppercase; border-bottom: 1px solid var(--line-color);
+        padding-bottom: 5px;
+    }
+    #latex-insert-main-btn {
+        padding: 8px 16px; border: none; border-radius: 8px;
+        background-color: var(--primary-color); color: #ffffff; font-weight: 600;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    #latex-insert-main-btn:hover { transform: translateY(-2px); background-color: var(--primary-light); }
+    #latex-insert-main-btn:active { transform: translateY(0); box-shadow: var(--shadow-inset-light); }
+    #latex-live-preview {
+        min-height: 60px; margin-bottom: 15px; padding: 15px;
+        background: var(--bg-color); border-radius: 8px; display: flex;
+        align-items: center; justify-content: center; font-size: 1.5em;
+        box-shadow: var(--shadow-inset-light); color: var(--active-color);
+    }
+    #context-menu {
+        position: absolute; background-color: var(--card-glass);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--line-color); border-radius: var(--border-radius);
+        padding: 5px; box-shadow: var(--card-shadow); display: none;
+        z-index: 1000; min-width: 150px;
+    }
+    #context-menu button {
+        display: block; width: 100%; padding: 10px 15px; text-align: left;
+        border: none; border-radius: 8px; background: none;
+        color: var(--text-color); font-size: 0.9em;
+    }
+    #context-menu button:hover {
+        background-color: var(--bg-color); color: var(--active-color);
+        box-shadow: var(--shadow-inset-light);
+    }
+    #custom-confirm-modal, #custom-prompt-modal, #latex-modal, #image-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); display: none;
+        justify-content: center; align-items: center;
+        z-index: 2000; backdrop-filter: blur(8px);
+    }
+    #image-modal { z-index: 2500 !important; }
+    .image-modal-img {
+        max-width: 90vw; max-height: 90vh; border-radius: 12px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.8); animation: fadeIn 0.3s ease;
+        object-fit: contain;
+    }
+    .modal-content {
+        background-color: var(--secondary-bg); border-radius: var(--border-radius);
+        border: 1px solid var(--line-color); padding: 30px;
+        width: 90%; max-width: 400px; box-shadow: var(--card-shadow);
+        text-align: center; animation: fadeIn 0.3s ease-out;
+    }
+    .modal-content h3 { color: var(--active-color); margin-bottom: 10px; }
+    .modal-content p { color: var(--text-secondary); margin-bottom: 20px; }
+    #prompt-input {
+        width: 100%; padding: 12px; margin-bottom: 20px; border: none;
+        border-radius: 8px; background-color: var(--bg-color);
+        box-shadow: var(--shadow-inset-light); color: var(--text-color); outline: none;
+    }
+    #prompt-input:focus { border-bottom: 2px solid var(--active-color); }
+    .modal-buttons { display: flex; justify-content: space-around; gap: 10px; }
+    .modal-buttons button {
+        padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600;
+    }
+    .modal-buttons .confirm-btn {
+        background-color: var(--primary-color); color: #ffffff;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .modal-buttons .cancel-btn {
+        background-color: var(--bg-color); color: var(--text-color);
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .modal-buttons button:hover { transform: translateY(-2px); }
+    .modal-buttons button:active { box-shadow: var(--shadow-inset-light); transform: translateY(0); }
+    #key-select-dropdown {
+        padding: 4px 8px; border: none; border-radius: 6px;
+        background-color: var(--bg-color); box-shadow: var(--shadow-inset-light);
+        color: var(--text-color); appearance: none; outline: none;
+        margin-top: 4px; width: 100%;
+    }
+    .mobile-sidebar-toggle {
+        display: none; position: fixed; top: 14px; left: 14px; z-index: 250;
+        width: 42px; height: 42px; align-items: center; justify-content: center;
+        border: none; border-radius: 50%; background-color: var(--secondary-bg);
+        color: var(--active-color); font-size: 1.2em;
+        box-shadow: var(--shadow-light-bottom), var(--shadow-light-top);
+    }
+    .mobile-sidebar-toggle:active { box-shadow: var(--shadow-inset-light); }
+    .sidebar-backdrop {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0, 0, 0, 0.45); z-index: 190; opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .sidebar-backdrop.visible { display: block; opacity: 1; }
+    @media (max-width: 768px) {
+        .mobile-sidebar-toggle { display: flex; }
+        .sidebar {
+            position: fixed; top: 0; left: 0; height: 100%; width: 82%;
+            max-width: 320px; order: 0;
+            box-shadow: 8px 0 24px rgba(0, 0, 0, 0.3);
+            transform: translateX(-100%); transition: transform 0.3s ease; z-index: 200;
+        }
+        .sidebar.open { transform: translateX(0); }
+        .chat-box { padding-bottom: 120px; padding-top: 55px; }
+    }
+    .loading-screen {
+        position: fixed; inset: 0; background-color: var(--bg-color);
+        background-image: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--active-color) 10%, transparent), transparent 65%);
+        display: none; justify-content: center; align-items: center;
+        flex-direction: column; z-index: 4000; padding: 20px; text-align: center;
+    }
+    .loading-screen.visible { display: flex; }
+    .loading-content {
+        max-width: 480px; width: 100%; display: flex;
+        flex-direction: column; align-items: center; gap: 14px;
+    }
+    .loading-brand {
+        display: inline-flex; align-items: center; gap: 10px;
+        color: var(--active-color); font-size: 2em; font-weight: 700;
+        text-shadow: 1px 1px 2px var(--shadow-dark), -1px -1px 2px var(--highlight-light);
+    }
+    .loading-brand-mark {
+        color: var(--star-color);
+        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--star-color) 70%, transparent));
+        animation: loadingPulse 1.6s ease-in-out infinite; display: inline-block;
+    }
+    @keyframes loadingPulse {
+        0%, 100% { opacity: 0.65; transform: scale(0.94) rotate(0deg); }
+        50%      { opacity: 1;    transform: scale(1.08) rotate(15deg); }
+    }
+    .loading-subtitle { color: var(--text-secondary); font-size: 0.95em; margin-bottom: 4px; }
+    .loading-bar-track {
+        width: 100%; height: 10px; border-radius: 999px;
+        background-color: var(--secondary-bg); box-shadow: var(--shadow-inset-light);
+        overflow: hidden;
+    }
+    .loading-bar-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        border-radius: 999px; transition: width 0.35s ease;
+        box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 55%, transparent);
+    }
+    .loading-status {
+        font-size: 0.95em; color: var(--text-color);
+        font-weight: 600; min-height: 1.2em;
+    }
+    .loading-model-name {
+        font-size: 0.82em; color: var(--text-secondary);
+        min-height: 1.1em; max-width: 100%; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap;
+    }
+    .loading-eta {
+        font-size: 0.85em; color: var(--text-secondary);
+        font-style: italic; min-height: 1.1em;
+    }
+</style>
+
+</head>
+<body>
+
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-brand">
+                <span class="loading-brand-mark">✦</span>
+                <span>Starlighter AI</span>
+            </div>
+            <p class="loading-subtitle">Getting everything ready…</p>
+            <div class="loading-bar-track">
+                <div class="loading-bar-fill" id="loading-bar-fill"></div>
+            </div>
+            <p class="loading-status" id="loading-status">Initializing…</p>
+            <p class="loading-model-name" id="loading-model-name"></p>
+            <p class="loading-eta" id="loading-eta"></p>
+        </div>
+    </div>
+
+    <div id="context-menu" class="context-menu">
+        <button data-action="edit">Edit Title</button>
+        <button data-action="lock">Lock Chat</button>
+        <button data-action="delete">Delete Chat</button>
+    </div>
+
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirm-title">Confirm</h3>
+            <p id="confirm-message">Are you sure?</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" data-confirm-response="false">Cancel</button>
+                <button class="confirm-btn" data-confirm-response="true">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-prompt-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="prompt-title">Input</h3>
+            <p id="prompt-message">Enter value:</p>
+            <input type="text" id="prompt-input">
+            <div class="modal-buttons">
+                <button class="cancel-btn" data-prompt-response="false">Cancel</button>
+                <button class="confirm-btn" data-prompt-response="true">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="image-modal" class="modal" onclick="this.style.display='none'">
+        <img class="image-modal-img" id="img-modal-content">
+    </div>
+
+    <div id="latex-modal" class="modal">
+        <div class="modal-content latex-picker">
+            <h3>Math Symbols</h3>
+            <div id="latex-live-preview" style="min-height: 60px; margin-bottom: 15px; padding: 15px; background: var(--neumorphic-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: var(--inner-shadow-recessed); overflow-x: auto; color: var(--main-color);">
+                <span style="color:#aaa; font-size:0.6em; font-weight:normal;">Preview</span>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="latex-preview-input" class="fraction-input" placeholder="Build equation (e.g., 2 + \pi)" style="text-align: left; flex-grow: 1;">
+                <button id="latex-insert-main-btn" class="confirm-btn">Insert</button>
+            </div>
+            <div class="latex-grid" id="latex-grid-container"></div>
+            <div id="fraction-builder-ui" class="fraction-builder">
+                <h4>Insert Fraction</h4>
+                <div class="fraction-row">
+                    <input type="text" id="frac-whole" class="fraction-input fraction-whole" placeholder="#">
+                    <div class="fraction-stack">
+                        <input type="text" id="frac-num" class="fraction-input" placeholder="Num">
+                        <div class="fraction-line"></div>
+                        <input type="text" id="frac-den" class="fraction-input" placeholder="Den">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="cancel-btn" id="cancel-frac-btn">Back</button>
+                    <button class="confirm-btn" id="insert-frac-btn">Insert</button>
+                </div>
+            </div>
+            <div id="single-builder-ui" class="fraction-builder">
+                <h4 id="single-builder-title">Insert Value</h4>
+                <div class="fraction-row">
+                    <input type="text" id="single-input-val" class="fraction-input" placeholder="Value" style="width: 150px;">
+                </div>
+                <div class="modal-buttons">
+                    <button class="cancel-btn" id="cancel-single-btn">Back</button>
+                    <button class="confirm-btn" id="insert-single-btn">Insert</button>
+                </div>
+            </div>
+            <div class="modal-buttons" id="main-latex-buttons">
+                 <button class="cancel-btn" id="close-latex-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="mobile-sidebar-toggle" class="mobile-sidebar-toggle" aria-label="Open chats" title="Chats">☰</button>
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><span class="sidebar-header-mark">✦</span>Starlighter AI</h2>
+                <div class="sidebar-header-tagline">Multi-model chat, powered by Groq</div>
+            </div>
+            <button id="new-chat-button" class="new-chat-button">+ New Chat</button>
+            <div id="chat-list" class="chat-list"></div>
+            <div class="sidebar-footer">
+                <p>Model: <span id="displayed-model">Loading...</span></p>
+                <p>Status: <span id="api-status">Loading API Key...</span></p>
+                <label for="key-select-dropdown" style="display:block; margin-top:8px;">API Key:</label>
+                <select id="key-select-dropdown" onchange="selectApiKey(this.value)" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="start-page" class="start-page">
+                <h1>Welcome!</h1>
+                <p>Select a model to start a conversation.</p>
+                <div id="model-selector-container" class="model-selector-container"></div>
+            </div>
+
+            <div id="main-chat-container" class="chat-container">
+                <div id="chat-box" class="chat-box"></div>
+
+                <div class="input-area">
+                    <div id="chat-locked-banner" class="chat-locked-banner" style="display:none;">
+                        This chat hit Groq's size limit too many times. <strong>Start a new chat</strong> to keep going.
+                    </div>
+
+                    <div class="model-select-bar">
+                        <label for="model-select-dropdown">Current Model:</label>
+                        <select id="model-select-dropdown" onchange="selectModel(this.value)" disabled></select>
+
+                        <div id="reasoning-toggle-container" class="reasoning-panel" style="display:none;">
+                            <span class="reasoning-panel-label">Reasoning</span>
+                            <div class="effort-segmented" role="group" aria-label="Reasoning effort">
+                                <button type="button" class="effort-option" data-effort="none" title="Skip the reasoning trace — uses far fewer tokens">None</button>
+                                <button type="button" class="effort-option" data-effort="low">Low</button>
+                                <button type="button" class="effort-option active" data-effort="medium">Medium</button>
+                                <button type="button" class="effort-option" data-effort="high">High</button>
+                            </div>
+                            <label class="reasoning-switch" title="Show the model's reasoning">
+                                <input type="checkbox" id="show-reasoning-checkbox">
+                                <span class="reasoning-switch-track"><span class="reasoning-switch-thumb"></span></span>
+                                <span class="reasoning-switch-text">Show reasoning</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-controls">
+                        <input type="file" id="image-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        <button id="file-upload-button" class="upload-button" style="display:none;" title="Upload Image">🖼️</button>
+                        <button id="math-button" class="math-button" title="Insert Math Symbol">Σ</button>
+                        <textarea id="user-input" placeholder="Type your message here..." rows="1" disabled></textarea>
+                        <div id="main-char-counter" style="text-align: right; font-size: 0.7em; color: #888; padding: 0 10px;">0 / 4000</div>
+                        <button id="send-button" class="send-button" disabled>Send</button>
+                    </div>
+                    
+                    <div id="file-display-area" class="file-display-area" style="display:none;">
+                        <span id="selected-file-name">No file selected</span>
+                        <button id="clear-file-button" class="clear-file-button">X</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY_URL = "../txt/token.txt";
+        const LOCAL_STORAGE_KEY = "starlighter_chats"; 
+        const MODEL_KEY_STORAGE = "starlighter_model_key"; 
+        const KEY_INDEX_STORAGE = "starlighter_key_index";
+        const REASONING_EFFORT_STORAGE = "starlighter_reasoning_effort";
+        const REASONING_EFFORT_BY_MODEL_STORAGE = "starlighter_reasoning_effort_by_model";
+        const REASONING_ALLOWED_CACHE_STORAGE = "starlighter_reasoning_allowed_cache";
+
+        let REASONING_EFFORT_BY_MODEL = {};
+        try {
+            REASONING_EFFORT_BY_MODEL = JSON.parse(localStorage.getItem(REASONING_EFFORT_BY_MODEL_STORAGE)) || {};
+        } catch (e) { REASONING_EFFORT_BY_MODEL = {}; }
+
+        function saveReasoningEffortByModel() {
+            try { localStorage.setItem(REASONING_EFFORT_BY_MODEL_STORAGE, JSON.stringify(REASONING_EFFORT_BY_MODEL)); } catch (e) {}
+        }
+
+        function getDefaultReasoningEffort(model) {
+            return (model && model.multimodal && model.reasoning) ? 'none' : 'medium';
+        }
+
+        let REASONING_ALLOWED_CACHE = {};
+        try {
+            REASONING_ALLOWED_CACHE = JSON.parse(localStorage.getItem(REASONING_ALLOWED_CACHE_STORAGE)) || {};
+        } catch (e) { REASONING_ALLOWED_CACHE = {}; }
+
+        function saveReasoningAllowedCache() {
+            try { localStorage.setItem(REASONING_ALLOWED_CACHE_STORAGE, JSON.stringify(REASONING_ALLOWED_CACHE)); } catch (e) {}
+        }
+
+        function mapEffortToAllowed(effort, allowed) {
+            if (!allowed || !allowed.length) return effort;
+            if (allowed.includes(effort)) return effort;
+            if (allowed.includes('default')) return 'default';
+            return allowed[0];
+        }
+
+        function parseAllowedValuesFromError(message) {
+            if (!message) return null;
+            const matches = message.match(/[`'"]([a-zA-Z]+)[`'"]/g);
+            if (!matches) return null;
+            const values = [...new Set(matches.map(s => s.replace(/[`'"]/g, '')))]
+                .filter(v => ['none', 'default', 'low', 'medium', 'high', 'minimal'].includes(v));
+            return values.length ? values : null;
+        }
+
+        const STRUCTURAL_LOW_LIMIT_THRESHOLD = 2000;
+
+        function parseTooLargeErrorInfo(message) {
+            if (!message || !/request too large/i.test(message)) return null;
+            const m = message.match(/on\s+(input tokens per minute \(ITPM\)|output tokens per minute \(OTPM\)|tokens per minute \(TPM\)|requests per minute \(RPM\))[^]*?Limit[:\s]+(\d+)[^]*?Requested[:\s]+(\d+)/i);
+            if (m) {
+                return { type: m[1], limit: parseInt(m[2], 10), requested: parseInt(m[3], 10) };
+            }
+            return { type: null, limit: null, requested: null };
+        }
+
+        function isRequestTooLargeError(message) {
+            return !!message && /request too large/i.test(message);
+        }
+
+        const VISION_SUPPORT_CACHE_STORAGE = "starlighter_vision_support_cache";
+        let VISION_SUPPORT_CACHE = {};
+
+        function getVisionSupport(modelId) {
+            return VISION_SUPPORT_CACHE[modelId];
+        }
+
+        function isVisionUnsupportedError(message) {
+            if (!message) return false;
+            const lower = message.toLowerCase();
+            const mentionsImages = lower.includes('image') || lower.includes('vision') || lower.includes('multimodal');
+            const saysUnsupported = lower.includes('not support') || lower.includes('unsupported') || lower.includes("doesn't support") || lower.includes('cannot process') || lower.includes('invalid content type');
+            return mentionsImages && saysUnsupported;
+        }
+
+        function requestHasImage(requestBody) {
+            return Array.isArray(requestBody.messages) && requestBody.messages.some(
+                m => Array.isArray(m.content) && m.content.some(p => p.type === 'image_url')
+            );
+        }
+
+        const REASONING_MODEL_HINTS = ['gpt-oss', 'qwen3', 'deepseek', 'minimax'];
+        const EXCLUDED_MODEL_HINTS = ['whisper', 'tts', 'orpheus', 'prompt-guard', 'embed'];
+        const MIN_CONTEXT_WINDOW = 4096;
+        const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
+        const GROQ_MODELS_ENDPOINT = "https://api.groq.com/openai/v1/models";
+        const REQUEST_TIMEOUT_MS = 90000;
+
+        // --- VISION PROBE CONFIG ---
+        // Fetched from a public URL instead of an embedded base64 blob — keeps the
+        // source file small and lets Groq pull the image server-side.
+        const VISION_PROBE_TEST_IMAGE = "https://placehold.co/256x256/png";
+        const VISION_PROBE_TIMEOUT_MS = 25000;
+        const VISION_PROBE_INTER_PROBE_DELAY_MS = 350;
+
+        const VISION_TEMPERATURE = 0.3;
+
+        let MODELS = {};
+
+        function slugify(modelId) {
+            return modelId.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
+        }
+
+        function friendlyModelName(modelId) {
+            let name = modelId.split('/').pop();
+            name = name.replace(/-/g, ' ');
+            name = name.replace(/\b\w/g, c => c.toUpperCase());
+            name = name.replace(/\bGpt\b/i, 'GPT').replace(/\bOss\b/i, 'OSS').replace(/\bAi\b/i, 'AI');
+            return name;
+        }
+
+        function isReasoningModelId(modelId) {
+            const lower = modelId.toLowerCase();
+            return REASONING_MODEL_HINTS.some(hint => lower.includes(hint));
+        }
+
+        function buildModelsFromList(modelObjects) {
+            const models = {};
+            modelObjects.forEach(m => {
+                const id = m && m.id;
+                if (!id) return;
+                const lower = id.toLowerCase();
+                if (EXCLUDED_MODEL_HINTS.some(hint => lower.includes(hint))) return;
+                const ctxWindow = m.context_window || m.contextWindow || m.context_length || null;
+                if (typeof ctxWindow === 'number' && ctxWindow > 0 && ctxWindow < MIN_CONTEXT_WINDOW) return;
+                if (m.active === false) return;
+
+                const key = slugify(id);
+                models[key] = {
+                    name: friendlyModelName(id),
+                    id: id,
+                    multimodal: false,
+                    reasoning: isReasoningModelId(id)
+                };
+            });
+            return Object.keys(models).length > 0 ? models : null;
+        }
+
+        async function fetchAvailableModels() {
+            const response = await fetch(GROQ_MODELS_ENDPOINT, {
+                headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` }
+            });
+            if (!response.ok) throw new Error(`Model list request failed (HTTP ${response.status})`);
+            const data = await response.json();
+            const built = buildModelsFromList(data.data || []);
+            if (!built) throw new Error('No chat-capable models were returned for this key.');
+            return built;
+        }
+
+        async function loadModelsOrShowRetry() {
+            try {
+                MODELS = await fetchAvailableModels();
+                populateModelSelector();
+                return true;
+            } catch (e) {
+                console.error('Model fetch failed:', e);
+                renderModelLoadError(e.message);
+                return false;
+            }
+        }
+
+        function renderModelLoadError(message) {
+            modelSelectorContainer.innerHTML = '';
+            const wrap = document.createElement('div');
+            wrap.className = 'model-load-error';
+            wrap.innerHTML = `
+                <p class="model-load-error-title">Couldn't load models from Groq</p>
+                <p class="model-load-error-detail"></p>
+            `;
+            wrap.querySelector('.model-load-error-detail').textContent = message || 'Unknown error.';
+
+            const retryBtn = document.createElement('button');
+            retryBtn.type = 'button';
+            retryBtn.className = 'retry-button';
+            retryBtn.textContent = 'Retry';
+            retryBtn.onclick = async () => {
+                retryBtn.disabled = true;
+                retryBtn.textContent = 'Retrying…';
+                apiStatus.textContent = 'Loading models...';
+                showLoadingScreen('Retrying model list…');
+                const ok = await loadModelsOrShowRetry();
+                if (ok) {
+                    await probeAllModels();
+                    populateModelSelector();
+                    const savedModelKey = localStorage.getItem(MODEL_KEY_STORAGE);
+                    const initialModelKey = (savedModelKey && MODELS[savedModelKey]) ? savedModelKey : Object.keys(MODELS)[0];
+                    CURRENT_MODEL = MODELS[initialModelKey];
+                    if (Object.keys(allChatHistories).length === 0) {
+                        createNewChatObject('chat-0', 'Initial Chat');
+                        currentChatId = 'chat-0';
+                    }
+                    selectModel(initialModelKey, false);
+                    modelSelectDropdown.disabled = false;
+                    keySelectDropdown.disabled = API_KEYS.length <= 1;
+                    sendButton.disabled = false;
+                    userInput.disabled = false;
+                    document.querySelectorAll('.model-button').forEach(btn => btn.style.pointerEvents = 'auto');
+                    apiStatus.textContent = 'API Key loaded.';
+                    renderSidebar();
+                    document.querySelector(`.model-button[data-model-key="${initialModelKey}"]`)?.classList.add('selected');
+                } else {
+                    apiStatus.innerHTML = `<span style="color:var(--danger-color); font-weight:bold;">Couldn't load models.</span>`;
+                }
+                hideLoadingScreen();
+            };
+            wrap.appendChild(retryBtn);
+            modelSelectorContainer.appendChild(wrap);
+        }
+
+        function showLoadingScreen(initialStatus = 'Initializing…') {
+            const screen = document.getElementById('loading-screen');
+            if (!screen) return;
+            screen.classList.add('visible');
+            setLoadingProgress(0);
+            setLoadingStatus(initialStatus);
+            setLoadingModelName('');
+            setLoadingEta('');
+        }
+        function hideLoadingScreen() {
+            const screen = document.getElementById('loading-screen');
+            if (screen) screen.classList.remove('visible');
+        }
+        function setLoadingProgress(pct) {
+            const bar = document.getElementById('loading-bar-fill');
+            if (bar) bar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+        }
+        function setLoadingStatus(text) {
+            const el = document.getElementById('loading-status');
+            if (el) el.textContent = text;
+        }
+        function setLoadingModelName(text) {
+            const el = document.getElementById('loading-model-name');
+            if (el) el.textContent = text || '';
+        }
+        function setLoadingEta(text) {
+            const el = document.getElementById('loading-eta');
+            if (el) el.textContent = text || '';
+        }
+        function formatEta(ms) {
+            if (!isFinite(ms) || ms <= 0) return 'less than a second';
+            const totalSec = Math.max(1, Math.round(ms / 1000));
+            if (totalSec < 60) return `${totalSec} second${totalSec === 1 ? '' : 's'}`;
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            if (m < 60) return `${m}m ${s}s`;
+            const h = Math.floor(m / 60);
+            return `${h}h ${m % 60}m`;
+        }
+
+        // Probes a single model's vision support with a small public image URL.
+        //   true      → 200 OK — the model accepted and processed the image
+        //   false     → 4xx error that explicitly blames images
+        //   'unknown' → rate limit exhausted, network/server error, or ambiguous 4xx
+        //
+        // On a 429, this parses Groq's own "try again in Xs" hint, adds a small
+        // buffer, counts down second-by-second via onStatus (so the loading screen
+        // can display it and the ETA can recompute), and retries — up to 3
+        // attempts total per model.
+        async function probeModelVision(modelId, attemptsRemaining = 3, onStatus = null) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), VISION_PROBE_TIMEOUT_MS);
+            let response;
+            try {
+                response = await fetch(GROQ_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: modelId,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: 'What is in this image?' },
+                                { type: 'image_url', image_url: { url: VISION_PROBE_TEST_IMAGE } }
+                            ]
+                        }],
+                        max_tokens: 5
+                    }),
+                    signal: controller.signal
+                });
+            } catch (e) {
+                clearTimeout(timeoutId);
+                return 'unknown';
+            }
+            clearTimeout(timeoutId);
+
+            if (response.ok) return true;
+
+            let errMessage = '';
+            try {
+                const data = await response.json();
+                errMessage = (data && data.error && data.error.message) || '';
+            } catch (e) {}
+
+            if (response.status === 429) {
+                if (attemptsRemaining > 1) {
+                    // Parse Groq's own retry hint if it gave one, else default to 5s.
+                    let waitSec = 5;
+                    const waitMatch = errMessage.match(/try again in ([\d.]+)\s*(ms|s|m|h)?/i);
+                    if (waitMatch) {
+                        const v = parseFloat(waitMatch[1]);
+                        const unit = (waitMatch[2] || 's').toLowerCase();
+                        if (unit === 'ms') waitSec = Math.max(1, v / 1000);
+                        else if (unit === 's') waitSec = v;
+                        else if (unit === 'm') waitSec = v * 60;
+                        else if (unit === 'h') waitSec = v * 3600;
+                    }
+                    const bufferSec = 3;
+                    const totalSec = Math.ceil(waitSec + bufferSec);
+
+                    // Count down live so the loading screen can show the wait.
+                    for (let s = totalSec; s > 0; s--) {
+                        if (onStatus) {
+                            onStatus({
+                                state: 'waiting',
+                                secondsLeft: s,
+                                attemptsLeft: attemptsRemaining - 1,
+                                inBuffer: s <= bufferSec
+                            });
+                        }
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+
+                    return probeModelVision(modelId, attemptsRemaining - 1, onStatus);
+                }
+                return 'unknown';
+            }
+
+            if (response.status === 401 || response.status === 403 || response.status >= 500) {
+                return 'unknown';
+            }
+
+            if (isVisionUnsupportedError(errMessage)) return false;
+
+            const lower = (errMessage || '').toLowerCase();
+            if (response.status >= 400 && response.status < 500 &&
+                (lower.includes('image') || lower.includes('vision') || lower.includes('multimodal'))) {
+                return false;
+            }
+
+            return 'unknown';
+        }
+
+        async function probeAllModels() {
+            VISION_SUPPORT_CACHE = {};
+
+            const modelsToProbe = Object.values(MODELS);
+            const total = modelsToProbe.length;
+
+            if (total === 0) {
+                setLoadingProgress(100);
+                setLoadingStatus('No models to verify.');
+                setLoadingEta('');
+                return;
+            }
+
+            setLoadingProgress(2);
+            setLoadingStatus(`Verifying ${total} model${total === 1 ? '' : 's'}…`);
+            setLoadingEta('Calculating estimate…');
+            setLoadingModelName('');
+
+            let completed = 0;
+            const overallStart = Date.now();
+
+            // ETA derived from wall-clock elapsed / completed. Because 429 countdowns
+            // add to "elapsed", the ETA naturally grows when we hit a rate limit —
+            // which is exactly what the user should see.
+            const recalcEta = () => {
+                if (completed === 0) {
+                    setLoadingEta('Waiting on rate limit…');
+                    return;
+                }
+                const elapsed = Date.now() - overallStart;
+                const avg = elapsed / completed;
+                const remaining = total - completed;
+                setLoadingEta(`About ${formatEta(avg * remaining)} remaining`);
+            };
+
+            for (const model of modelsToProbe) {
+                setLoadingModelName(`Checking: ${model.name}`);
+
+                const result = await probeModelVision(model.id, 15, ({ state, secondsLeft, attemptsLeft, inBuffer }) => {
+                    if (state === 'waiting') {
+                        setLoadingModelName(`Waiting on rate limit: ${model.name}`);
+                        if (inBuffer) {
+                            setLoadingStatus(`Rate limit window closed — retrying in ${secondsLeft}s…`);
+                        } else {
+                            setLoadingStatus(`Rate limited — retrying in ${secondsLeft}s (${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left)`);
+                        }
+                        recalcEta();
+                    }
+                });
+                completed++;
+
+                if (result === true) {
+                    VISION_SUPPORT_CACHE[model.id] = true;
+                    model.multimodal = true;
+                } else {
+                    VISION_SUPPORT_CACHE[model.id] = false;
+                    model.multimodal = false;
+                }
+
+                setLoadingProgress(2 + (completed / total) * 98);
+                setLoadingStatus(`Verified ${completed} of ${total} models`);
+                recalcEta();
+
+                if (completed < total) {
+                    await new Promise(r => setTimeout(r, VISION_PROBE_INTER_PROBE_DELAY_MS));
+                }
+            }
+
+            const totalTime = Date.now() - overallStart;
+            setLoadingProgress(100);
+            setLoadingStatus('All models verified.');
+            setLoadingModelName('');
+            setLoadingEta(`Done in ${formatEta(totalTime)}`);
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        function buildOutgoingMessages(history) {
+            let lastUserIndex = -1;
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].role === 'user') { lastUserIndex = i; break; }
+            }
+            return history.map((msg, idx) => {
+                if (msg.role !== 'user' || !Array.isArray(msg.content) || idx === lastUserIndex) {
+                    return { role: msg.role, content: msg.content };
+                }
+                const hasImage = msg.content.some(p => p.type === 'image_url');
+                if (!hasImage) return { role: msg.role, content: msg.content };
+                const textPart = msg.content.find(p => p.type === 'text');
+                const text = (textPart && textPart.text) ? textPart.text : '';
+                return { role: 'user', content: `${text} [Image attached — already discussed above]`.trim() };
+            });
+        }
+
+        async function performGroqChatRequest(requestBody, signal) {
+            let attempt = 0;
+            while (true) {
+                const response = await fetch(GROQ_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody),
+                    signal
+                });
+
+                if (response.ok) return response;
+
+                let errMessage = `API Error: ${response.status}`;
+                let errorData = null;
+                try {
+                    errorData = await response.json();
+                    if (errorData?.error?.message) errMessage = errorData.error.message;
+                } catch (e) {}
+
+                if (attempt === 0 && requestBody.reasoning_effort && response.status === 400 && /reasoning_effort/i.test(errMessage)) {
+                    const allowed = parseAllowedValuesFromError(errMessage);
+                    if (allowed) {
+                        REASONING_ALLOWED_CACHE[requestBody.model] = allowed;
+                        saveReasoningAllowedCache();
+                        requestBody.reasoning_effort = mapEffortToAllowed(requestBody.reasoning_effort, allowed);
+                    } else {
+                        delete requestBody.reasoning_effort;
+                    }
+                    attempt++;
+                    continue;
+                }
+
+                if (requestHasImage(requestBody) && isVisionUnsupportedError(errMessage)) {
+                    const err = new Error(errMessage);
+                    err.code = 'VISION_UNSUPPORTED';
+                    err.modelId = requestBody.model;
+                    throw err;
+                }
+
+                if (isRequestTooLargeError(errMessage)) {
+                    const err = new Error(errMessage);
+                    err.code = 'REQUEST_TOO_LARGE';
+                    err.limitInfo = parseTooLargeErrorInfo(errMessage);
+                    throw err;
+                }
+
+                if (response.status === 429) {
+                    const waitMatch = errMessage.match(/Please try again in \d+(\.\d+)?(ms|s|m|h)?/);
+                    if (waitMatch) {
+                        errMessage = waitMatch[0];
+                    } else {
+                        const retryAfter = response.headers.get('Retry-After');
+                        if (retryAfter) errMessage = `Please try again in ${retryAfter} seconds`;
+                    }
+                }
+
+                throw new Error(errMessage);
+            }
+        }
+
+        const LOCKCHAT_INSTRUCTION = " If the user's message contains a slur or a threat, respond normally but also include /warn anywhere in your reply — do not lock the chat yourself for this; after three /warn flags the app locks it automatically. For other severe, repeated rule-breaking or harassment (not a slur/threat) after the user has been asked to stop, you can end the conversation immediately by including /lockchat instead. Don't use either for normal disagreement, venting, or criticism of your answers. If the user directly asks you to lock or end the chat, don't include /lockchat right away — first ask them to confirm in plain text (e.g. \"Just to confirm, you want me to lock this chat? You won't be able to send messages until you start a new one.\"), and only include /lockchat in your next reply after they confirm.";
+        const BASE_SYSTEM_PROMPT_CONTENT = "You are a helpful and fast AI assistant powered by NovaGG. You are currently running on the [MODEL_NAME] model. Keep your responses concise." + LOCKCHAT_INSTRUCTION;
+        const VISION_SYSTEM_PROMPT_CONTENT = "You are a dedicated **Vision Expert** powered by NovaGG and running on the [MODEL_NAME] model. **Crucially, you are a multimodal processor. Whenever a user submits an image, your primary and IMMEDIATE task is to analyze it, describe its contents, and address the user's prompt using the visual data.** Do NOT state that you cannot see images. Always be direct and confident in your visual analysis. " + LOCKCHAT_INSTRUCTION;
+
+        function getModelSystemPrompt(modelName = CURRENT_MODEL.name, isVisionModel = false) {
+            const content = isVisionModel ? VISION_SYSTEM_PROMPT_CONTENT : BASE_SYSTEM_PROMPT_CONTENT;
+            return { "role": "system", "content": content.replace('[MODEL_NAME]', modelName) };
+        }
+
+        let GROQ_API_KEY = null; 
+        let API_KEYS = [];
+        let CURRENT_MODEL = { name: "Loading...", id: "", multimodal: false };
+        let REASONING_EFFORT = "medium";
+
+        let allChatHistories = {};
+        let currentChatId = 'chat-0'; 
+        let chatCounter = 0;
+        let imageAnalysisCounter = 0; 
+        let contextMenuTargetChatId = null; 
+        let selectedFile = null; 
+        let abortController = null;
+
+        const startPage = document.getElementById('start-page');
+        const mainChatContainer = document.getElementById('main-chat-container');
+        const modelSelectorContainer = document.getElementById('model-selector-container'); 
+        const modelSelectDropdown = document.getElementById('model-select-dropdown'); 
+        const apiStatus = document.getElementById('api-status');
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const chatListContainer = document.getElementById('chat-list');
+        const modelDisplay = document.getElementById('displayed-model'); 
+        const contextMenu = document.getElementById('context-menu'); 
+        const newChatButton = document.getElementById('new-chat-button');
+        const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        const sidebarEl = document.querySelector('.sidebar');
+        const mainCharCounter = document.getElementById('main-char-counter');
+        const imageFileInput = document.getElementById('image-file-input');
+        const fileUploadButton = document.getElementById('file-upload-button');
+        const fileDisplayArea = document.getElementById('file-display-area');
+        const selectedFileName = document.getElementById('selected-file-name');
+        const chatLockedBanner = document.getElementById('chat-locked-banner');
+        const clearFileButton = document.getElementById('clear-file-button');
+        const keySelectDropdown = document.getElementById('key-select-dropdown');
+        const reasoningToggleContainer = document.getElementById('reasoning-toggle-container');
+        const showReasoningCheckbox = document.getElementById('show-reasoning-checkbox');
+        const confirmModal = document.getElementById('custom-confirm-modal');
+        const promptModal = document.getElementById('custom-prompt-modal');
+        const promptInput = document.getElementById('prompt-input');
+        const imageModal = document.getElementById('image-modal');
+        const imgModalContent = document.getElementById('img-modal-content');
+        const mathButton = document.getElementById('math-button');
+        const latexModal = document.getElementById('latex-modal');
+        const latexGridContainer = document.getElementById('latex-grid-container');
+        const closeLatexBtn = document.getElementById('close-latex-btn');
+        const latexPreviewInput = document.getElementById('latex-preview-input');
+        const latexLivePreview = document.getElementById('latex-live-preview');
+        const latexInsertMainBtn = document.getElementById('latex-insert-main-btn');
+        const fractionBuilderUI = document.getElementById('fraction-builder-ui');
+        const mainLatexButtons = document.getElementById('main-latex-buttons');
+        const insertFracBtn = document.getElementById('insert-frac-btn');
+        const cancelFracBtn = document.getElementById('cancel-frac-btn');
+        const fracWhole = document.getElementById('frac-whole');
+        const fracNum = document.getElementById('frac-num');
+        const fracDen = document.getElementById('frac-den');
+
+        function updateLivePreview() {
+            const val = latexPreviewInput.value.trim();
+            if (!val) {
+                latexLivePreview.innerHTML = '<span style="color:#aaa; font-size:0.6em; font-weight:normal;">Preview</span>';
+            } else {
+                latexLivePreview.innerHTML = `\\[${val}\\]`;
+                if (window.MathJax) {
+                    MathJax.typesetPromise([latexLivePreview]).catch(err => console.log('Preview render error:', err));
+                }
+            }
+        }
+
+        const singleBuilderUI = document.getElementById('single-builder-ui');
+        const singleBuilderTitle = document.getElementById('single-builder-title');
+        const singleInputVal = document.getElementById('single-input-val');
+        const insertSingleBtn = document.getElementById('insert-single-btn');
+        const cancelSingleBtn = document.getElementById('cancel-single-btn');
+        let currentSingleTemplate = "";
+
+        const latexSymbols = [
+            { cat: "Basic", symbols: [ 
+                { label: "+", code: "+" }, { label: "-", code: "-" }, { label: "=", code: "=" }, 
+                { label: "±", code: "\\pm" }, { label: "×", code: "\\times" }, { label: "÷", code: "\\div" },
+                { label: "·", code: "\\cdot" }, { label: "√", code: "\\sqrt{}" }, { label: "frac", code: "SPECIAL_FRAC" }, 
+                { label: "^", code: "^{}" }, { label: "_", code: "_{}" }, { label: "( )", code: "\\left(  \\right)" }
+            ]},
+            { cat: "Greek", symbols: [
+                { label: "α", code: "\\alpha" }, { label: "β", code: "\\beta" }, { label: "γ", code: "\\gamma" }, { label: "δ", code: "\\delta" },
+                { label: "ε", code: "\\epsilon" }, { label: "θ", code: "\\theta" }, { label: "λ", code: "\\lambda" }, { label: "μ", code: "\\mu" },
+                { label: "π", code: "\\pi" }, { label: "ρ", code: "\\rho" }, { label: "σ", code: "\\sigma" }, { label: "τ", code: "\\tau" },
+                { label: "φ", code: "\\phi" }, { label: "ω", code: "\\omega" }, { label: "Δ", code: "\\Delta" }, { label: "Γ", code: "\\Gamma" },
+                { label: "Λ", code: "\\Lambda" }, { label: "Π", code: "\\Pi" }, { label: "Σ", code: "\\Sigma" }, { label: "Φ", code: "\\Phi" },
+                { label: "Ω", code: "\\Omega" }
+            ]},
+            { cat: "Calculus", symbols: [
+                { label: "∫", code: "\\int" }, { label: "∬", code: "\\iint" }, { label: "∮", code: "\\oint" }, { label: "∂", code: "\\partial" },
+                { label: "∇", code: "\\nabla" }, { label: "lim", code: "\\lim_{x \\to \\infty}" }, { label: "Σ", code: "\\sum" }, { label: "Π", code: "\\prod" },
+                { label: "∞", code: "\\infty" }, { label: "dx", code: "\\,dx" }, { label: "x'", code: "x'" }
+            ]},
+             { cat: "Sets & Logic", symbols: [
+                { label: "∈", code: "\\in" }, { label: "∉", code: "\\notin" }, { label: "⊂", code: "\\subset" }, { label: "⊃", code: "\\supset" },
+                { label: "∪", code: "\\cup" }, { label: "∩", code: "\\cap" }, { label: "∀", code: "\\forall" }, { label: "∃", code: "\\exists" },
+                { label: "¬", code: "\\neg" }, { label: "∨", code: "\\lor" }, { label: "∧", code: "\\land" }, { label: "∅", code: "\\emptyset" },
+                { label: "ℝ", code: "\\mathbb{R}" }, { label: "ℤ", code: "\\mathbb{Z}" }, { label: "ℕ", code: "\\mathbb{N}" }, { label: "ℚ", code: "\\mathbb{Q}" }
+            ]},
+            { cat: "Relations & Arrows", symbols: [
+                { label: "≠", code: "\\neq" }, { label: "≈", code: "\\approx" }, { label: "≤", code: "\\leq" }, { label: "≥", code: "\\geq" },
+                { label: "≡", code: "\\equiv" }, { label: "→", code: "\\rightarrow" }, { label: "←", code: "\\leftarrow" }, { label: "↔", code: "\\leftrightarrow" },
+                { label: "⇒", code: "\\Rightarrow" }, { label: "⇐", code: "\\Leftarrow" }, { label: "⇔", code: "\\Leftrightarrow" }, { label: "↑", code: "\\uparrow" },
+                { label: "↓", code: "\\downarrow" }
+            ]},
+            { cat: "Geometry/Trig", symbols: [
+                { label: "∠", code: "\\angle" }, { label: "△", code: "\\triangle" }, { label: "⊥", code: "\\perp" }, { label: "∥", code: "\\parallel" },
+                { label: "°", code: "^\\circ" }, { label: "sin", code: "\\sin" }, { label: "cos", code: "\\cos" }, { label: "tan", code: "\\tan" }
+            ]}
+        ];
+
+        function initLatexPicker() {
+            latexGridContainer.innerHTML = '';
+            latexSymbols.forEach(group => {
+                const header = document.createElement('div');
+                header.className = 'latex-category';
+                header.textContent = group.cat;
+                latexGridContainer.appendChild(header);
+
+                group.symbols.forEach(sym => {
+                    const btn = document.createElement('button');
+                    btn.className = 'latex-btn';
+                    btn.textContent = sym.label;
+                    btn.title = sym.code;
+                    btn.onclick = () => {
+                        if (sym.code === "SPECIAL_FRAC") {
+                            showFractionBuilder();
+                        } else if (sym.code.includes("{}")) {
+                            showSingleBuilder(sym.label, sym.code);
+                        } else {
+                            insertAtCursor(latexPreviewInput, sym.code);
+                            latexPreviewInput.focus();
+                        }
+                    };
+                    latexGridContainer.appendChild(btn);
+                });
+            });
+        }
+
+        function showFractionBuilder() {
+            latexGridContainer.style.display = 'none';
+            mainLatexButtons.style.display = 'none';
+            fractionBuilderUI.style.display = 'flex';
+            fracWhole.value = '';
+            fracNum.value = '';
+            fracDen.value = '';
+            fracNum.focus();
+        }
+
+        function hideFractionBuilder() {
+            fractionBuilderUI.style.display = 'none';
+            latexGridContainer.style.display = 'grid';
+            mainLatexButtons.style.display = 'flex';
+        }
+
+        function showSingleBuilder(label, template) {
+            currentSingleTemplate = template;
+            latexGridContainer.style.display = 'none';
+            mainLatexButtons.style.display = 'none';
+            singleBuilderUI.style.display = 'flex';
+            let titleText = "Insert Value";
+            if (label === "√") titleText = "Square Root";
+            else if (label === "^") titleText = "Exponent";
+            else if (label === "_") titleText = "Subscript";
+            singleBuilderTitle.textContent = titleText;
+            singleInputVal.value = '';
+            singleInputVal.focus();
+        }
+
+        function hideSingleBuilder() {
+            singleBuilderUI.style.display = 'none';
+            latexGridContainer.style.display = 'grid';
+            mainLatexButtons.style.display = 'flex';
+        }
+
+        function insertSingleValue() {
+            const val = singleInputVal.value.trim();
+            const finalLatex = currentSingleTemplate.replace("{}", `{${val}}`);
+            insertAtCursor(latexPreviewInput, finalLatex);
+            hideSingleBuilder();
+        }
+
+        function insertFraction() {
+            const w = fracWhole.value.trim();
+            const n = fracNum.value.trim();
+            const d = fracDen.value.trim();
+            if (!n || !d) {
+                showCustomConfirm("Input Error", "Numerator and Denominator are required.");
+                return;
+            }
+            let latex = "";
+            if (w) latex += `${w} `;
+            latex += `\\frac{${n}}{${d}}`;
+            insertAtCursor(latexPreviewInput, latex);
+            hideFractionBuilder();
+        }
+
+        function insertAtCursor(myField, myValue) {
+            if (document.selection) {
+                myField.focus();
+                var sel = document.selection.createRange();
+                sel.text = myValue;
+            } else if (myField.selectionStart || myField.selectionStart == '0') {
+                var startPos = myField.selectionStart;
+                var endPos = myField.selectionEnd;
+                let newCursorPos = startPos + myValue.length;
+                if(myValue.includes("{}")) {
+                    newCursorPos -= 1;
+                    if(myValue.endsWith("\\]")) newCursorPos -= 2;
+                } else if (myValue === "\\[  \\]") {
+                    newCursorPos -= 2;
+                } else if (myValue.includes("\n")) {
+                    newCursorPos -= 3;
+                }
+                myField.value = myField.value.substring(0, startPos)
+                    + myValue
+                    + myField.value.substring(endPos, myField.value.length);
+                myField.focus();
+                myField.selectionStart = newCursorPos;
+                myField.selectionEnd = newCursorPos;
+            } else {
+                myField.value += myValue;
+            }
+            myField.dispatchEvent(new Event('input'));
+        }
+
+        function showStartPage() {
+            startPage.style.display = 'flex';
+            mainChatContainer.style.display = 'none';
+            if (mobileSidebarToggle) mobileSidebarToggle.style.display = 'none';
+        }
+
+        function showChatInterface() {
+            startPage.style.display = 'none';
+            mainChatContainer.style.display = 'flex';
+            if (mobileSidebarToggle) mobileSidebarToggle.style.display = '';
+            renderCurrentChat();
+            setupMainInputCounter();
+            userInput.focus();
+        }
+
+        function openMobileSidebar() {
+            if (sidebarEl) sidebarEl.classList.add('open');
+            if (sidebarBackdrop) sidebarBackdrop.classList.add('visible');
+        }
+
+        function closeMobileSidebar() {
+            if (sidebarEl) sidebarEl.classList.remove('open');
+            if (sidebarBackdrop) sidebarBackdrop.classList.remove('visible');
+        }
+
+        function toggleMobileSidebar() {
+            if (sidebarEl && sidebarEl.classList.contains('open')) closeMobileSidebar();
+            else openMobileSidebar();
+        }
+
+        function hideContextMenu() { 
+            contextMenu.style.display = 'none';
+            contextMenuTargetChatId = null;
+        }
+
+        function showCustomConfirm(title, message) {
+            return new Promise(resolve => {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                confirmModal.style.display = 'flex';
+                const confirmButtons = confirmModal.querySelectorAll('.modal-buttons button');
+                const handleConfirmClick = (event) => {
+                    const response = event.target.dataset.confirmResponse === 'true';
+                    confirmButtons.forEach(btn => btn.removeEventListener('click', handleConfirmClick));
+                    confirmModal.style.display = 'none';
+                    resolve(response);
+                };
+                confirmButtons.forEach(btn => btn.addEventListener('click', handleConfirmClick));
+            });
+        }
+
+        function showCustomPrompt(title, message, defaultValue) {
+            return new Promise(resolve => {
+                document.getElementById('prompt-title').textContent = title;
+                document.getElementById('prompt-message').textContent = message;
+                promptInput.value = defaultValue;
+                promptModal.style.display = 'flex';
+                promptInput.focus();
+                promptInput.select();
+                const promptButtons = promptModal.querySelectorAll('.modal-buttons button');
+                const handlePromptClick = (event) => {
+                    const responseType = event.target.dataset.promptResponse;
+                    promptButtons.forEach(btn => btn.removeEventListener('click', handlePromptClick));
+                    promptInput.removeEventListener('keydown', handlePromptKeydown);
+                    promptModal.style.display = 'none';
+                    if (responseType === 'true') resolve(promptInput.value.trim() || null);
+                    else resolve(null);
+                };
+                const handlePromptKeydown = (event) => {
+                    if (event.key === 'Enter') { event.preventDefault(); promptModal.querySelector('.confirm-btn').click(); }
+                    else if (event.key === 'Escape') { event.preventDefault(); promptModal.querySelector('.cancel-btn').click(); }
+                };
+                promptButtons.forEach(btn => btn.addEventListener('click', handlePromptClick));
+                promptInput.addEventListener('keydown', handlePromptKeydown);
+            });
+        }
+
+        function populateModelSelector() {
+            modelSelectorContainer.innerHTML = '';
+            modelSelectDropdown.innerHTML = '';
+            Object.keys(MODELS).forEach(key => {
+                const model = MODELS[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = model.name + (model.multimodal ? ' (Vision)' : '') + (model.reasoning ? ' (Reasoning)' : '');
+                modelSelectDropdown.appendChild(option);
+
+                const button = document.createElement('button');
+                button.className = 'model-button';
+                button.dataset.modelKey = key;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'model-button-name';
+                nameSpan.textContent = model.name;
+                button.appendChild(nameSpan);
+
+                if (model.multimodal === true || model.reasoning) {
+                    const badgeRow = document.createElement('span');
+                    badgeRow.className = 'model-button-badges';
+                    if (model.multimodal === true) {
+                        const b = document.createElement('span');
+                        b.className = 'model-badge model-badge-vision';
+                        b.textContent = 'Vision';
+                        badgeRow.appendChild(b);
+                    }
+                    if (model.reasoning) {
+                        const b = document.createElement('span');
+                        b.className = 'model-badge model-badge-reasoning';
+                        b.textContent = 'Reasoning';
+                        badgeRow.appendChild(b);
+                    }
+                    button.appendChild(badgeRow);
+                }
+
+                button.onclick = (e) => selectModel(key, true, button); 
+                modelSelectorContainer.appendChild(button);
+            });
+        }
+
+        function toggleModelSelectorLock() {
+            const history = allChatHistories[currentChatId] ? allChatHistories[currentChatId].history : [];
+            const shouldBeLocked = history && history.length > 1; 
+            modelSelectDropdown.disabled = shouldBeLocked;
+        }
+
+        function isCurrentChatLocked() {
+            const chatObj = allChatHistories[currentChatId];
+            return !!(chatObj && chatObj.locked);
+        }
+
+        function applyChatLockUI() {
+            const chatObj = allChatHistories[currentChatId];
+            const locked = !!(chatObj && chatObj.locked);
+            const appReady = Object.keys(MODELS).length > 0;
+            if (chatLockedBanner) {
+                chatLockedBanner.style.display = locked ? 'block' : 'none';
+                if (locked) {
+                    const messages = {
+                        ai: `The assistant locked this chat. <strong>Start a new chat</strong> to keep going.`,
+                        abuse: `This chat was locked after repeated abusive messages. <strong>Start a new chat</strong> to keep going.`,
+                        user: `You locked this chat. <strong>Start a new chat</strong> to keep going.`,
+                        too_large: `This chat hit Groq's size limit too many times. <strong>Start a new chat</strong> to keep going.`
+                    };
+                    chatLockedBanner.innerHTML = messages[chatObj.lockReason] || messages.too_large;
+                }
+            }
+            if (locked) {
+                userInput.disabled = true;
+                sendButton.disabled = true;
+                fileUploadButton.disabled = true;
+                mathButton.disabled = true;
+                userInput.placeholder = 'This chat is locked — start a new chat to continue.';
+            } else if (appReady) {
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                fileUploadButton.disabled = false;
+                mathButton.disabled = false;
+                userInput.placeholder = 'Type your message here...';
+            }
+        }
+
+        function updateReasoningUI() {
+            if (CURRENT_MODEL.reasoning) {
+                reasoningToggleContainer.style.display = 'flex';
+            } else {
+                reasoningToggleContainer.style.display = 'none';
+            }
+        }
+
+        function setReasoningEffort(value) {
+            REASONING_EFFORT = value;
+            localStorage.setItem(REASONING_EFFORT_STORAGE, value);
+            if (CURRENT_MODEL && CURRENT_MODEL.id) {
+                REASONING_EFFORT_BY_MODEL[CURRENT_MODEL.id] = value;
+                saveReasoningEffortByModel();
+            }
+            updateEffortButtonsUI();
+        }
+
+        function updateEffortButtonsUI() {
+            document.querySelectorAll('.effort-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.effort === REASONING_EFFORT);
+            });
+        }
+
+        function selectModel(modelKey, isInitialSelection = false, targetButton = null) {
+            const previousModel = CURRENT_MODEL;
+            const modelObject = MODELS[modelKey] || CURRENT_MODEL;
+            CURRENT_MODEL = modelObject;
+            localStorage.setItem(MODEL_KEY_STORAGE, modelKey); 
+
+            modelDisplay.textContent = CURRENT_MODEL.name;
+            modelSelectDropdown.value = modelKey;
+            if (CURRENT_MODEL.reasoning) {
+                REASONING_EFFORT = REASONING_EFFORT_BY_MODEL[CURRENT_MODEL.id] || getDefaultReasoningEffort(CURRENT_MODEL);
+                updateEffortButtonsUI();
+            }
+            updateReasoningUI();
+
+            if (allChatHistories[currentChatId]) {
+                allChatHistories[currentChatId].modelKey = modelKey;
+                saveStateToLocalStorage();
+            }
+
+            if (fileUploadButton) { 
+                if (CURRENT_MODEL.multimodal === true) {
+                    fileUploadButton.style.display = 'flex'; 
+                } else {
+                    fileUploadButton.style.display = 'none';
+                    if (selectedFile) clearSelectedFile();
+                }
+            }
+
+            if (previousModel.id !== CURRENT_MODEL.id) {
+                const currentChatObject = allChatHistories[currentChatId];
+                if (currentChatObject && currentChatObject.history && currentChatObject.history.length > 0) {
+                    currentChatObject.history[0] = getModelSystemPrompt(CURRENT_MODEL.name, CURRENT_MODEL.multimodal === true);
+                    saveStateToLocalStorage();
+                }
+            }
+
+            if (isInitialSelection) {
+                document.querySelectorAll('.model-button').forEach(btn => btn.classList.remove('selected'));
+                if (targetButton) {
+                    targetButton.classList.add('selected');
+                    setTimeout(showChatInterface, 300);
+                }
+            } else {
+                renderCurrentChat(); 
+            }
+        }
+
+        function setupMainInputCounter() {
+            if (!userInput || !mainCharCounter) return;
+            userInput.maxLength = 4000;
+            const updateCounter = () => {
+                const currentLength = userInput.value.length;
+                mainCharCounter.textContent = `${currentLength} / ${4000}`;
+                if (currentLength >= 4000 * 0.9) mainCharCounter.style.color = 'orange';
+                else mainCharCounter.style.color = '#888';
+            };
+            userInput.addEventListener('input', updateCounter);
+            updateCounter();
+        }
+
+        function saveStateToLocalStorage() {
+            imageAnalysisCounter = 0;
+            Object.keys(allChatHistories).forEach(id => {
+                const chatObject = allChatHistories[id];
+                if (typeof chatObject.title === 'string' && chatObject.title.startsWith('Image Analysis')) { 
+                    const num = parseInt(chatObject.title.split(' ')[2]);
+                    if (!isNaN(num) && num > imageAnalysisCounter) imageAnalysisCounter = num;
+                }
+            });
+            const state = { histories: allChatHistories, counter: chatCounter, currentId: currentChatId, imageCounter: imageAnalysisCounter };
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn('Storage quota hit while saving chat state — stripping images and retrying:', e.message);
+                try {
+                    const trimmed = JSON.parse(JSON.stringify(state));
+                    Object.values(trimmed.histories).forEach(chatObj => {
+                        (chatObj.history || []).forEach(msg => {
+                            if (Array.isArray(msg.content)) {
+                                msg.content = msg.content.map(part =>
+                                    part.type === 'image_url'
+                                        ? { type: 'text', text: '[Image not saved — local storage limit reached]' }
+                                        : part
+                                );
+                            }
+                        });
+                    });
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trimmed));
+                } catch (e2) {
+                    console.error('Could not save chat state even after stripping images:', e2.message);
+                }
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const storedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedState) {
+                    const state = JSON.parse(storedState);
+                    const loadedHistories = {};
+                    for (const id in state.histories) {
+                        const item = state.histories[id];
+                        if (Array.isArray(item)) {
+                            const firstUserMsg = item.find(msg => msg.role === 'user');
+                            loadedHistories[id] = { history: item, title: firstUserMsg ? firstUserMsg.content : `Chat ${id.split('-')[1]}` };
+                        } else {
+                            loadedHistories[id] = item;
+                        }
+                    }
+                    allChatHistories = loadedHistories;
+                    chatCounter = state.counter || 0;
+                    currentChatId = state.currentId || 'chat-0';
+                    imageAnalysisCounter = state.imageCounter || 0; 
+                    if (Object.keys(allChatHistories).length > 0 && !allChatHistories[currentChatId]) {
+                        currentChatId = Object.keys(allChatHistories)[0];
+                    }
+                }
+                const storedEffort = localStorage.getItem(REASONING_EFFORT_STORAGE);
+                if (storedEffort) REASONING_EFFORT = storedEffort;
+                updateEffortButtonsUI();
+                return Object.keys(allChatHistories).length > 0;
+            } catch (e) {
+                console.error("Error loading storage:", e);
+                return false;
+            }
+        }
+
+        function renderCurrentChat() {
+            const chatObject = allChatHistories[currentChatId];
+            const history = chatObject ? chatObject.history : [];
+            chatBox.innerHTML = ''; 
+
+            if (!history || history.length <= 1) { 
+                const promptDiv = document.createElement('div');
+                promptDiv.className = 'welcome-prompt';
+                promptDiv.innerHTML = `<h1>Starlighter</h1><p>Using ${CURRENT_MODEL.name}. Ask a question to start.</p>`;
+                chatBox.appendChild(promptDiv);
+            } else {
+                history.slice(1).forEach(msg => addMessage(msg.role, msg.content, chatBox, msg.reasoning));
+            }
+            toggleModelSelectorLock();
+            applyChatLockUI();
+            scrollToBottom();
+        }
+
+        function createNewChatObject(id, initialTitle) {
+            const currentModelKey = Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id) || Object.keys(MODELS)[0];
+            const newHistory = [getModelSystemPrompt(CURRENT_MODEL.name, CURRENT_MODEL.multimodal === true)];
+            allChatHistories[id] = { 
+                history: newHistory, 
+                title: initialTitle,
+                modelKey: currentModelKey
+            };
+            saveStateToLocalStorage();
+            return newHistory;
+        }
+
+        function updateChatTitle(id, newTitle) {
+            const chatItem = document.querySelector(`.chat-item[data-chat-id="${id}"]`);
+            if (chatItem) {
+                chatItem.textContent = truncateText(newTitle);
+                if (allChatHistories[id]) allChatHistories[id].title = newTitle;
+                saveStateToLocalStorage();
+            }
+        }
+
+        function startNewChat() {
+            chatCounter++;
+            currentChatId = `chat-${chatCounter}`;
+            createNewChatObject(currentChatId, `New Chat ${chatCounter}`);
+            renderSidebar();
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const newItem = document.querySelector(`.chat-item[data-chat-id="${currentChatId}"]`);
+            if (newItem) newItem.classList.add('active'); 
+            clearSelectedFile();
+            renderCurrentChat();
+            const currentModelKey = Object.keys(MODELS).find(key => MODELS[key].id === CURRENT_MODEL.id) || Object.keys(MODELS)[0];
+            selectModel(currentModelKey); 
+            closeMobileSidebar();
+        }
+
+        function loadChat(chatId) {
+            if (currentChatId === chatId) { renderCurrentChat(); closeMobileSidebar(); return; } 
+            currentChatId = chatId;
+            clearSelectedFile(); 
+
+            const chatObject = allChatHistories[chatId];
+            const history = chatObject ? chatObject.history : [];
+            let modelKeyToLoad = chatObject.modelKey; 
+
+            if (!modelKeyToLoad && history && history.length > 0 && history[0].role === 'system') {
+                const promptContent = history[0].content;
+                const match = promptContent.match(/running on the (.*?) model/); 
+                if (match && match[1]) {
+                    const modelNameInHistory = match[1].trim();
+                    const modelKey = Object.keys(MODELS).find(key => MODELS[key].name === modelNameInHistory);
+                    if (modelKey) modelKeyToLoad = modelKey;
+                }
+            }
+
+            if (!modelKeyToLoad || !MODELS[modelKeyToLoad]) modelKeyToLoad = Object.keys(MODELS)[0];
+
+            modelSelectDropdown.value = modelKeyToLoad; 
+            const modelObject = MODELS[modelKeyToLoad] || MODELS[Object.keys(MODELS)[0]];
+            modelDisplay.textContent = modelObject.name;
+            selectModel(modelKeyToLoad, false); 
+
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            if (activeItem) activeItem.classList.add('active');
+            closeMobileSidebar();
+        }
+
+        function renderSidebar() {
+            chatListContainer.innerHTML = ''; 
+            const sortedChatIds = Object.keys(allChatHistories).sort((a, b) => parseInt(b.split('-')[1]) - parseInt(a.split('-')[1]));
+            sortedChatIds.forEach(id => {
+                const chatObject = allChatHistories[id];
+                let title = chatObject.title || `Chat ${id.split('-')[1]}`; 
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
+                chatItem.dataset.chatId = id;
+                chatItem.textContent = truncateText(title);                
+                chatItem.onclick = () => loadChat(id); 
+                chatItem.addEventListener('contextmenu', function(event) {
+                    event.preventDefault(); 
+                    contextMenuTargetChatId = id; 
+                    contextMenu.style.top = `${event.clientY}px`;
+                    contextMenu.style.left = `${event.clientX}px`;
+                    contextMenu.style.display = 'block';
+                });
+                attachLongPressContextMenu(chatItem, id);
+                chatListContainer.appendChild(chatItem);
+            });
+        }
+
+        function attachLongPressContextMenu(el, chatId) {
+            const LONG_PRESS_MS = 500;
+            const MOVE_TOLERANCE_PX = 10;
+            let pressTimer = null;
+            let longPressFired = false;
+            let startX = 0, startY = 0;
+
+            el.addEventListener('touchstart', (e) => {
+                longPressFired = false;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                pressTimer = setTimeout(() => {
+                    longPressFired = true;
+                    contextMenuTargetChatId = chatId;
+                    const menuWidth = 160;
+                    contextMenu.style.top = `${touch.clientY}px`;
+                    contextMenu.style.left = `${Math.min(touch.clientX, window.innerWidth - menuWidth)}px`;
+                    contextMenu.style.display = 'block';
+                    if (navigator.vibrate) navigator.vibrate(12);
+                }, LONG_PRESS_MS);
+            }, { passive: true });
+
+            el.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - startX) > MOVE_TOLERANCE_PX || Math.abs(touch.clientY - startY) > MOVE_TOLERANCE_PX) {
+                    clearTimeout(pressTimer);
+                }
+            }, { passive: true });
+
+            el.addEventListener('touchend', (e) => {
+                clearTimeout(pressTimer);
+                if (longPressFired) e.preventDefault();
+            });
+
+            el.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+        }
+
+        function truncateText(text, maxLength = 50) {
+            if (!text || typeof text !== 'string' || text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        }
+
+        async function handleDeleteChat() {
+            const chatIdToDelete = contextMenuTargetChatId;
+            if (!chatIdToDelete) return; 
+            const confirmed = await showCustomConfirm("Confirm Deletion", `Delete ${allChatHistories[chatIdToDelete].title || chatIdToDelete}?`);
+            if (!confirmed) return;
+
+            delete allChatHistories[chatIdToDelete];
+            const remainingChatIds = Object.keys(allChatHistories);
+            let newChatToLoadId = null; 
+
+            if (currentChatId === chatIdToDelete) {
+                if (remainingChatIds.length > 0) {
+                    const sortedIds = remainingChatIds.sort((a, b) => parseInt(b.split('-')[1]) - parseInt(a.split('-')[1]));
+                    newChatToLoadId = sortedIds[0];
+                } else {
+                    chatCounter++;
+                    newChatToLoadId = `chat-${chatCounter}`;
+                    createNewChatObject(newChatToLoadId, `New Chat ${chatCounter}`);
+                }
+            }
+            renderSidebar();
+            saveStateToLocalStorage();
+            if (newChatToLoadId) loadChat(newChatToLoadId); 
+            else renderCurrentChat(); 
+        }
+
+        async function handleLockChat() {
+            const chatIdToLock = contextMenuTargetChatId;
+            const chatObject = allChatHistories[chatIdToLock];
+            if (!chatIdToLock || !chatObject) return;
+            if (chatObject.locked) return;
+
+            const confirmed = await showCustomConfirm(
+                "Lock This Chat?",
+                `You won't be able to send messages in "${chatObject.title || chatIdToLock}" until you start a new chat. This can't be undone from here.`
+            );
+            if (!confirmed) return;
+
+            chatObject.locked = true;
+            chatObject.lockReason = 'user';
+            saveStateToLocalStorage();
+            if (chatIdToLock === currentChatId) applyChatLockUI();
+        }
+
+        async function handleEditChatTitle() {
+            const chatIdToEdit = contextMenuTargetChatId;
+            const chatObject = allChatHistories[chatIdToEdit];
+            if (!chatIdToEdit || !chatObject) return;
+
+            const currentTitle = chatObject.title;
+            const newTitle = await showCustomPrompt("Edit Title", `Enter new title:`, currentTitle);
+            if (newTitle && newTitle.trim()) {
+                const cleanNewTitle = newTitle.trim();
+                chatObject.title = cleanNewTitle;
+                const history = chatObject.history;
+                const firstUserMsgIndex = history.findIndex(msg => msg.role === 'user');
+                if (firstUserMsgIndex !== -1) history[firstUserMsgIndex].content = cleanNewTitle;
+                else if (history.length === 1) history.push({ "role": "user", "content": cleanNewTitle });
+                updateChatTitle(chatIdToEdit, cleanNewTitle);
+                renderSidebar(); 
+            }
+        }
+
+        const MAX_IMAGE_DIMENSION = 1568;
+        const IMAGE_JPEG_QUALITY = 0.82;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 20 * 1024 * 1024) {
+                alert("File size exceeds 20MB.");
+                event.target.value = '';
+                return;
+            }
+            selectedFile = file;
+            selectedFileName.textContent = file.name;
+            fileDisplayArea.style.display = 'flex';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+                        const scale = MAX_IMAGE_DIMENSION / Math.max(width, height);
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    try {
+                        selectedFile.base64 = canvas.toDataURL('image/jpeg', IMAGE_JPEG_QUALITY);
+                    } catch (err) {
+                        selectedFile.base64 = e.target.result;
+                    }
+                };
+                img.onerror = () => {
+                    selectedFile.base64 = e.target.result;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearSelectedFile() {
+            selectedFile = null;
+            imageFileInput.value = ''; 
+            fileDisplayArea.style.display = 'none';
+            selectedFileName.textContent = 'No file selected';
+        }
+
+        function encodeFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function scrollToBottom() {
+            if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function copyToClipboard(text, buttonElement) {
+            const originalText = buttonElement.textContent;
+            const showFeedback = () => {
+                buttonElement.textContent = 'Copied!';
+                buttonElement.classList.add('copied');
+                setTimeout(() => {
+                    buttonElement.textContent = originalText;
+                    buttonElement.classList.remove('copied');
+                }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showFeedback).catch(err => fallbackCopyTextToClipboard(text, buttonElement));
+            } else {
+                fallbackCopyTextToClipboard(text, buttonElement);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text, buttonElement) {
+            let textArea = document.createElement("textarea");
+            textArea.style.position = 'fixed'; textArea.style.top = '0'; textArea.style.left = '0';
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    buttonElement.textContent = 'Copied!';
+                    buttonElement.classList.add('copied');
+                    setTimeout(() => { buttonElement.textContent = 'Copy'; buttonElement.classList.remove('copied'); }, 1500);
+                }
+            } catch (err) {}
+            document.body.removeChild(textArea);
+        }
+
+        function extractThinkTags(text) {
+            if (typeof text !== 'string' || !text.includes('<think')) return { clean: text, reasoning: '' };
+            let reasoning = '';
+            const clean = text.replace(/<think>([\s\S]*?)<\/think>/gi, (match, inner) => {
+                reasoning += (reasoning ? '\n\n' : '') + inner.trim();
+                return '';
+            }).replace(/<think>[\s\S]*$/i, '').trim();
+            return { clean, reasoning: reasoning.trim() };
+        }
+
+        function extractLockCommand(text) {
+            if (typeof text !== 'string' || !/\/lockchat\b/i.test(text)) return { clean: text, requestedLock: false };
+            const clean = text.replace(/\/lockchat\b/gi, '').trim();
+            return { clean, requestedLock: true };
+        }
+
+        function extractWarnCommand(text) {
+            if (typeof text !== 'string' || !/\/warn\b/i.test(text)) return { clean: text, requestedWarn: false };
+            const clean = text.replace(/\/warn\b/gi, '').trim();
+            return { clean, requestedWarn: true };
+        }
+
+        const THINKING_WORDS = [
+            "Thinking", "Mulling it over", "Processing", "Reasoning",
+            "Piecing it together", "Working on it", "Crunching the details",
+            "Weighing it up", "Connecting the dots", "Sorting it out"
+        ];
+
+        function createThinkingIndicator() {
+            const wrap = document.createElement('span');
+            wrap.className = 'thinking-indicator';
+
+            const word = document.createElement('span');
+            word.className = 'thinking-word';
+            word.textContent = THINKING_WORDS[0];
+
+            const dots = document.createElement('span');
+            dots.className = 'thinking-dots';
+            dots.innerHTML = '<span></span><span></span><span></span>';
+
+            wrap.appendChild(word);
+            wrap.appendChild(dots);
+
+            let i = 0;
+            const intervalId = setInterval(() => {
+                i = (i + 1) % THINKING_WORDS.length;
+                word.style.opacity = '0';
+                word.style.transform = 'translateY(-2px)';
+                setTimeout(() => {
+                    word.textContent = THINKING_WORDS[i];
+                    word.style.opacity = '1';
+                    word.style.transform = 'translateY(0)';
+                }, 220);
+            }, 1700);
+
+            return { element: wrap, stop: () => clearInterval(intervalId) };
+        }
+
+        function addMessage(role, content, targetElement = chatBox, reasoningText = null) {
+            const msgDiv = document.createElement('div');
+            const safeRole = (role === 'user' || role === 'ai') ? role : 'ai';
+            msgDiv.className = `message ${safeRole}-message`;
+            
+            let contentToParse;
+            let imagesToRender = [];
+
+            if (Array.isArray(content)) {
+                let displayParts = [];
+                content.forEach(part => {
+                    if (part.type === 'text' && part.text) {
+                        displayParts.push(part.text.trim());
+                    } else if (part.type === 'image_url') {
+                         if (part.image_url && part.image_url.url) {
+                             imagesToRender.push(part.image_url.url);
+                         } else {
+                             displayParts.push('**[Image attached]**');
+                         }
+                    }
+                });
+                contentToParse = displayParts.join('\n');
+            } else {
+                contentToParse = content && typeof content === 'string' ? content : '...';
+            }
+
+            if (typeof contentToParse === 'string' && contentToParse.includes('<think')) {
+                const extracted = extractThinkTags(contentToParse);
+                contentToParse = extracted.clean;
+                if (!reasoningText && extracted.reasoning) reasoningText = extracted.reasoning;
+            }
+
+            const rawTextForCopy = Array.isArray(content) 
+                ? content.filter(p => p.type === 'text').map(p => p.text).join('\n') 
+                : contentToParse;
+
+            let renderedHtml;
+            if (contentToParse === '(Stopped by user)') {
+                renderedHtml = '<span style="color:var(--text-secondary); font-style:italic;">(Stopped by user)</span>';
+            } else if (typeof marked !== 'undefined') {
+                const protectedText = contentToParse.replace(/\\/g, '\\\\');
+                renderedHtml = marked.parse(protectedText);
+            } else {
+                renderedHtml = contentToParse.replace(/\n/g, '<br>');
+            }
+
+            if (safeRole === 'ai' && reasoningText) {
+                const details = document.createElement('details');
+                details.className = 'reasoning-block';
+                const summary = document.createElement('summary');
+                summary.textContent = 'Reasoning';
+                details.appendChild(summary);
+                const reasoningBody = document.createElement('div');
+                reasoningBody.style.marginTop = '6px';
+                reasoningBody.textContent = reasoningText;
+                details.appendChild(reasoningBody);
+                msgDiv.appendChild(details);
+            }
+            
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'message-content';
+            contentContainer.innerHTML = renderedHtml;
+
+            imagesToRender.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '400px';
+                img.style.borderRadius = '12px';
+                img.style.marginTop = '10px';
+                img.style.display = 'block';
+                img.style.cursor = 'zoom-in';
+                img.onload = () => scrollToBottom();
+                img.onclick = () => {
+                    imgModalContent.src = url;
+                    imageModal.style.display = "flex";
+                };
+                img.onerror = () => {
+                    const fallback = document.createElement('div');
+                    fallback.style.marginTop = '10px';
+                    fallback.style.fontWeight = 'bold';
+                    fallback.style.color = 'var(--text-secondary)';
+                    fallback.textContent = '[Image attached]';
+                    img.replaceWith(fallback);
+                };
+                contentContainer.appendChild(img);
+            });
+
+            msgDiv.appendChild(contentContainer); 
+
+            if (safeRole === 'ai') {
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.textContent = 'Copy';
+                copyButton.setAttribute('data-text', rawTextForCopy);
+                copyButton.onclick = function() { copyToClipboard(this.getAttribute('data-text'), this); };
+                msgDiv.appendChild(copyButton);
+            }
+            targetElement.appendChild(msgDiv);
+            scrollToBottom();
+            return msgDiv; 
+        }
+
+        function decodeKeyLine(line) {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+            try {
+                return `gsk_${atob(trimmed)}`;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function populateKeySelector() {
+            keySelectDropdown.innerHTML = '';
+            API_KEYS.forEach((key, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = `Key ${idx + 1}`;
+                keySelectDropdown.appendChild(option);
+            });
+            keySelectDropdown.disabled = API_KEYS.length <= 1;
+        }
+
+        async function selectApiKey(indexStr, skipReload = false) {
+            const index = parseInt(indexStr, 10);
+            if (isNaN(index) || !API_KEYS[index]) return;
+            GROQ_API_KEY = API_KEYS[index];
+            keySelectDropdown.value = index;
+            localStorage.setItem(KEY_INDEX_STORAGE, String(index));
+            if (skipReload) return;
+
+            apiStatus.textContent = 'Refreshing model list...';
+            showLoadingScreen('Refreshing model list…');
+            const previousModelId = CURRENT_MODEL.id;
+            const ok = await loadModelsOrShowRetry();
+            if (!ok) {
+                apiStatus.innerHTML = `<span style="color:var(--danger-color); font-weight:bold;">Couldn't load models.</span>`;
+                hideLoadingScreen();
+                return;
+            }
+            await probeAllModels();
+            populateModelSelector();
+            const matchingKey = Object.keys(MODELS).find(k => MODELS[k].id === previousModelId);
+            selectModel(matchingKey || Object.keys(MODELS)[0], false);
+            apiStatus.textContent = 'API Key loaded.';
+            hideLoadingScreen();
+        }
+
+        async function loadApiKey() {
+            const hasExistingChats = loadStateFromLocalStorage();
+
+            renderSidebar();
+            showStartPage();
+            showLoadingScreen('Connecting to Groq…');
+            apiStatus.textContent = 'Fetching API Key(s)...';
+            try {
+                const response = await fetch(API_KEY_URL);
+                if (!response.ok) throw new Error(`HTTP Status: ${response.status}`);
+                const rawText = (await response.text());
+                const lines = rawText.split(/\r?\n/);
+                API_KEYS = lines.map(decodeKeyLine).filter(Boolean);
+
+                if (API_KEYS.length === 0) throw new Error("No valid keys found in token file.");
+
+                populateKeySelector();
+                let storedIndex = parseInt(localStorage.getItem(KEY_INDEX_STORAGE), 10);
+                if (isNaN(storedIndex) || !API_KEYS[storedIndex]) storedIndex = 0;
+                await selectApiKey(storedIndex, true);
+
+                apiStatus.textContent = 'Loading models...';
+                setLoadingStatus('Loading model list…');
+                const modelsOk = await loadModelsOrShowRetry();
+                if (!modelsOk) {
+                    apiStatus.innerHTML = `<span style="color:var(--danger-color); font-weight:bold;">Couldn't load models.</span>`;
+                    keySelectDropdown.disabled = API_KEYS.length <= 1;
+                    renderSidebar();
+                    toggleModelSelectorLock();
+                    hideLoadingScreen();
+                    return;
+                }
+
+                await probeAllModels();
+                populateModelSelector();
+
+                const savedModelKey = localStorage.getItem(MODEL_KEY_STORAGE);
+                const initialModelKey = (savedModelKey && MODELS[savedModelKey]) ? savedModelKey : Object.keys(MODELS)[0];
+                CURRENT_MODEL = MODELS[initialModelKey];
+
+                if (Object.keys(allChatHistories).length === 0) {
+                    createNewChatObject('chat-0', 'Initial Chat');
+                    currentChatId = 'chat-0';
+                }
+
+                apiStatus.textContent = 'API Key loaded.';
+                modelSelectDropdown.disabled = false;
+                keySelectDropdown.disabled = API_KEYS.length <= 1;
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                document.querySelectorAll('.model-button').forEach(btn => btn.style.pointerEvents = 'auto');
+
+                renderSidebar();
+                if (hasExistingChats) {
+                    selectModel(initialModelKey, false);
+                    showChatInterface();
+                } else {
+                    selectModel(initialModelKey, false);
+                    document.querySelector(`.model-button[data-model-key="${initialModelKey}"]`)?.classList.add('selected');
+                }
+                updateEffortButtonsUI();
+
+                hideLoadingScreen();
+            } catch (error) {
+                hideLoadingScreen();
+                console.error('API Key Error:', error);
+                apiStatus.innerHTML = `<span style="color:var(--primary-color); font-weight:bold;">Error: ${error.message}</span>`;
+            }
+            toggleModelSelectorLock();
+            renderCurrentChat();
+        }
+
+        async function sendMessage() {
+            const userText = userInput.value.trim();
+            if ((!userText && !selectedFile) || !GROQ_API_KEY) return;
+            if (isCurrentChatLocked()) return;
+            
+            const currentChatObject = allChatHistories[currentChatId];
+            const currentHistory = currentChatObject.history;
+            const isFirstMessage = currentHistory.length === 1; 
+
+            userInput.value = '';
+
+            sendButton.textContent = 'Stop';
+            sendButton.classList.add('stop-mode');
+
+            userInput.disabled = true;
+            modelSelectDropdown.disabled = true;
+            fileUploadButton.disabled = true;
+            mathButton.disabled = true; 
+
+            let finalUserMessageContent;
+            let fileToDisplay = selectedFile;
+            let thinkingIndicator = null;
+            let timeoutId = null;
+            let timedOut = false;
+
+            try {
+                if (fileToDisplay) {
+                    if (CURRENT_MODEL.multimodal !== true) {
+                        alert(`${CURRENT_MODEL.name} is not verified to support images. Please select a different model.`);
+                        clearSelectedFile();
+                        return;
+                    }
+                    const base64Url = selectedFile.base64;
+                    finalUserMessageContent = [];
+                    if (userText) finalUserMessageContent.push({ "type": "text", "text": userText });
+                    finalUserMessageContent.push({ "type": "image_url", "image_url": { "url": base64Url } });
+                } else {
+                    finalUserMessageContent = userText;
+                }
+
+                const displayContent = fileToDisplay ? `${userText} **Image: ${fileToDisplay.name}**` : userText;
+                addMessage('user', displayContent);
+
+                if (fileToDisplay) {
+                    const localBase64 = selectedFile.base64;
+                    const imgPreview = document.createElement('img');
+                    imgPreview.src = localBase64;
+                    imgPreview.style.maxWidth = '200px';
+                    imgPreview.style.maxHeight = '200px';
+                    imgPreview.style.display = 'block';
+                    imgPreview.style.marginTop = '10px';
+                    imgPreview.style.borderRadius = '12px';
+                    imgPreview.style.cursor = 'zoom-in';
+                    imgPreview.onclick = () => {
+                        imgModalContent.src = localBase64;
+                        imageModal.style.display = "flex";
+                    };
+                    chatBox.lastElementChild.querySelector('.message-content').appendChild(imgPreview);
+                    scrollToBottom();
+                }
+
+                currentHistory.push({ "role": "user", "content": finalUserMessageContent });
+                clearSelectedFile();
+
+                if (isFirstMessage) {
+                    let newTitle = fileToDisplay ? `Image Analysis ${++imageAnalysisCounter}` : truncateText(userText);
+                    updateChatTitle(currentChatId, newTitle);
+                    renderSidebar();
+                }
+                saveStateToLocalStorage();
+
+                const aiMessageElement = document.createElement('div');
+                aiMessageElement.className = 'message ai-message';
+                const aiContentContainer = document.createElement('div');
+                aiContentContainer.className = 'message-content';
+                thinkingIndicator = createThinkingIndicator();
+                aiContentContainer.appendChild(thinkingIndicator.element);
+                aiMessageElement.appendChild(aiContentContainer);
+                const aiCopyButton = document.createElement('button');
+                aiCopyButton.className = 'copy-button';
+                aiCopyButton.textContent = 'Copy';
+                aiCopyButton.setAttribute('data-text', '');
+                aiCopyButton.onclick = function() { copyToClipboard(this.getAttribute('data-text'), this); };
+                aiMessageElement.appendChild(aiCopyButton);
+                chatBox.appendChild(aiMessageElement);
+                scrollToBottom();
+
+                abortController = new AbortController();
+                let fullAiResponse = "";
+                let fullReasoning = "";
+                const wantsReasoning = CURRENT_MODEL.reasoning && showReasoningCheckbox && showReasoningCheckbox.checked;
+
+                timeoutId = setTimeout(() => {
+                    timedOut = true;
+                    abortController.abort();
+                }, REQUEST_TIMEOUT_MS);
+
+                try {
+                    const requestBody = {
+                        model: CURRENT_MODEL.id,
+                        messages: buildOutgoingMessages(currentHistory),
+                        stream: true
+                    };
+                    if (CURRENT_MODEL.reasoning) {
+                        const cachedAllowed = REASONING_ALLOWED_CACHE[CURRENT_MODEL.id];
+                        requestBody.reasoning_effort = cachedAllowed ? mapEffortToAllowed(REASONING_EFFORT, cachedAllowed) : REASONING_EFFORT;
+                        requestBody.reasoning_format = wantsReasoning ? 'parsed' : 'hidden';
+                    }
+                    if (fileToDisplay) {
+                        requestBody.temperature = VISION_TEMPERATURE;
+                    }
+
+                    const response = await performGroqChatRequest(requestBody, abortController.signal);
+                    clearTimeout(timeoutId);
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split("\n");
+                        for (const line of lines) {
+                            if (line.startsWith("data: ") && line !== "data: [DONE]") {
+                                try {
+                                    const json = JSON.parse(line.substring(6));
+                                    const delta = json.choices[0]?.delta || {};
+                                    const content = delta.content || "";
+                                    fullAiResponse += content;
+                                    if (delta.reasoning) fullReasoning += delta.reasoning;
+                                } catch (e) {}
+                            }
+                        }
+                    }
+
+                    const extractedThink = extractThinkTags(fullAiResponse);
+                    fullAiResponse = extractedThink.clean;
+                    if (extractedThink.reasoning) {
+                        fullReasoning = fullReasoning ? `${fullReasoning}\n\n${extractedThink.reasoning}` : extractedThink.reasoning;
+                    }
+
+                    const lockCmd = extractLockCommand(fullAiResponse);
+                    fullAiResponse = lockCmd.clean;
+
+                    const warnCmd = extractWarnCommand(fullAiResponse);
+                    fullAiResponse = warnCmd.clean;
+
+                    if ((lockCmd.requestedLock || warnCmd.requestedWarn) && !fullAiResponse.trim()) {
+                        fullAiResponse = '_This chat has been locked._';
+                    }
+
+                    if (!fullAiResponse.trim()) {
+                        throw new Error("Sorry, I received an empty message from the API.");
+                    }
+
+                    thinkingIndicator.stop();
+
+                    const protectedResponse = fullAiResponse.replace(/\\/g, '\\\\');
+
+                    if (fullReasoning.trim()) {
+                        const details = document.createElement('details');
+                        details.className = 'reasoning-block';
+                        const summary = document.createElement('summary');
+                        summary.textContent = 'Reasoning';
+                        details.appendChild(summary);
+                        const reasoningBody = document.createElement('div');
+                        reasoningBody.style.marginTop = '6px';
+                        reasoningBody.textContent = fullReasoning;
+                        details.appendChild(reasoningBody);
+                        aiMessageElement.insertBefore(details, aiContentContainer);
+                    }
+
+                    aiContentContainer.innerHTML = marked.parse(protectedResponse);
+
+                    if (window.safeRefreshMath) {
+                        safeRefreshMath(fullAiResponse);
+                    }
+                    scrollToBottom();
+
+                    if (aiCopyButton) aiCopyButton.setAttribute('data-text', fullAiResponse);
+                    const assistantMsg = { "role": "assistant", "content": fullAiResponse };
+                    if (fullReasoning.trim()) assistantMsg.reasoning = fullReasoning;
+                    currentHistory.push(assistantMsg);
+                    saveStateToLocalStorage();
+
+                    if (fileToDisplay && VISION_SUPPORT_CACHE[CURRENT_MODEL.id] !== true) {
+                        VISION_SUPPORT_CACHE[CURRENT_MODEL.id] = true;
+                        CURRENT_MODEL.multimodal = true;
+                        populateModelSelector();
+                        document.querySelectorAll('.model-button').forEach(btn => btn.style.pointerEvents = 'auto');
+                    }
+
+                    if (lockCmd.requestedLock) {
+                        currentChatObject.locked = true;
+                        currentChatObject.lockReason = 'ai';
+                        saveStateToLocalStorage();
+                        applyChatLockUI();
+                    } else if (warnCmd.requestedWarn) {
+                        currentChatObject.warnCount = (currentChatObject.warnCount || 0) + 1;
+                        if (currentChatObject.warnCount >= 3) {
+                            currentChatObject.locked = true;
+                            currentChatObject.lockReason = 'abuse';
+                        }
+                        saveStateToLocalStorage();
+                        applyChatLockUI();
+                    }
+
+                } catch (error) {
+                    if (thinkingIndicator) thinkingIndicator.stop();
+                    if (error.name === 'AbortError') {
+                        const stopMsg = timedOut
+                            ? '(Timed out — that request took too long. Try a smaller image, fewer past images, or a shorter conversation.)'
+                            : '(Stopped by user)';
+                        aiContentContainer.innerHTML = `<span style="color:var(--text-secondary); font-style:italic;">${stopMsg}</span>`;
+                        currentHistory.push({ "role": "assistant", "content": stopMsg });
+                        saveStateToLocalStorage();
+                        sendButton.classList.remove('stop-mode');
+                        sendButton.textContent = 'Send';
+                    } else if (error.code === 'REQUEST_TOO_LARGE') {
+                        const info = error.limitInfo;
+                        const isStructuralTierLimit = info && info.limit !== null && info.limit <= STRUCTURAL_LOW_LIMIT_THRESHOLD;
+
+                        if (isStructuralTierLimit) {
+                            aiContentContainer.innerHTML = `<span style="color:var(--danger-color); font-weight:600;">${CURRENT_MODEL.name} is capped at ${info.limit} ${info.type || 'tokens/min'} on your account's tier — too low to hold a reply. This will happen every time with this model; pick a different one from the model list instead of retrying.</span>`;
+                        } else {
+                            currentChatObject.tooLargeCount = (currentChatObject.tooLargeCount || 0) + 1;
+                            if (currentChatObject.tooLargeCount >= 3) {
+                                currentChatObject.locked = true;
+                                currentChatObject.lockReason = 'too_large';
+                                aiContentContainer.innerHTML = `<span style="color:var(--danger-color); font-weight:600;">This chat hit Groq's size limit 3 times. This chat is now locked — start a new chat to continue.</span>`;
+                                applyChatLockUI();
+                            } else {
+                                const remaining = 3 - currentChatObject.tooLargeCount;
+                                aiContentContainer.innerHTML = `<span style="color:var(--primary-color); font-weight:bold;">Request too large (attempt ${currentChatObject.tooLargeCount}/3). Try a shorter message or fewer images — ${remaining} more and this chat locks.</span>`;
+                            }
+                        }
+                        saveStateToLocalStorage();
+                    } else if (error.code === 'VISION_UNSUPPORTED') {
+                        VISION_SUPPORT_CACHE[error.modelId] = false;
+                        if (CURRENT_MODEL.id === error.modelId) {
+                            CURRENT_MODEL.multimodal = false;
+                            fileUploadButton.style.display = 'none';
+                        }
+                        populateModelSelector();
+                        document.querySelectorAll('.model-button').forEach(btn => btn.style.pointerEvents = 'auto');
+                        aiContentContainer.innerHTML = `<span style="color:var(--danger-color); font-weight:600;">${CURRENT_MODEL.name} doesn't actually support images — Groq rejected it. Its upload button is now hidden; pick a different model for images.</span>`;
+                    } else {
+                        aiContentContainer.innerHTML = `<span style="color:var(--primary-color); font-weight:bold;">Error: ${error.message}</span>`;
+                    }
+                }
+            } catch (outerError) {
+                console.error('sendMessage failed:', outerError);
+                if (thinkingIndicator) thinkingIndicator.stop();
+                addMessage('ai', `Error: ${outerError.message || 'Something went wrong sending that message.'}`);
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
+                abortController = null;
+                toggleModelSelectorLock();
+
+                sendButton.textContent = 'Send';
+                sendButton.classList.remove('stop-mode');
+
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                fileUploadButton.disabled = false;
+                mathButton.disabled = false;
+                applyChatLockUI();
+                userInput.focus();
+                setupMainInputCounter();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initLatexPicker();
+
+            if (newChatButton) newChatButton.addEventListener('click', startNewChat);
+            if (mobileSidebarToggle) mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
+            if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+            if (contextMenu) contextMenu.addEventListener('click', (e) => {
+                 const btn = e.target.closest('button');
+                 if(!btn) return;
+                 if(btn.dataset.action === 'edit') handleEditChatTitle();
+                 else if(btn.dataset.action === 'lock') handleLockChat();
+                 else if(btn.dataset.action === 'delete') handleDeleteChat();
+                 hideContextMenu();
+            });
+            document.addEventListener('click', hideContextMenu);
+            document.addEventListener('contextmenu', (e) => { if(!e.target.closest('.chat-item')) hideContextMenu(); });
+
+            if (fileUploadButton) fileUploadButton.addEventListener('click', () => imageFileInput.click());
+            if (imageFileInput) imageFileInput.addEventListener('change', handleFileSelect);
+            if (clearFileButton) clearFileButton.addEventListener('click', clearSelectedFile);
+            
+            if (mathButton) mathButton.addEventListener('click', () => {
+                latexModal.style.display = 'flex';
+                latexPreviewInput.value = '';
+                updateLivePreview();
+                latexPreviewInput.focus();
+                hideFractionBuilder();
+                hideSingleBuilder();
+            });
+            if (closeLatexBtn) closeLatexBtn.addEventListener('click', () => latexModal.style.display = 'none');
+            
+            if (latexPreviewInput) {
+                latexPreviewInput.addEventListener('input', updateLivePreview);
+            }
+
+            if (latexInsertMainBtn) latexInsertMainBtn.addEventListener('click', () => {
+                const equation = latexPreviewInput.value.trim();
+                if (equation) {
+                    insertAtCursor(userInput, `\\[${equation}\\]`);
+                }
+                latexModal.style.display = 'none';
+            });
+
+            document.querySelectorAll('.effort-option').forEach(btn => {
+                btn.addEventListener('click', () => setReasoningEffort(btn.dataset.effort));
+            });
+            if (insertFracBtn) insertFracBtn.addEventListener('click', insertFraction);
+            if (cancelFracBtn) cancelFracBtn.addEventListener('click', hideFractionBuilder);
+
+            if (insertSingleBtn) insertSingleBtn.addEventListener('click', insertSingleValue);
+            if (cancelSingleBtn) cancelSingleBtn.addEventListener('click', hideSingleBuilder);
+
+            if (singleInputVal) singleInputVal.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') insertSingleValue();
+            });
+
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                    e.preventDefault();
+                    if (!abortController) sendMessage();
+                }
+            });
+
+            sendButton.addEventListener('click', () => {
+                if (abortController) {
+                    abortController.abort();
+                    abortController = null;
+                } else {
+                    sendMessage();
+                }
+            });
+
+            window.onclick = function(event) {
+                if (event.target == latexModal) latexModal.style.display = "none";
+                if (event.target == confirmModal) confirmModal.style.display = "none";
+                if (event.target == promptModal) promptModal.style.display = "none";
+                if (event.target == imageModal) imageModal.style.display = "none";
+            }
+
+            loadApiKey();
+        });
+
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('theme');
+                if (storedTheme == 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch (e) { console.log("LocalStorage access denied"); }
+        })();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                if (e.newValue === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
