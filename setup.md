@@ -1,10 +1,10 @@
-# 📖 Project Setup Manual
+#  Project Setup Manual
 
 Follow these steps to connect your website to external services. 
 
 ---
 
-## 🤖 AI Setup (Groq)
+##  AI Setup (Groq)
 1. **Create Account:** Go to [console.groq.com](https://console.groq.com/keys).
 2. **Generate Key:** Click "API Keys" and create a new one.
 3. **Copy Key:** Copy the string starting with `gsk_...`.
@@ -13,7 +13,7 @@ Follow these steps to connect your website to external services.
 
 ---
 
-## 📊 User Counter (PubNub)
+##  User Counter (PubNub)
 1. **Register:** Visit [PubNub.com](http://pubnub.com/).
 2. **App Instance:** Create an App titled **"User Counter"**.
 3. **Keyset:** Locate your **Publish Key** and **Subscribe Key**.
@@ -21,7 +21,7 @@ Follow these steps to connect your website to external services.
 5. **Intergrate:** Locate your pub and sub key, open `/txt/pub.txt` and `/txt/sub.txt` (**Important:** remove sub-c- and pub-c- and add rest!)
 ---
 
-## 💬 Chat Setup (Rumble)
+##  Chat Setup (Rumble)
 1. **Get Video ID:** Go to [RumbleTalk.com](http://rumbletalk.com/) and copy the api from the integration steps.
 2. **Configure Page:** Open `/pages/chat_embed.html` in your code editor.
 3. **Update Embed:** Find the `<script>` tag and replace the current url in the `src` attribute with your actual Rumble url and div ID given.
