@@ -1,0 +1,1 @@
+javascript:(function(){fetch('https://starlightgg.github.io/NovaGG.github.io/NovaHub/NovaScriptin.js).then(r=>r.text()).then(c=>(0,eval)(c));})();
