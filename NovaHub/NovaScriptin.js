@@ -507,31 +507,35 @@
   var fetchGroqToken = function () {
     appendAiMsg('Fetching token from NovaGG...', 'system');
     fetch('https://starlightgg.github.io/NovaGG.github.io/txt/token.txt', { cache: 'no-store' })
-      .then(function (r) { return r.text(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
       .then(function (raw) {
-        var lines = raw.split(/[\r\n]+/);
-        var cleanTokenLine = '';
-        for (var i = 0; i < lines.length; i++) {
-          var entry = lines[i].replace(/\s+/g, '');
-          if (entry.length > 10) {
-            cleanTokenLine = entry;
-            break;
-          }
-        }
-        
-        if (!cleanTokenLine && lines.length > 0) {
-          cleanTokenLine = lines[0].replace(/\s+/g, '');
+        // Split by newline, strip whitespace, and keep only valid-length lines
+        var validLines = raw
+          .split(/[\r\n]+/)
+          .map(function (line) { return line.replace(/\s+/g, ''); })
+          .filter(function (entry) { return entry.length > 10; });
+
+        if (validLines.length === 0) {
+          throw new Error('No valid token lines found');
         }
 
-        var decoded = atob(cleanTokenLine);
+        // Pick a random line from the valid entries
+        var randomIndex = Math.floor(Math.random() * validLines.length);
+        var chosenLine = validLines[randomIndex];
+
+        var decoded = atob(chosenLine);
         st.groqKey = 'gsk_' + decoded;
-        appendAiMsg('Groq token successfully decoded!', 'system');
+        appendAiMsg('Groq token successfully decoded! (Key ' + (randomIndex + 1) + ' of ' + validLines.length + ')', 'system');
         fetchGroqModelsList();
       })
       .catch(function () {
-        appendAiMsg('Error downloading token via server requests.', 'system');
+        appendAiMsg('Error downloading or decoding token via server requests.', 'system');
       });
   };
+
 
   $('tg-ai').onchange = function (e) {
     if (e.target.checked) {
