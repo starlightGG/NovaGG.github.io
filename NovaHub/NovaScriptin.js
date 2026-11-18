@@ -53,7 +53,7 @@
     ];
     var innerCardChildren = [el('div', { c: 'nova-ctop' }, topChildren)];
     if (extraElements) {
-      innerCardChildren.push(el('div', { style: 'margin-top:10px;' }, extraElements));
+      innerCardChildren.push(el('div', { c: 'nova-extra', style: 'margin-top:10px;' }, extraElements));
     }
     return el('div', { c: 'nova-card' }, innerCardChildren);
   };
@@ -110,10 +110,10 @@
   var st = {
     ac: 0,
     ms: 100,
-    acKey: '`',       // AutoClicker operational execution toggle keybind
-    acHideKey: '3',   // Toggle visibility on AutoClicker macro options screen
-    hubKey: '1',      // Toggle framework main control dashboard visibility
-    aiKey: '2',       // Interactive dynamic panel chatbot assistant toggle keybind
+    acKey: 'Backquote', // AutoClicker operational execution toggle keybind
+    acHideKey: 'Digit3',   // Toggle visibility on AutoClicker macro options screen
+    hubKey: 'Digit1',      // Toggle framework main control dashboard visibility
+    aiKey: 'Digit2',       // Interactive dynamic panel chatbot assistant toggle keybind
     currentRecording: null, // Tracks which functional element is binding a key
     id: 0,
     x: 0,
@@ -128,11 +128,61 @@
     groqKey: '',
   };
 
-  // Button components structured into modern interactive dynamic key selectors instead of drops
-  var btnAcKey = el('button', { c: 'nova-kbtn', t: st.acKey.toUpperCase() });
-  var btnAcHideKey = el('button', { c: 'nova-kbtn', t: st.acHideKey.toUpperCase() });
-  var btnHubKey = el('button', { c: 'nova-kbtn', t: st.hubKey.toUpperCase() });
-  var btnAiKey = el('button', { c: 'nova-kbtn', t: st.aiKey.toUpperCase() });
+  // ----- Saved settings (localStorage of the site Nova runs on) -----
+  var SETKEY = 'novascriptin:settings';
+  var KEY_NAMES = ['acKey', 'acHideKey', 'hubKey', 'aiKey'];
+  var XS_K = ['color', 'style', 'size', 'thick', 'gap', 'op', 'outline'];
+  var CC_K = ['style', 'color', 'size', 'op', 'smooth', 'press', 'hide', 'emoji'];
+  var TS_K = ['text', 'speed', 'rate', 'notice', 'fix', 'enter'];
+  var savedSet = (function () {
+    try { return JSON.parse(window.localStorage.getItem(SETKEY)) || {}; } catch (e) { return {}; }
+  })();
+  var mergeSaved = function (target, src, keys) {
+    if (!src || typeof src !== 'object') return;
+    keys.forEach(function (k) { if (typeof src[k] === typeof target[k]) target[k] = src[k]; });
+  };
+  var pickKeys = function (src, keys) {
+    var o = {};
+    keys.forEach(function (k) { o[k] = src[k]; });
+    return o;
+  };
+  if (savedSet.keys) KEY_NAMES.forEach(function (k) { if (typeof savedSet.keys[k] === 'string') st[k] = savedSet.keys[k]; });
+  var saveT = 0;
+  var saveNow = function () {
+    clearTimeout(saveT);
+    try {
+      window.localStorage.setItem(SETKEY, JSON.stringify({
+        keys: pickKeys(st, KEY_NAMES),
+        dark: !!$('tg-dark').checked,
+        tb: !!$('tg-tb').checked,
+        xs: pickKeys(xs, XS_K),
+        cc: pickKeys(cc, CC_K),
+        ts: pickKeys(ts, TS_K)
+      }));
+    } catch (e) {}
+  };
+  var saveSettings = function () {
+    clearTimeout(saveT);
+    saveT = setTimeout(saveNow, 300);
+  };
+
+  // Readable names for stored key codes / mouse buttons
+  var bindLabel = function (b) {
+    if (!b) return 'DISABLED';
+    var m = { ShiftLeft: 'LShift', ShiftRight: 'RShift', ControlLeft: 'LCtrl', ControlRight: 'RCtrl', AltLeft: 'LAlt', AltRight: 'RAlt', MetaLeft: 'LMeta', MetaRight: 'RMeta', Backquote: '`', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Mouse1: 'Mouse Middle', Mouse2: 'Mouse Right', Mouse3: 'Mouse Back', Mouse4: 'Mouse Forward' };
+    if (m[b]) return m[b];
+    var k = /^Key([A-Z])$/.exec(b) || /^Digit(\d)$/.exec(b);
+    if (k) return k[1];
+    var n = /^Numpad(.+)$/.exec(b);
+    if (n) return 'Num ' + n[1];
+    return b;
+  };
+
+  // Keybind buttons (shown in each script's settings popup)
+  var btnAcKey = el('button', { c: 'nova-kbtn', t: bindLabel(st.acKey) });
+  var btnAcHideKey = el('button', { c: 'nova-kbtn', t: bindLabel(st.acHideKey) });
+  var btnHubKey = el('button', { c: 'nova-kbtn', t: bindLabel(st.hubKey) });
+  var btnAiKey = el('button', { c: 'nova-kbtn', t: bindLabel(st.aiKey) });
 
   var sTab = el('div', { id: 'tab-scripts', c: 'nova-sec active' }, [
     card('AutoClicker', 'Toggle overlay dashboard panel', 'tg-ac', 'ac-lbl'),
@@ -146,6 +196,10 @@
     card('Crosshair', 'Screen-center crosshair | Right-click switch for settings', 'tg-xh'),
     card('Fake Typer', 'Types text with human mistakes | Right-click switch for settings', 'tg-ty'),
     card('Custom Cursor', 'Replace your mouse cursor (computer only) | Right-click switch for settings', 'tg-cur'),
+    card('Timer', 'Countdown that beeps when done | Saved on this site', 'tg-tmr', 'tmr-lbl'),
+    card('Screen Time', 'Tracks time spent on this site | Saved on this site', 'tg-scr', 'scr-lbl', [
+      el('button', { id: 'btn-scrreset', c: 'nova-kbtn', t: 'Reset screen time' }),
+    ]),
   ]);
 
   var pTab = el('div', { id: 'tab-page', c: 'nova-sec' }, [
@@ -168,52 +222,9 @@
     ]),
   ]);
 
-  var hAcKeyCard = el('div', { c: 'nova-card' }, [
-    el('div', { c: 'nova-ctop' }, [
-      el('div', 0, [
-        el('h4', { t: 'AutoClicker Activation' }),
-        el('p', { t: 'Keybind assignment to fire macro loop' }),
-      ]),
-      el('div', { style: 'width:90px;flex-shrink:0' }, [btnAcKey]),
-    ])
-  ]);
-
-  var hAcHideCard = el('div', { c: 'nova-card' }, [
-    el('div', { c: 'nova-ctop' }, [
-      el('div', 0, [
-        el('h4', { t: 'Hide AutoClicker Window' }),
-        el('p', { t: 'Toggle visibility on AutoClicker panel overlay' }),
-      ]),
-      el('div', { style: 'width:90px;flex-shrink:0' }, [btnAcHideKey]),
-    ])
-  ]);
-
-  var hHubKeyCard = el('div', { c: 'nova-card' }, [
-    el('div', { c: 'nova-ctop' }, [
-      el('div', 0, [
-        el('h4', { t: 'Hide Hub Window' }),
-        el('p', { t: 'Toggle visual dashboard configuration' }),
-      ]),
-      el('div', { style: 'width:90px;flex-shrink:0' }, [btnHubKey]),
-    ])
-  ]);
-
-  var hAiKeyCard = el('div', { c: 'nova-card' }, [
-    el('div', { c: 'nova-ctop' }, [
-      el('div', 0, [
-        el('h4', { t: 'Hide Chatbot Panel' }),
-        el('p', { t: 'Toggle visibility on Groq Assistant window' }),
-      ]),
-      el('div', { style: 'width:90px;flex-shrink:0' }, [btnAiKey]),
-    ])
-  ]);
-
   var stTab = el('div', { id: 'tab-settings', c: 'nova-sec' }, [
     card('Dark Mode', 'Switch neumorphic theme', 'tg-dark'),
-    hAcKeyCard,
-    hAcHideCard,
-    hHubKeyCard,
-    hAiKeyCard,
+    card('Transparent Buttons', 'Floating buttons are see-through (on) or solid (off)', 'tg-tb'),
   ]);
 
   var bodyWrap = el('div', { c: 'nova-body' }, [sTab, pTab, stTab]);
@@ -221,7 +232,7 @@
   var hub = el(
     'div',
     { id: 'novascriptin-hub', c: 'nova-box dark' },
-    [hdr, tabs, bodyWrap, res]
+    [hdr, el('div', { c: 'nova-main' }, [tabs, bodyWrap]), res]
   );
   shadow.appendChild(hub);
 
@@ -246,7 +257,7 @@
   var acOvl = el('div', { id: 'nova-ac-ovl', c: 'nova-box dark' }, [
     acHdr,
     acBody,
-    el('button', { id: 'btn-openframe', c: 'nova-kbtn', style: 'margin-top:10px', t: 'Open iframe at target' }),
+    el('p', { style: 'margin:10px 0 0;font-size:11px;color:var(--sub)', t: "Note: doesn't work inside iframes from other sites." }),
   ]);
   shadow.appendChild(acOvl);
 
@@ -289,6 +300,8 @@
   };
 
   $('tg-dark').checked = true;
+  $('tg-tb').checked = true;
+  if (savedSet.tb === false) $('tg-tb').checked = false;
 
   setTimeout(function () {
     ldr.style.opacity = '0';
@@ -300,10 +313,18 @@
     }, 400);
   }, 750);
 
-  var isTouch = !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
-  var tgt = null, acFab = null, syncFabs = null;
+  // Every permanent document/window listener goes through gOn so destroying the UI can remove them all
+  var destroyed = 0;
+  var globalL = [];
+  var gOn = function (t, type, fn, o) {
+    t.addEventListener(type, fn, o);
+    globalL.push([t, type, fn, o]);
+  };
 
-  document.addEventListener('mousemove', function (e) {
+  var isTouch = !!(window.matchMedia && window.matchMedia('(pointer:coarse)').matches);
+  var tgt = null, acFab = null, syncFabs = null, syncHubGhost = null;
+
+  gOn(document, 'mousemove', function (e) {
     st.x = e.clientX;
     st.y = e.clientY;
     if (e.target !== host) { st.px = e.clientX; st.py = e.clientY; }
@@ -330,6 +351,7 @@
         st.currentRecording = null;
         showToast(fallbackLabel + ' keybind unassigned and completely disabled.');
         upd();
+        saveSettings();
         return;
       }
       if (st.currentRecording) {
@@ -337,8 +359,8 @@
       }
       st.currentRecording = btn;
       btn.classList.add('recording');
-      btn.textContent = 'PRESS KEY';
-      showToast('Press any standard keyboard controller button to bind. Double click button to disable.');
+      btn.textContent = 'PRESS KEY / MOUSE';
+      showToast('Press any key (LShift, RShift too) or a mouse button (middle, right, back, forward). Click the button again to disable.');
     };
   };
 
@@ -358,21 +380,33 @@
     rh = hub.offsetHeight;
     hub.style.transition = 'none';
   };
-  document.addEventListener('pointermove', function (e) {
+  gOn(document, 'pointermove', function (e) {
     if (rz) {
-      hub.style.width = Math.max(260, rw + (e.clientX - rx)) + 'px';
-      hub.style.height = Math.max(220, rh + (e.clientY - ry)) + 'px';
+      var hl = parseFloat(hub.style.left) || 0, ht = parseFloat(hub.style.top) || 0;
+      hub.style.width = Math.max(340, Math.min(window.innerWidth - hl, rw + (e.clientX - rx))) + 'px';
+      hub.style.height = Math.max(260, Math.min(window.innerHeight - ht, rh + (e.clientY - ry))) + 'px';
     }
   });
-  document.addEventListener('pointerup', function () {
+  gOn(document, 'pointerup', function () {
     if (rz) {
       rz = 0;
       hub.style.transition = '';
     }
   });
 
+  var dragBoxes = [];
+  var clampBox = function (box) {
+    if (!box.style.left || box.offsetWidth === 0) return;
+    var l = parseFloat(box.style.left) || 0, t = parseFloat(box.style.top) || 0;
+    box.style.left = Math.max(0, Math.min(window.innerWidth - box.offsetWidth, l)) + 'px';
+    box.style.top = Math.max(0, Math.min(window.innerHeight - box.offsetHeight, t)) + 'px';
+  };
+  var onResize = function () { dragBoxes.forEach(clampBox); };
+  gOn(window, 'resize', onResize);
+
   var drag = function (box, h) {
     var d = 0, ox = 0, oy = 0;
+    dragBoxes.push(box);
     h.onpointerdown = function (e) {
       if (e.target.closest('button,input,select,textarea,#nova-res,.ai-chat-area')) return;
       d = 1;
@@ -385,13 +419,14 @@
       ox = e.clientX - r.left;
       oy = e.clientY - r.top;
     };
-    document.addEventListener('pointermove', function (e) {
+    gOn(document, 'pointermove', function (e) {
       if (d) {
-        box.style.left = e.clientX - ox + 'px';
-        box.style.top = e.clientY - oy + 'px';
+        // keep the whole box on screen
+        box.style.left = Math.max(0, Math.min(window.innerWidth - box.offsetWidth, e.clientX - ox)) + 'px';
+        box.style.top = Math.max(0, Math.min(window.innerHeight - box.offsetHeight, e.clientY - oy)) + 'px';
       }
     });
-    document.addEventListener('pointerup', function () {
+    gOn(document, 'pointerup', function () {
       if (d) {
         d = 0;
         box.style.transition = '';
@@ -420,7 +455,8 @@
     lbl = $('ac-lbl');
 
   var upd = function () {
-    lbl.textContent = 'Toggle overlay dashboard panel' + (isTouch ? ' | Drag the red target, tap CLICK' : ' | Key: ' + (st.acKey ? st.acKey.toUpperCase() : 'NONE'));
+    lbl.textContent = 'Toggle overlay dashboard panel' + (isTouch ? ' | Drag the red target, tap CLICK' : ' | Key: ' + (st.acKey ? bindLabel(st.acKey) : 'NONE')) + ' | No iframe support';
+    if (syncHubGhost) syncHubGhost();
   };
   upd();
 
@@ -433,29 +469,42 @@
     var currentDoc = document;
     var el = currentDoc.elementFromPoint(x, y);
     var targetWin = window;
+    var cross = false;
 
     while (el && el.tagName === 'IFRAME') {
+      var rect = el.getBoundingClientRect();
+      var fsx = el.offsetWidth ? rect.width / el.offsetWidth : 1;
+      var fsy = el.offsetHeight ? rect.height / el.offsetHeight : 1;
+      var nx = (x - rect.left) / fsx - el.clientLeft;
+      var ny = (y - rect.top) / fsy - el.clientTop;
+      x = nx; // from here on x/y are relative to this iframe
+      y = ny;
+
+      var nextDoc = null, nextWin = null;
       try {
-        var nextDoc = el.contentDocument || el.contentWindow.document;
-        var nextWin = el.contentWindow;
-        var rect = el.getBoundingClientRect();
-
-        var fsx = rect.width / (el.offsetWidth || 1) || 1;
-        var fsy = rect.height / (el.offsetHeight || 1) || 1;
-        x = (x - rect.left) / fsx - el.clientLeft;
-        y = (y - rect.top) / fsy - el.clientTop;
-
-        var innerEl = nextDoc.elementFromPoint(x, y);
-        if (!innerEl || innerEl === el) break;
-
-        el = innerEl;
-        currentDoc = nextDoc;
-        targetWin = nextWin;
+        nextDoc = el.contentDocument || el.contentWindow.document;
+        nextWin = el.contentWindow;
       } catch (err) {
-        break;
+        nextDoc = null;
       }
+      if (!nextDoc) { cross = true; break; } // other-site (or sandboxed) iframe: the browser hides its inside
+
+      var innerEl = nextDoc.elementFromPoint(x, y);
+      if (!innerEl || innerEl === el) break;
+
+      el = innerEl;
+      currentDoc = nextDoc;
+      targetWin = nextWin;
     }
-    return { element: el, doc: currentDoc, win: targetWin, cx: x, cy: y, frame: !!(el && el.tagName === 'IFRAME') };
+    return { element: el, doc: currentDoc, win: targetWin, cx: x, cy: y, frame: !!(el && el.tagName === 'IFRAME'), cross: cross };
+  };
+
+  // Other-site iframes can't be clicked into (browser security), so just say so
+  var warnFrame = function () {
+    var now = Date.now();
+    if (now - (st.frameWarn || 0) < 6000) return;
+    st.frameWarn = now;
+    showToast("AutoClicker doesn't work inside iframes from other sites (browser limit).");
   };
 
   var start = function () {
@@ -474,12 +523,8 @@
       if (isTouch && tgt) tgt.style.pointerEvents = 'auto';
       if (blocked) return;
 
-      if (data && data.frame) { // still an iframe = cross-origin, the browser won't let us click inside
-        var nowT = Date.now();
-        if (nowT - (st.frameWarn || 0) > 4000) {
-          st.frameWarn = nowT;
-          showToast("Can't click inside that iframe (other site). Use 'Open iframe at target' in the AutoClicker panel.");
-        }
+      if (data && data.cross) {
+        warnFrame();
         return;
       }
       if (data && data.element) {
@@ -515,6 +560,7 @@
   };
 
   var setAc = function (v) {
+    if (destroyed && v) return;
     st.ac = v;
     acStatE.textContent = v ? 'ON' : 'OFF';
     acStatE.style.color = v ? '#48bb78' : '#e53e3e';
@@ -538,12 +584,11 @@
   $('nova-min').onclick = function () {
     hub.style.display = 'none';
     if (isTouch) {
-      var fbT = $('tg-fb');
-      if (fbT) fbT.checked = true; // make sure the HUB button is available to reopen
-      if (syncFabs) syncFabs();
       showToast('Tap the HUB button to reopen');
     } else if (st.hubKey) {
-      showToast('Click ' + st.hubKey.toUpperCase() + ' to unhide display dashboard');
+      showToast('Press ' + bindLabel(st.hubKey) + ' to unhide display dashboard');
+    } else {
+      showToast('Click the hub button to reopen');
     }
   };
 
@@ -704,77 +749,101 @@
     }
   };
 
-  document.addEventListener('keydown', function (e) {
-    if (!e.isTrusted) return; // ignore fake typer's synthetic key events
-    // Intercept if processing keybind mapping capture
-    if (st.currentRecording) {
-      e.preventDefault();
-      e.stopPropagation();
-      var keyStr = e.key;
+  var KEYS = [
+    { k: 'acKey', btn: btnAcKey, label: 'AutoClicker' },
+    { k: 'acHideKey', btn: btnAcHideKey, label: 'AutoClicker panel' },
+    { k: 'hubKey', btn: btnHubKey, label: 'Hub window' },
+    { k: 'aiKey', btn: btnAiKey, label: 'Chatbot panel' },
+  ];
 
-      // Prevent collisions across layout targets
-      if ((st.currentRecording !== btnAcKey && st.acKey && st.acKey.toLowerCase() === keyStr.toLowerCase()) ||
-          (st.currentRecording !== btnAcHideKey && st.acHideKey && st.acHideKey.toLowerCase() === keyStr.toLowerCase()) ||
-          (st.currentRecording !== btnHubKey && st.hubKey && st.hubKey.toLowerCase() === keyStr.toLowerCase()) ||
-          (st.currentRecording !== btnAiKey && st.aiKey && st.aiKey.toLowerCase() === keyStr.toLowerCase())) {
+  // Called when a key / mouse button is pressed while a keybind button is waiting
+  var setBinding = function (code) {
+    var rec = st.currentRecording;
+    var item = KEYS.filter(function (i) { return i.btn === rec; })[0];
+    if (!item) return;
+    for (var i = 0; i < KEYS.length; i++) {
+      if (KEYS[i] !== item && st[KEYS[i].k] === code) {
         showToast('Key conflict! That button is currently bound elsewhere.');
         return;
       }
+    }
+    st[item.k] = code;
+    item.btn.textContent = bindLabel(code);
+    rec.classList.remove('recording');
+    st.currentRecording = null;
+    if (item.k === 'acKey') upd();
+    if (item.k === 'hubKey' && syncHubGhost) syncHubGhost();
+    showToast('Successfully bound action to ' + bindLabel(code));
+    saveSettings();
+  };
 
-      if (st.currentRecording === btnAcKey) {
-        st.acKey = keyStr;
-        btnAcKey.textContent = keyStr.toUpperCase();
-        upd();
-      } else if (st.currentRecording === btnAcHideKey) {
-        st.acHideKey = keyStr;
-        btnAcHideKey.textContent = keyStr.toUpperCase();
-      } else if (st.currentRecording === btnHubKey) {
-        st.hubKey = keyStr;
-        btnHubKey.textContent = keyStr.toUpperCase();
-      } else if (st.currentRecording === btnAiKey) {
-        st.aiKey = keyStr;
-        btnAiKey.textContent = keyStr.toUpperCase();
-      }
+  // Which keybind does this key code / mouse button belong to?
+  var bindHit = function (code) {
+    for (var i = 0; i < KEYS.length; i++) if (st[KEYS[i].k] && st[KEYS[i].k] === code) return KEYS[i].k;
+    return null;
+  };
 
-      st.currentRecording.classList.remove('recording');
-      st.currentRecording = null;
-      showToast('Successfully bound action to ' + keyStr.toUpperCase());
+  var fireBind = function (which) {
+    if (which === 'acKey') {
+      if (tgAc.checked) setAc(!st.ac);
+      else showToast('Turn on AutoClicker in Scripts first.');
+    } else if (which === 'acHideKey') {
+      if (tgAc.checked) acOvl.style.display = acOvl.style.display === 'none' ? 'block' : 'none';
+      else showToast('Turn on AutoClicker in Scripts first.');
+    } else if (which === 'hubKey') {
+      hub.style.display = hub.style.display === 'none' ? 'flex' : 'none';
+    } else if (which === 'aiKey') {
+      if ($('tg-ai').checked) aiOvl.style.display = aiOvl.style.display === 'none' ? 'flex' : 'none';
+      else showToast('Enable the Groq Chatbot switch inside Scripts panel first.');
+    }
+  };
+
+  var typingInPage = function () {
+    var a = document.activeElement;
+    return !!(a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable));
+  };
+
+  gOn(document, 'keydown', function (e) {
+    if (destroyed) return;
+    if (!e.isTrusted) return; // ignore fake typer's synthetic key events
+    if (st.currentRecording) { // waiting to bind: uses the physical key (so LShift / RShift are different)
+      e.preventDefault();
+      e.stopPropagation();
+      setBinding(e.code);
       return;
     }
-
-    if (shadow.activeElement && (shadow.activeElement.tagName === 'INPUT' || shadow.activeElement.tagName === 'SELECT' || shadow.activeElement.tagName === 'TEXTAREA')) {
-      return;
-    }
-
-    if (document.body.contentEditable !== 'true') {
-      var pressedKey = e.key.toLowerCase();
-
-      if (st.acKey && pressedKey === st.acKey.toLowerCase()) {
-        if (tgAc.checked) {
-          setAc(!st.ac);
-        } else {
-          showToast('Turn on AutoClicker in Scripts first.');
-        }
-      } else if (st.acHideKey && pressedKey === st.acHideKey.toLowerCase()) {
-        if (tgAc.checked) {
-          var isAcHidden = (acOvl.style.display === 'none');
-          acOvl.style.display = isAcHidden ? 'block' : 'none';
-        } else {
-          showToast('Turn on AutoClicker in Scripts first.');
-        }
-      } else if (st.hubKey && pressedKey === st.hubKey.toLowerCase()) {
-        var isHidden = (hub.style.display === 'none');
-        hub.style.display = isHidden ? 'flex' : 'none';
-      } else if (st.aiKey && pressedKey === st.aiKey.toLowerCase()) {
-        if ($('tg-ai').checked) {
-          var isAiHidden = (aiOvl.style.display === 'none');
-          aiOvl.style.display = isAiHidden ? 'flex' : 'none';
-        } else {
-          showToast('Enable the Groq Chatbot switch inside Scripts panel first.');
-        }
-      }
-    }
+    if (shadow.activeElement && (shadow.activeElement.tagName === 'INPUT' || shadow.activeElement.tagName === 'SELECT' || shadow.activeElement.tagName === 'TEXTAREA')) return;
+    if (e.repeat || typingInPage() || document.body.contentEditable === 'true') return;
+    var which = bindHit(e.code);
+    if (which) fireBind(which);
   });
+
+  // Mouse buttons (middle / right / back / forward; left click can't be bound)
+  gOn(document, 'mousedown', function (e) {
+    if (destroyed || !e.isTrusted) return;
+    if (st.currentRecording) {
+      if (e.button === 0) return; // left click is for pressing the UI
+      e.preventDefault();
+      e.stopPropagation();
+      st.ctxUntil = Date.now() + 600;
+      setBinding('Mouse' + e.button);
+      return;
+    }
+    if (e.button === 0 || e.target === host) return;
+    var which = bindHit('Mouse' + e.button);
+    if (which) {
+      e.preventDefault();
+      fireBind(which);
+    }
+  }, true);
+  gOn(document, 'mouseup', function (e) {
+    if (destroyed || !e.isTrusted || e.button === 0 || e.target === host) return;
+    if (bindHit('Mouse' + e.button)) e.preventDefault(); // stops back/forward navigation
+  }, true);
+  gOn(document, 'contextmenu', function (e) {
+    if (destroyed) return;
+    if (st.currentRecording || Date.now() < (st.ctxUntil || 0) || (e.target !== host && bindHit('Mouse2'))) e.preventDefault();
+  }, true);
 
   var fc = 0, lt = performance.now();
   var loop = function (n) {
@@ -1108,7 +1177,7 @@
     '.banner-ad', '.top-ad', '.sidebar-ad', '.sticky-ad', '.adsbox', '[id*="advertisement"]', '[class*="advertisement"]', '[aria-label="Advertisement"]', '[aria-label="advertisement"]',
     '.taboola', '[id^="taboola-"]', '.trc_rbox_container', '.OUTBRAIN', '[id^="outbrain"]', '.ob-widget', '.mgid', '[id^="mgid"]', 'amp-ad', 'amp-embed'
   ].join(',');
-  var ab = { blocked: 0, pops: 0, style: null, iv: 0, undo: [] };
+  var ab = { blocked: 0, pops: 0, style: null, iv: 0, yiv: 0, undo: [] };
   var abLbl = $('ab-lbl');
   var abDefault = abLbl.textContent;
   var adHit = function (u) {
@@ -1116,76 +1185,135 @@
     for (var i = 0; i < AD_DOM.length; i++) if (u.indexOf(AD_DOM[i]) > -1) return true;
     return false;
   };
+  var AD_LIST = AD_SEL.split(',');
+  var isYT = /(^|\.)youtube\.com$/.test(location.hostname);
+  var YT_LIST = ['#masthead-ad', '#player-ads', '.video-ads', '.ytp-ad-overlay-container', '.ytp-ad-image-overlay', '.ytp-ad-text-overlay',
+    'ytd-ad-slot-renderer', 'ytd-in-feed-ad-layout-renderer', 'ytd-promoted-sparkles-web-renderer', 'ytd-promoted-video-renderer', 'ytd-display-ad-renderer',
+    'ytd-banner-promo-renderer', 'ytd-statement-banner-renderer', 'ytd-companion-slot-renderer', 'ytd-player-legacy-desktop-watch-ads-renderer',
+    'ytd-action-companion-ad-renderer', 'ytd-ads-engagement-panel-content-renderer', 'ytm-promoted-sparkles-web-renderer', 'ytm-promoted-video-renderer',
+    'ytm-companion-ad-renderer', 'ytm-companion-slot', 'ytm-ad-slot-renderer'];
+  var yt = { act: 0, muted: false, rate: 1, skipped: 0 };
+  var abList = function () { return AD_LIST.concat(isYT ? YT_LIST : []); };
+
   var abStatus = function () {
     var n = 0;
-    try { n = document.querySelectorAll(AD_SEL).length; } catch (e) {}
-    abLbl.textContent = 'Hidden: ' + n + ' | Blocked requests: ' + ab.blocked + ' | Popups: ' + ab.pops;
+    try { n = document.querySelectorAll(abList().join(',')).length; } catch (e) {}
+    abLbl.textContent = 'ON' + (isYT ? ' (YouTube mode) | Video ads skipped: ' + yt.skipped : '') + ' | Hidden: ' + n + ' | Blocked requests: ' + ab.blocked + ' | Popups: ' + ab.pops;
   };
-  var abTick = function () {
-    abStatus();
-    // YouTube: click skip buttons and jump video ads to the end
-    if (/(^|\.)youtube\.com$/.test(location.hostname)) {
-      var sk = document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern');
-      if (sk) sk.click();
-      var pl = document.querySelector('.html5-video-player.ad-showing video');
-      if (pl && isFinite(pl.duration) && pl.duration > 0 && pl.currentTime < pl.duration - 0.3) pl.currentTime = pl.duration - 0.1;
-    }
+
+  var ytReset = function () {
+    if (!yt.act) return;
+    yt.act = 0;
+    var v = document.querySelector('video');
+    if (v) { try { v.muted = yt.muted; v.playbackRate = yt.rate; } catch (e) {} }
   };
+
+  // YouTube: skip/close ad UI, fast-forward video ads, dismiss the "ad blockers" popup
+  var ytTick = function () {
+    try {
+      var enf = document.querySelectorAll('ytd-enforcement-message-view-model');
+      if (enf.length) {
+        enf.forEach(function (n) { (n.closest('tp-yt-paper-dialog') || n).remove(); });
+        var bd = document.querySelector('tp-yt-iron-overlay-backdrop');
+        if (bd) bd.remove();
+        var pv = document.querySelector('video');
+        if (pv && pv.paused) pv.play();
+      }
+      var skip = document.querySelector('.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button-container button');
+      if (skip) skip.click();
+      var cl = document.querySelector('.ytp-ad-overlay-close-button');
+      if (cl) cl.click();
+
+      var pl = document.querySelector('.html5-video-player.ad-showing, #movie_player.ad-showing');
+      var v = document.querySelector('video.html5-main-video') || document.querySelector('video');
+      if (pl && v) {
+        if (!yt.act) { yt.act = 1; yt.muted = v.muted; yt.rate = v.playbackRate; yt.skipped++; }
+        v.muted = true;
+        v.playbackRate = 16;
+        if (isFinite(v.duration) && v.duration > 0 && v.currentTime < v.duration - 0.2) v.currentTime = v.duration - 0.1;
+      } else {
+        ytReset();
+      }
+    } catch (e) {}
+  };
+
   feat.ab = function (on) {
     // undo previous patches
     ab.undo.forEach(function (f) { try { f(); } catch (e) {} });
     ab.undo = [];
     clearInterval(ab.iv);
+    clearInterval(ab.yiv);
     ab.iv = 0;
+    ab.yiv = 0;
     if (ab.style) { ab.style.remove(); ab.style = null; }
+    ytReset();
     abLbl.textContent = abDefault;
     if (!on) return;
 
-    // 1) hide ad elements
-    ab.style = document.createElement('style');
-    ab.style.id = 'nova-adblock';
-    ab.style.textContent = AD_SEL + '{display:none !important;visibility:hidden !important;height:0 !important;min-height:0 !important;overflow:hidden !important}';
-    document.head.appendChild(ab.style);
+    // instant feedback so the card text always changes
+    abLbl.textContent = 'ON' + (isYT ? ' (YouTube mode)' : '') + ' | starting...';
 
-    // 2) block requests to ad domains made after this point
-    var of = window.fetch;
-    window.fetch = function (u) {
-      if (adHit(u)) { ab.blocked++; return Promise.reject(new TypeError('Blocked by NovaScriptin')); }
-      return of.apply(this, arguments);
-    };
-    ab.undo.push(function () { window.fetch = of; });
+    // 1) hide ad elements (one rule per selector so one bad selector can't break the rest)
+    try {
+      ab.style = document.createElement('style');
+      ab.style.id = 'nova-adblock';
+      ab.style.textContent = abList().map(function (s) { return s + '{display:none !important}'; }).join('');
+      document.head.appendChild(ab.style);
+    } catch (e) {}
 
-    var ox = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function (m, u) {
-      if (adHit(u)) { ab.blocked++; arguments[1] = 'data:,'; }
-      return ox.apply(this, arguments);
-    };
-    ab.undo.push(function () { XMLHttpRequest.prototype.open = ox; });
+    // 2) block requests to ad domains made after this point (skipped on YouTube: it detects this and its ads don't come from those domains anyway)
+    if (!isYT) {
+      try {
+        var of = window.fetch;
+        window.fetch = function (u) {
+          if (adHit(u)) { ab.blocked++; return Promise.reject(new TypeError('Blocked by NovaScriptin')); }
+          return of.apply(this, arguments);
+        };
+        ab.undo.push(function () { window.fetch = of; });
+      } catch (e) {}
 
-    [HTMLScriptElement.prototype, HTMLIFrameElement.prototype, HTMLImageElement.prototype].forEach(function (proto) {
-      var d = Object.getOwnPropertyDescriptor(proto, 'src');
-      if (!d || !d.set) return;
-      Object.defineProperty(proto, 'src', {
-        configurable: true,
-        enumerable: d.enumerable,
-        get: d.get,
-        set: function (v) {
-          if (adHit(v)) { ab.blocked++; return; }
-          d.set.call(this, v);
-        }
+      try {
+        var ox = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (m, u) {
+          if (adHit(u)) { ab.blocked++; arguments[1] = 'data:,'; }
+          return ox.apply(this, arguments);
+        };
+        ab.undo.push(function () { XMLHttpRequest.prototype.open = ox; });
+      } catch (e) {}
+
+      [HTMLScriptElement.prototype, HTMLIFrameElement.prototype, HTMLImageElement.prototype].forEach(function (proto) {
+        try {
+          var d = Object.getOwnPropertyDescriptor(proto, 'src');
+          if (!d || !d.set) return;
+          Object.defineProperty(proto, 'src', {
+            configurable: true,
+            enumerable: d.enumerable,
+            get: d.get,
+            set: function (v) {
+              if (adHit(v)) { ab.blocked++; return; }
+              d.set.call(this, v);
+            }
+          });
+          ab.undo.push(function () { Object.defineProperty(proto, 'src', d); });
+        } catch (e) {}
       });
-      ab.undo.push(function () { Object.defineProperty(proto, 'src', d); });
-    });
 
-    var osa = Element.prototype.setAttribute;
-    Element.prototype.setAttribute = function (n, v) {
-      if (n === 'src' && /^(SCRIPT|IFRAME|IMG)$/.test(this.tagName) && adHit(v)) { ab.blocked++; return; }
-      return osa.apply(this, arguments);
-    };
-    ab.undo.push(function () { Element.prototype.setAttribute = osa; });
+      try {
+        var osa = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (n, v) {
+          if (n === 'src' && /^(SCRIPT|IFRAME|IMG)$/.test(this.tagName) && adHit(v)) { ab.blocked++; return; }
+          return osa.apply(this, arguments);
+        };
+        ab.undo.push(function () { Element.prototype.setAttribute = osa; });
+      } catch (e) {}
+    }
 
-    abTick();
-    ab.iv = setInterval(abTick, 1500);
+    abStatus();
+    ab.iv = setInterval(abStatus, 1500);
+    if (isYT) {
+      ytTick();
+      ab.yiv = setInterval(ytTick, 250);
+    }
   };
 
   // Block Popups
@@ -1259,6 +1387,7 @@
   feat.note = function (on) { noteOvl.style.display = on ? 'flex' : 'none'; };
   // ───────────────────────── Crosshair (customizable) ─────────────────────────
   var xs = { color: '#48bb78', style: 'cross', size: 10, thick: 2, gap: 4, op: 100, outline: true };
+  mergeSaved(xs, savedSet.xs, XS_K);
 
   var drawXh = function () {
     var s = xs.size, t = xs.thick, g = xs.gap, c = xs.color, stl = xs.style, o = '';
@@ -1292,6 +1421,7 @@
 
   // ───────────────────────── Fake Typer ─────────────────────────
   var ts = { text: 'Hello! This is a test of the fake typer.', speed: 120, rate: 6, notice: 2, fix: true, enter: false };
+  mergeSaved(ts, savedSet.ts, TS_K);
   var ty = { run: 0, t: 0 };
   var lastEdit = null;
 
@@ -1498,13 +1628,14 @@
       var v = +i.value;
       l.textContent = name + ': ' + v + unit;
       cb(v);
+      saveSettings();
     };
     return el('div', { c: 'nova-col', style: 'margin-bottom:10px' }, [l, i]);
   };
   var pCheck = function (name, val, cb) {
     var i = el('input', { type: 'checkbox' });
     i.checked = val;
-    i.onchange = function () { cb(i.checked); };
+    i.onchange = function () { cb(i.checked); saveSettings(); };
     return el('label', { c: 'nova-chk' }, [i, el('span', { t: name })]);
   };
   var stopKeys = function (n) {
@@ -1515,7 +1646,7 @@
   // Crosshair settings
   var xsPop = mkPop('Crosshair Settings');
   var xsColor = el('input', { type: 'color', c: 'nova-clr', value: xs.color });
-  xsColor.oninput = function () { xs.color = xsColor.value; drawXh(); };
+  xsColor.oninput = function () { xs.color = xsColor.value; drawXh(); saveSettings(); };
   var xsStyle = el('select', { c: 'nova-select' }, [
     el('option', { value: 'cross', t: 'Cross' }),
     el('option', { value: 'crossdot', t: 'Cross + Dot' }),
@@ -1526,7 +1657,7 @@
     el('option', { value: 'circledot', t: 'Circle + Dot' }),
   ]);
   xsStyle.value = xs.style;
-  xsStyle.onchange = function () { xs.style = xsStyle.value; drawXh(); };
+  xsStyle.onchange = function () { xs.style = xsStyle.value; drawXh(); saveSettings(); };
   [
     el('div', { c: 'nova-col', style: 'margin-bottom:10px' }, [el('label', { t: 'Color' }), xsColor]),
     el('div', { c: 'nova-col', style: 'margin-bottom:10px' }, [el('label', { t: 'Style' }), xsStyle]),
@@ -1540,7 +1671,7 @@
   // Fake typer settings
   var tsPop = mkPop('Fake Typer Settings');
   var tsText = el('textarea', { c: 'nova-ta', rows: 4, value: ts.text, placeholder: 'Text to type...' });
-  tsText.oninput = function () { ts.text = tsText.value; };
+  tsText.oninput = function () { ts.text = tsText.value; saveSettings(); };
   stopKeys(tsText);
   [
     el('p', { c: 'nova-hint', t: 'Click a text field on the page, then switch Fake Typer on.' }),
@@ -1554,6 +1685,7 @@
 
   // ───────────────────────── Custom Cursor (computer only) ─────────────────────────
   var cc = { style: 'ringdot', color: '#ffffff', size: 26, op: 100, smooth: 25, press: true, hide: true, emoji: '🎯', x: 0, y: 0, down: 0, raf: 0, on: 0 };
+  mergeSaved(cc, savedSet.cc, CC_K);
   var curEl = el('div', { id: 'nova-cur' });
   shadow.appendChild(curEl);
   var curPageStyle = null, curShadowStyle = null;
@@ -1630,7 +1762,7 @@
 
   var curPop = mkPop('Cursor Settings');
   var curColor = el('input', { type: 'color', c: 'nova-clr', value: cc.color });
-  curColor.oninput = function () { cc.color = curColor.value; drawCur(); };
+  curColor.oninput = function () { cc.color = curColor.value; drawCur(); saveSettings(); };
   var curStyle = el('select', { c: 'nova-select' }, [
     el('option', { value: 'ringdot', t: 'Ring + Dot' }),
     el('option', { value: 'ring', t: 'Ring' }),
@@ -1640,9 +1772,9 @@
     el('option', { value: 'emoji', t: 'Emoji' }),
   ]);
   curStyle.value = cc.style;
-  curStyle.onchange = function () { cc.style = curStyle.value; drawCur(); };
+  curStyle.onchange = function () { cc.style = curStyle.value; drawCur(); saveSettings(); };
   var curEmoji = el('input', { type: 'text', c: 'nova-in', value: cc.emoji, maxLength: 8, placeholder: 'Emoji / character' });
-  curEmoji.oninput = function () { cc.emoji = curEmoji.value; drawCur(); };
+  curEmoji.oninput = function () { cc.emoji = curEmoji.value; drawCur(); saveSettings(); };
   stopKeys(curEmoji);
   [
     el('div', { c: 'nova-col', style: 'margin-bottom:10px' }, [el('label', { t: 'Style' }), curStyle]),
@@ -1661,34 +1793,454 @@
     openPop(curPop, e);
   };
 
-  // AutoClicker: open the iframe under the target in its own tab (cross-origin frames can't be clicked from outside)
-  $('btn-openframe').onclick = function () {
-    var px = st.px, py = st.py;
-    if (isTouch && tgt) {
-      var r = tgt.getBoundingClientRect();
-      px = r.left + r.width / 2;
-      py = r.top + r.height / 2;
-      tgt.style.pointerEvents = 'none';
-    }
-    var f = document.elementFromPoint(px, py);
-    if (isTouch && tgt) tgt.style.pointerEvents = 'auto';
-    if (!f || f.tagName !== 'IFRAME') { showToast('No iframe under the target. Put the target (or last mouse spot) over it first.'); return; }
-    var src = f.src || f.getAttribute('src');
-    if (!src || src === 'about:blank') { showToast('That iframe has no URL to open.'); return; }
-    (oOpen || window.open).call(window, src, '_blank');
-    showToast('Opened the frame. Run Nova there and the AutoClicker will work in it.');
-  };
-
   // Right-click the switches to open settings
   $('tg-xh').parentNode.oncontextmenu = function (e) { e.preventDefault(); openPop(xsPop, e); };
   $('tg-ty').parentNode.oncontextmenu = function (e) { e.preventDefault(); openPop(tsPop, e); };
 
+  // ───────────────────────── Destroy confirm, hub ghost button, Timer, Screen Time ─────────────────────────
+  css.textContent +=
+    '.nova-fab.ghost{background:transparent;box-shadow:none;border:1px dashed var(--sub);color:var(--sub);opacity:.4;transition:opacity .2s}.nova-fab.ghost:hover{opacity:1}' +
+    '#nova-cfm{position:fixed;left:0;top:0;right:0;bottom:0;z-index:1000010;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);pointer-events:auto}' +
+    '.nova-cfm-box{width:min(86vw,300px);padding:20px;border-radius:20px;box-shadow:8px 8px 16px var(--s1),-8px -8px 16px var(--s2);animation:nPop .25s ease forwards}' +
+    '#nova-tmr{position:fixed;top:130px;left:20px;width:230px;padding:14px;border-radius:18px;box-shadow:7px 7px 14px var(--s1),-7px -7px 14px var(--s2);z-index:999999;display:none;animation:nPop .3s ease forwards}' +
+    '.tmr-disp{font-family:monospace;font-size:30px;font-weight:800;text-align:center;margin:2px 0 12px}.tmr-row{display:flex;gap:6px;margin-bottom:10px}' +
+    '#nova-scr{position:fixed;top:130px;right:20px;padding:10px 14px;border-radius:14px;box-shadow:6px 6px 12px var(--s1),-6px -6px 12px var(--s2);font-size:12px;font-weight:700;line-height:1.6;z-index:999998;display:none;cursor:grab;touch-action:none;animation:nPop .3s ease forwards}';
+
+  // Confirm dialog
+  var cfm = el('div', { id: 'nova-cfm' });
+  var cfmTitle = el('div', { c: 'nova-ttl', style: 'margin-bottom:8px' });
+  var cfmMsg = el('p', { style: 'margin:0 0 16px;font-size:12.5px;line-height:1.45;color:var(--sub)' });
+  var cfmOk = el('button', { c: 'nova-kbtn', style: 'color:#e53e3e' });
+  var cfmNo = el('button', { c: 'nova-kbtn', t: 'Cancel' });
+  var cfmBox = el('div', { c: 'nova-box nova-cfm-box dark' }, [cfmTitle, cfmMsg, el('div', { style: 'display:flex;gap:10px' }, [cfmOk, cfmNo])]);
+  cfm.appendChild(cfmBox);
+  shadow.appendChild(cfm);
+  var askConfirm = function (title, msg, okLabel, onOk) {
+    cfmTitle.textContent = title;
+    cfmMsg.textContent = msg;
+    cfmOk.textContent = okLabel;
+    cfm.style.display = 'flex';
+    cfmOk.onclick = function () { cfm.style.display = 'none'; onOk(); };
+    cfmNo.onclick = function () { cfm.style.display = 'none'; };
+  };
+  cfm.onclick = function (e) { if (e.target === cfm) cfm.style.display = 'none'; };
+
+  // Transparent buttons toggle (Settings tab)
+  var fabList = [];
+  var tbOn = function () { var t = $('tg-tb'); return !t || t.checked; };
+  var applyGhost = function () {
+    var g = tbOn();
+    fabList.forEach(function (b) { b.classList.toggle('ghost', g); });
+  };
+  $('tg-tb').addEventListener('change', applyGhost);
+  $('tg-tb').addEventListener('change', saveSettings);
+
+  // Floating button: drag to move, tap to trigger (used on touch devices, and for the hub ghost button on desktop)
+  var mkFab = function (label, top, onTap) {
+    var b = el('div', { c: 'nova-box nova-fab dark', t: label });
+    b.style.left = Math.max(0, window.innerWidth - 60) + 'px';
+    b.style.top = top + 'px';
+    shadow.appendChild(b);
+    dragBoxes.push(b);
+    fabList.push(b);
+    b.classList.toggle('ghost', tbOn());
+    var sx = 0, sy = 0, mv = 0, dn = 0, ox = 0, oy = 0;
+    b.onpointerdown = function (e) {
+      dn = 1; mv = 0; sx = e.clientX; sy = e.clientY;
+      var r = b.getBoundingClientRect();
+      ox = e.clientX - r.left;
+      oy = e.clientY - r.top;
+      try { b.setPointerCapture(e.pointerId); } catch (x) {}
+    };
+    b.onpointermove = function (e) {
+      if (!dn) return;
+      if (!mv && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 8) mv = 1;
+      if (mv) {
+        b.style.left = Math.max(0, Math.min(window.innerWidth - 48, e.clientX - ox)) + 'px';
+        b.style.top = Math.max(0, Math.min(window.innerHeight - 48, e.clientY - oy)) + 'px';
+      }
+    };
+    b.onpointerup = function () {
+      if (dn && !mv) onTap();
+      dn = 0;
+    };
+    b.onpointercancel = function () { dn = 0; };
+    return b;
+  };
+
+  // Transparent "hub" button on desktop when the hub keybind is turned off
+  var hubGhost = null;
+  if (!isTouch) {
+    hubGhost = mkFab('hub', 12, function () {
+      hub.style.display = hub.style.display === 'none' ? 'flex' : 'none';
+    });
+    hubGhost.style.left = '12px';
+  }
+  syncHubGhost = function () {
+    if (hubGhost) hubGhost.style.display = st.hubKey ? 'none' : 'flex';
+  };
+  syncHubGhost();
+
+  // ----- Saved data (localStorage of the site Nova is running on) -----
+  var TKEY = 'novascriptin:timer', SKEY = 'novascriptin:screentime';
+  var lsGet = function (k) {
+    try { var v = window.localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+  };
+  var lsSet = function (k, v) {
+    try { window.localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; }
+  };
+  var lsOk = lsSet('novascriptin:test', 1);
+  var warnedLs = 0;
+  var checkLs = function () {
+    if (!lsOk && !warnedLs) { warnedLs = 1; showToast("This site blocks storage, so timer/screen time won't be saved."); }
+  };
+  var pad2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+  var fmtT = function (s) {
+    s = Math.max(0, Math.round(s));
+    return pad2(Math.floor(s / 3600)) + ':' + pad2(Math.floor(s % 3600 / 60)) + ':' + pad2(s % 60);
+  };
+  var fmtD = function (s) {
+    s = Math.floor(s);
+    var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+    return (h ? h + 'h ' : '') + (h || m ? m + 'm ' : '') + (s % 60) + 's';
+  };
+
+  // ----- Beep -----
+  var audioCtx = null;
+  var unlockAudio = function () {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) {}
+  };
+  var beep = function (freq, dur) {
+    try {
+      unlockAudio();
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      g.gain.value = 0.2;
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+  };
+
+  // ----- Timer -----
+  var tm = { state: 'idle', dur: 300, left: 300, endAt: 0, iv: 0, beepIv: 0, ringTo: 0, ringing: 0 };
+  var tmrLbl = $('tmr-lbl');
+  var tmrDefault = tmrLbl.textContent;
+  var stopKeys2 = function (n) {
+    n.onkeydown = function (e) { e.stopPropagation(); };
+    n.onkeyup = function (e) { e.stopPropagation(); };
+  };
+  var tmrDisp = el('div', { c: 'tmr-disp', t: '00:05:00' });
+  var inH = el('input', { type: 'number', c: 'nova-in', min: '0', max: '99', value: '0' });
+  var inM = el('input', { type: 'number', c: 'nova-in', min: '0', max: '999', value: '5' });
+  var inS = el('input', { type: 'number', c: 'nova-in', min: '0', max: '59', value: '0' });
+  [inH, inM, inS].forEach(stopKeys2);
+  var tCol = function (l, i) { return el('div', { c: 'nova-col' }, [el('label', { t: l }), i]); };
+  var tmrMain = el('button', { c: 'nova-kbtn', t: 'Start' });
+  var tmrReset = el('button', { c: 'nova-kbtn', t: 'Reset' });
+  var tmrStopBtn = el('button', { c: 'nova-kbtn', style: 'display:none;margin-top:10px;color:#e53e3e', t: 'Stop beeping' });
+  var tmrX = el('button', { c: 'nova-cls', t: 'X' });
+  var tmrHdr = el('div', { c: 'nova-hdr' }, [el('span', { c: 'nova-ttl', style: 'font-size:14.5px', t: 'Timer' }), tmrX]);
+  var tmrOvl = el('div', { id: 'nova-tmr', c: 'nova-box dark' }, [
+    tmrHdr,
+    tmrDisp,
+    el('div', { c: 'tmr-row' }, [tCol('hr', inH), tCol('min', inM), tCol('sec', inS)]),
+    el('div', { c: 'tmr-row' }, [tmrMain, tmrReset]),
+    tmrStopBtn,
+  ]);
+  shadow.appendChild(tmrOvl);
+  drag(tmrOvl, tmrHdr);
+
+  var readIn = function () {
+    var h = Math.min(99, Math.max(0, parseInt(inH.value, 10) || 0));
+    var m = Math.min(999, Math.max(0, parseInt(inM.value, 10) || 0));
+    var s = Math.min(59, Math.max(0, parseInt(inS.value, 10) || 0));
+    return h * 3600 + m * 60 + s;
+  };
+  var tmrRemain = function () { return Math.max(0, (tm.endAt - Date.now()) / 1000); };
+  var tmrSave = function () {
+    lsSet(TKEY, { state: tm.state, dur: tm.dur, left: tm.left, endAt: tm.endAt, h: inH.value, m: inM.value, s: inS.value });
+  };
+  var tmrRender = function () {
+    var shown = tm.state === 'running' ? tmrRemain() : tm.left;
+    tmrDisp.textContent = fmtT(shown);
+    tmrMain.textContent = tm.state === 'running' ? 'Pause' : tm.state === 'paused' ? 'Resume' : 'Start';
+    tmrLbl.textContent = tm.state === 'idle' ? tmrDefault
+      : tm.state === 'running' ? 'Running: ' + fmtT(shown) + ' left'
+      : tm.state === 'paused' ? 'Paused: ' + fmtT(shown) + ' left'
+      : 'Finished!';
+  };
+  var stopRing = function () {
+    clearInterval(tm.beepIv);
+    clearTimeout(tm.ringTo);
+    tm.ringing = 0;
+    tmrStopBtn.style.display = 'none';
+  };
+  var ring = function () {
+    stopRing();
+    tm.ringing = 1;
+    tmrStopBtn.style.display = 'block';
+    var pat = function () {
+      beep(880, 0.18);
+      setTimeout(function () { beep(880, 0.18); }, 250);
+      setTimeout(function () { beep(1175, 0.35); }, 500);
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    };
+    pat();
+    tm.beepIv = setInterval(pat, 1500);
+    tm.ringTo = setTimeout(stopRing, 60000); // auto-stop after a minute
+  };
+  var tmrFinish = function () {
+    clearInterval(tm.iv);
+    tm.state = 'done';
+    tm.left = 0;
+    tm.endAt = 0;
+    tmrSave();
+    $('tg-tmr').checked = true; // pop the timer open so you can see/stop it
+    tmrOvl.style.display = 'block';
+    tmrRender();
+    showToast('Timer finished!');
+    ring();
+  };
+  var tmrTick = function () {
+    if (tm.state !== 'running') return;
+    if (tmrRemain() <= 0) tmrFinish();
+    else tmrRender();
+  };
+  var tmrRun = function () {
+    clearInterval(tm.iv);
+    tm.iv = setInterval(tmrTick, 250);
+  };
+
+  tmrMain.onclick = function () {
+    unlockAudio();
+    checkLs();
+    if (tm.state === 'running') {
+      tm.left = tmrRemain();
+      tm.state = 'paused';
+      tm.endAt = 0;
+      clearInterval(tm.iv);
+    } else if (tm.state === 'paused') {
+      tm.state = 'running';
+      tm.endAt = Date.now() + tm.left * 1000;
+      tmrRun();
+    } else {
+      stopRing();
+      var d = readIn();
+      if (d <= 0) { showToast('Set a time first.'); return; }
+      tm.dur = d;
+      tm.left = d;
+      tm.state = 'running';
+      tm.endAt = Date.now() + d * 1000;
+      tmrRun();
+    }
+    tmrSave();
+    tmrRender();
+  };
+  tmrReset.onclick = function () {
+    stopRing();
+    clearInterval(tm.iv);
+    tm.state = 'idle';
+    tm.dur = readIn();
+    tm.left = tm.dur;
+    tm.endAt = 0;
+    tmrSave();
+    tmrRender();
+  };
+  tmrStopBtn.onclick = stopRing;
+  tmrX.onclick = function () { $('tg-tmr').checked = false; feat.tmr(0); };
+  [inH, inM, inS].forEach(function (i) {
+    i.oninput = function () {
+      if (tm.state === 'idle' || tm.state === 'done') {
+        tm.state = 'idle';
+        tm.left = readIn();
+        tm.dur = tm.left;
+        tmrSave();
+        tmrRender();
+      }
+    };
+  });
+
+  // restore a saved timer for this site
+  (function () {
+    var sv = lsGet(TKEY);
+    if (!sv) { tm.left = readIn(); tmrRender(); return; }
+    inH.value = sv.h || '0';
+    inM.value = sv.m || '0';
+    inS.value = sv.s || '0';
+    tm.dur = sv.dur || readIn();
+    if (sv.state === 'running' && sv.endAt) {
+      tm.endAt = sv.endAt;
+      if (sv.endAt > Date.now()) { tm.state = 'running'; tmrRun(); }
+      else { tm.state = 'running'; setTimeout(tmrFinish, 900); } // finished while Nova wasn't open
+    } else if (sv.state === 'paused') {
+      tm.state = 'paused';
+      tm.left = sv.left || 0;
+    } else {
+      tm.state = 'idle';
+      tm.left = readIn();
+    }
+    tmrRender();
+  })();
+
+  feat.tmr = function (on) {
+    tmrOvl.style.display = on ? 'block' : 'none';
+    if (on) { checkLs(); tmrRender(); }
+  };
+  feat._tmrStop = function () { // used when Nova is destroyed: keep the saved state, stop the ticking
+    tmrSave();
+    clearInterval(tm.iv);
+    stopRing();
+  };
+
+  // ----- Screen Time -----
+  var sc = { iv: 0, last: 0, ticks: 0, data: { days: {}, total: 0 } };
+  var scLbl = $('scr-lbl');
+  var scDefault = scLbl.textContent;
+  var scL1 = el('div'), scL2 = el('div'), scL3 = el('div');
+  var scOvl = el('div', { id: 'nova-scr', c: 'nova-box dark' }, [scL1, scL2, scL3]);
+  shadow.appendChild(scOvl);
+  drag(scOvl, scOvl);
+  var dayKey = function (t) {
+    var d = new Date(t || Date.now());
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  };
+  var scLoad = function () {
+    var sv = lsGet(SKEY);
+    if (sv && sv.days) sc.data = { days: sv.days, total: sv.total || 0 };
+  };
+  var scSave = function () {
+    var keys = Object.keys(sc.data.days).sort();
+    while (keys.length > 60) delete sc.data.days[keys.shift()]; // keep the last 60 days
+    lsSet(SKEY, sc.data);
+  };
+  var scWeek = function () {
+    var sum = 0;
+    for (var i = 0; i < 7; i++) sum += sc.data.days[dayKey(Date.now() - i * 864e5)] || 0;
+    return sum;
+  };
+  var scRender = function () {
+    var today = sc.data.days[dayKey()] || 0;
+    scL1.textContent = 'Today: ' + fmtD(today);
+    scL2.textContent = 'Last 7 days: ' + fmtD(scWeek());
+    scL3.textContent = 'Total: ' + fmtD(sc.data.total);
+    scLbl.textContent = sc.iv ? 'Today ' + fmtD(today) + ' | Total ' + fmtD(sc.data.total) : scDefault;
+  };
+  var scTick = function () {
+    var now = Date.now();
+    var dt = Math.min(5, (now - sc.last) / 1000);
+    sc.last = now;
+    if (document.visibilityState === 'visible') {
+      var k = dayKey();
+      sc.data.days[k] = (sc.data.days[k] || 0) + dt;
+      sc.data.total += dt;
+    }
+    sc.ticks++;
+    if (sc.ticks % 5 === 0) scSave();
+    scRender();
+  };
+  var scOnHide = function () { scSave(); };
+  feat.scr = function (on) {
+    clearInterval(sc.iv);
+    sc.iv = 0;
+    window.removeEventListener('pagehide', scOnHide);
+    document.removeEventListener('visibilitychange', scOnHide);
+    scOvl.style.display = on ? 'block' : 'none';
+    if (on) {
+      checkLs();
+      scLoad();
+      sc.last = Date.now();
+      sc.iv = setInterval(scTick, 1000);
+      window.addEventListener('pagehide', scOnHide);
+      document.addEventListener('visibilitychange', scOnHide);
+    } else {
+      scSave();
+    }
+    scRender();
+  };
+  $('btn-scrreset').onclick = function () {
+    askConfirm('Reset screen time?', 'This clears the saved screen time for this site.', 'Reset', function () {
+      sc.data = { days: {}, total: 0 };
+      scSave();
+      scRender();
+      showToast('Screen time reset.');
+    });
+  };
+  scLoad();
+  scRender();
+
+  // ───────────────────────── Side tabs, whole-card toggles, gear buttons, keybind settings ─────────────────────────
+  css.textContent +=
+    '#novascriptin-hub{width:75vw;height:75vh;min-width:340px;min-height:260px}' +
+    '.nova-main{display:flex;flex:1;min-height:0;gap:14px}' +
+    '.nova-tabs{flex-direction:column;margin:0;width:112px;flex-shrink:0;overflow-y:auto}' +
+    '.nova-tbtn{flex:none;text-align:left;padding:12px 12px}' +
+    '.nova-body{min-width:0}' +
+    '.nova-card.tgl{cursor:pointer}' +
+    '.nova-ctop>div:first-child{flex:1;min-width:0}' +
+    '.nova-gear{background:none;border:none;box-shadow:none;color:var(--sub);font-size:18px;line-height:1;padding:4px 6px;cursor:pointer;flex-shrink:0}.nova-gear:hover{color:var(--ac)}' +
+    '.nova-fab.ghost.on{background:var(--ac);color:var(--bg);opacity:.8}.nova-fab.ghost:active{opacity:1}' +
+    '@media (pointer:coarse){.nova-gear{font-size:22px;padding:6px 8px}}' +
+    '@media (max-width:640px){#novascriptin-hub{width:min(94vw,420px);height:75vh}.nova-tabs{width:84px}.nova-tbtn{font-size:12px;padding:10px 8px}}';
+
+  // Click anywhere on a card to flip its switch (buttons, sliders, text boxes and the gear still work normally)
+  hub.querySelectorAll('.nova-card').forEach(function (c) {
+    var cb = c.querySelector('.nova-sw input');
+    if (!cb) return;
+    c.classList.add('tgl');
+    c.addEventListener('click', function (e) {
+      if (e.target.closest('button,input,select,textarea,label,.nova-extra,.nova-gear')) return;
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+
+  // Keybind settings live in each script's settings popup (gear button or right-click the switch)
+  var keyRow = function (label, btn) {
+    return el('div', { c: 'nova-col', style: 'margin-bottom:10px' }, [el('label', { t: label }), btn]);
+  };
+  var keyHint = function (extra) {
+    return el('p', { c: 'nova-hint', t: 'Click the button, then press a key (LShift, RShift, any key) or a mouse button (middle, right, back, forward). Click it again to disable.' + (extra || '') });
+  };
+  var acPop = mkPop('AutoClicker Settings');
+  [keyHint(), keyRow('Start / stop clicking', btnAcKey), keyRow('Show / hide AutoClicker panel', btnAcHideKey)].forEach(function (n) { acPop.body.appendChild(n); });
+  var aiPop = mkPop('Chatbot Settings');
+  [keyHint(), keyRow('Show / hide chatbot window', btnAiKey)].forEach(function (n) { aiPop.body.appendChild(n); });
+  var tbPop = mkPop('Buttons & Hub Settings');
+  [keyHint(' If the hub key is off, a transparent "hub" button appears so you can still open the hub.'), keyRow('Show / hide hub window', btnHubKey)].forEach(function (n) { tbPop.body.appendChild(n); });
+
+  // Gear button on a card = same as right-clicking its switch
+  var addGear = function (id, open) {
+    var top = $(id).closest('.nova-card').querySelector('.nova-ctop');
+    var g = el('button', { c: 'nova-gear', t: '\u2699\uFE0E', title: 'Settings' });
+    g.onclick = function (e) {
+      e.stopPropagation();
+      var r = g.getBoundingClientRect();
+      open({ clientX: r.left, clientY: r.bottom });
+    };
+    top.insertBefore(g, top.lastElementChild);
+  };
+  addGear('tg-xh', function (pt) { openPop(xsPop, pt); });
+  addGear('tg-ty', function (pt) { openPop(tsPop, pt); });
+  addGear('tg-cur', function (pt) {
+    if (isTouch) showToast('Custom Cursor only works on computer.');
+    else openPop(curPop, pt);
+  });
+  if (!isTouch) { // keybinds only matter with a keyboard / mouse
+    [['tg-ac', acPop], ['tg-ai', aiPop], ['tg-tb', tbPop]].forEach(function (p) {
+      addGear(p[0], function (pt) { openPop(p[1], pt); });
+      $(p[0]).parentNode.oncontextmenu = function (e) { e.preventDefault(); openPop(p[1], e); };
+    });
+  }
+
   // ───────────────────────── Mobile: floating buttons, touch target, long-press ─────────────────────────
   if (isTouch) {
     // Keybinds don't apply on touch: hide those cards, add a toggle for the floating buttons
-    [hAcKeyCard, hAcHideCard, hHubKeyCard, hAiKeyCard].forEach(function (c) { c.style.display = 'none'; });
-    stTab.appendChild(card('Floating Buttons', 'Draggable on-screen buttons replace the keybinds', 'tg-fb'));
-    $('tg-fb').checked = true;
 
     // "Right-click" wording -> "Long-press"
     hub.querySelectorAll('.nova-card p').forEach(function (p) {
@@ -1701,36 +2253,6 @@
     tgt.style.left = Math.round(window.innerWidth / 2 - 22) + 'px';
     tgt.style.top = Math.round(window.innerHeight / 2 - 22) + 'px';
     drag(tgt, tgt);
-
-    // Floating button: drag to move, tap to trigger
-    var mkFab = function (label, top, onTap) {
-      var b = el('div', { c: 'nova-box nova-fab dark', t: label });
-      b.style.left = Math.max(0, window.innerWidth - 60) + 'px';
-      b.style.top = top + 'px';
-      shadow.appendChild(b);
-      var sx = 0, sy = 0, mv = 0, dn = 0, ox = 0, oy = 0;
-      b.onpointerdown = function (e) {
-        dn = 1; mv = 0; sx = e.clientX; sy = e.clientY;
-        var r = b.getBoundingClientRect();
-        ox = e.clientX - r.left;
-        oy = e.clientY - r.top;
-        try { b.setPointerCapture(e.pointerId); } catch (x) {}
-      };
-      b.onpointermove = function (e) {
-        if (!dn) return;
-        if (!mv && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 8) mv = 1;
-        if (mv) {
-          b.style.left = Math.max(0, Math.min(window.innerWidth - 48, e.clientX - ox)) + 'px';
-          b.style.top = Math.max(0, Math.min(window.innerHeight - 48, e.clientY - oy)) + 'px';
-        }
-      };
-      b.onpointerup = function () {
-        if (dn && !mv) onTap();
-        dn = 0;
-      };
-      b.onpointercancel = function () { dn = 0; };
-      return b;
-    };
 
     acFab = mkFab('CLICK', 120, function () {
       if (tgAc.checked) setAc(!st.ac);
@@ -1748,7 +2270,7 @@
 
     // Buttons only show when their feature is on
     syncFabs = function () {
-      var on = $('tg-fb').checked;
+      var on = true;
       var acShow = on && tgAc.checked ? 'flex' : 'none';
       hubFab.style.display = on ? 'flex' : 'none';
       acFab.style.display = acShow;
@@ -1758,7 +2280,6 @@
     };
     tgAc.addEventListener('change', syncFabs);
     $('tg-ai').addEventListener('change', syncFabs);
-    $('tg-fb').addEventListener('change', syncFabs);
     syncFabs();
 
     // Dark theme toggle also themes the buttons
@@ -1800,7 +2321,7 @@
   }
 
   // Wire toggles to features
-  ['unl', 'pw', 'rm', 'hl', 'zoom', 'css', 'scroll', 'clk', 'note', 'xh', 'ty', 'ab', 'pop', 'cur'].forEach(function (k) {
+  ['unl', 'pw', 'rm', 'hl', 'zoom', 'css', 'scroll', 'clk', 'note', 'xh', 'ty', 'ab', 'pop', 'cur', 'tmr', 'scr'].forEach(function (k) {
     $('tg-' + k).onchange = function (e) { feat[k](e.target.checked); };
   });
   $('rg-zoom').oninput = function () { if ($('tg-zoom').checked) feat.zoom(1); };
@@ -1812,13 +2333,24 @@
   });
 
   $('tg-dark').onchange = function (e) {
-    [hub, ovl, acOvl, toast, aiOvl, clk, noteOvl, xsPop.p, tsPop.p, curPop.p].forEach(function (x) {
-      x.classList.toggle('dark', e.target.checked);
+    [hub, ovl, acOvl, toast, aiOvl, clk, noteOvl, xsPop.p, tsPop.p, curPop.p, tmrOvl, scOvl, cfmBox, hubGhost, acPop.p, aiPop.p, tbPop.p].forEach(function (x) {
+      if (x) x.classList.toggle('dark', e.target.checked);
     });
+    saveSettings();
   };
+  if (savedSet.dark === false) { // restore saved light mode
+    $('tg-dark').checked = false;
+    $('tg-dark').dispatchEvent(new Event('change'));
+  }
 
   var cleanup = function () {
+    saveNow();
+    destroyed = 1;
     setAc(0);
+    stop();
+    clearTimeout(st.tid);
+    globalL.forEach(function (l) { try { l[0].removeEventListener(l[1], l[2], l[3]); } catch (e) {} });
+    globalL = [];
     st.st = 0;
     cancelAnimationFrame(st.rid);
     clearInterval(st.pid);
@@ -1835,8 +2367,15 @@
   window.__novaCleanup = cleanup;
 
   $('nova-cls').onclick = function () {
-    setAc(0);
-    hub.style.opacity = '0';
-    setTimeout(cleanup, 250);
+    askConfirm(
+      'Destroy UI?',
+      'This closes NovaScriptin and turns off every script and effect. A running timer pauses its ticking (it picks up again if you reopen Nova).',
+      'Destroy',
+      function () {
+        setAc(0);
+        hub.style.opacity = '0';
+        setTimeout(cleanup, 250);
+      }
+    );
   };
 })();
