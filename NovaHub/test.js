@@ -2361,9 +2361,57 @@
 
   $('rg-zoom').oninput = function () { if ($('tg-zoom').checked) feat.zoom(1); };
 
-  // ─────────── YOUR ORIGINAL FILE WAS CUT OFF HERE ───────────
-  // Paste the remainder of your original novascriptin.js starting at:
-  //   $('ta-css').oninput = function () { ... };
-  // (plus the rest: the destroy routine, the window.__novaCleanup
-  //  assignment, closing of the IIFE, etc.) in place of this comment.
+  $('ta-css').oninput = function () { if (ccss) ccss.textContent = $('ta-css').value; };
+  // Don't let page key handlers eat typing in our textareas
+  [noteTa, $('ta-css')].forEach(function (t) {
+    t.onkeydown = function (e) { e.stopPropagation(); };
+    t.onkeyup = function (e) { e.stopPropagation(); };
+  });
+
+  $('tg-dark').onchange = function (e) {
+    [hub, ovl, acOvl, toast, aiOvl, clk, noteOvl, xsPop.p, tsPop.p, curPop.p, tmrOvl, scOvl, cfmBox, hubGhost, acPop.p, aiPop.p, tbPop.p].forEach(function (x) {
+      if (x) x.classList.toggle('dark', e.target.checked);
+    });
+    saveSettings();
+  };
+  if (savedSet.dark === false) { // restore saved light mode
+    $('tg-dark').checked = false;
+    $('tg-dark').dispatchEvent(new Event('change'));
+  }
+
+  var cleanup = function () {
+    saveNow();
+    destroyed = 1;
+    setAc(0);
+    stop();
+    clearTimeout(st.tid);
+    globalL.forEach(function (l) { try { l[0].removeEventListener(l[1], l[2], l[3]); } catch (e) {} });
+    globalL = [];
+    st.st = 0;
+    cancelAnimationFrame(st.rid);
+    clearInterval(st.pid);
+    dmStop();
+    Object.keys(feat).forEach(function (k) {
+      try { feat[k](0); } catch (e) {}
+    });
+    document.body.contentEditable = 'false';
+    document.documentElement.classList.remove('n-inv');
+    host.remove();
+    gCss.remove();
+    fdark.remove();
+  };
+  window.__novaCleanup = cleanup;
+
+  $('nova-cls').onclick = function () {
+    askConfirm(
+      'Destroy UI?',
+      'This closes NovaScriptin and turns off every script and effect. A running timer pauses its ticking (it picks up again if you reopen Nova).',
+      'Destroy',
+      function () {
+        setAc(0);
+        hub.style.opacity = '0';
+        setTimeout(cleanup, 250);
+      }
+    );
+  };
 })();
