@@ -157,7 +157,14 @@
         tb: !!$('tg-tb').checked,
         xs: pickKeys(xs, XS_K),
         cc: pickKeys(cc, CC_K),
-        ts: pickKeys(ts, TS_K)
+        ts: pickKeys(ts, TS_K),
+        tog: {
+          st: !!$('tg-st').checked,
+          clk: !!$('tg-clk').checked,
+          note: !!$('tg-note').checked,
+          cur: !!$('tg-cur').checked
+        },
+        noteText: noteTa.value
       }));
     } catch (e) {}
   };
@@ -186,16 +193,16 @@
 
   var sTab = el('div', { id: 'tab-scripts', c: 'nova-sec active' }, [
     card('AutoClicker', 'Toggle overlay dashboard panel', 'tg-ac', 'ac-lbl'),
-    card('Stats Overlay', 'Draggable FPS & Google Ping', 'tg-st'),
+    card('Stats Overlay', 'Draggable FPS & Google Ping | Saved on this site', 'tg-st'),
     card('Groq Chatbot', 'AI Companion Overlay Panel', 'tg-ai'),
     card('Auto Scroller', 'Scrolls the page down for you (speed below)', 'tg-scroll', '', [
       el('input', { type: 'range', id: 'rg-scroll', c: 'nova-rng', min: '1', max: '30', value: '3' }),
     ]),
-    card('Clock', 'Draggable live clock overlay', 'tg-clk'),
-    card('Scratchpad', 'Draggable notepad overlay (kept until you close Nova)', 'tg-note'),
+    card('Clock', 'Draggable live clock overlay | Saved on this site', 'tg-clk'),
+    card('Scratchpad', 'Draggable notepad overlay | Saved on this site', 'tg-note'),
     card('Crosshair', 'Screen-center crosshair | Right-click switch for settings', 'tg-xh'),
     card('Fake Typer', 'Types text with human mistakes | Right-click switch for settings', 'tg-ty'),
-    card('Custom Cursor', 'Replace your mouse cursor (computer only) | Right-click switch for settings', 'tg-cur'),
+    card('Custom Cursor', 'Replace your mouse cursor (computer only) | Right-click switch for settings | Saved on this site', 'tg-cur'),
     card('Timer', 'Countdown that beeps when done | Saved on this site', 'tg-tmr', 'tmr-lbl'),
     card('Screen Time', 'Tracks time spent on this site | Saved on this site', 'tg-scr', 'scr-lbl', [
       el('button', { id: 'btn-scrreset', c: 'nova-kbtn', t: 'Reset screen time' }),
@@ -2324,6 +2331,34 @@
   ['unl', 'pw', 'rm', 'hl', 'zoom', 'css', 'scroll', 'clk', 'note', 'xh', 'ty', 'ab', 'pop', 'cur', 'tmr', 'scr'].forEach(function (k) {
     $('tg-' + k).onchange = function (e) { feat[k](e.target.checked); };
   });
+
+  // ----- Persist & restore Stats / Clock / Scratchpad / Cursor state -----
+  (function () {
+    ['st', 'clk', 'note', 'cur'].forEach(function (k) {
+      $('tg-' + k).addEventListener('change', saveSettings);
+    });
+    noteTa.addEventListener('input', saveSettings);
+
+    var sv = savedSet || {};
+    var tog = sv.tog || {};
+
+    // Flipping .checked then firing 'change' lets each feature's own
+    // handler run, so nothing is duplicated here.
+    var turnOn = function (k) {
+      var cb = $('tg-' + k);
+      if (!cb) return;
+      cb.checked = true;
+      cb.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    if (tog.st) turnOn('st');
+    if (tog.clk) turnOn('clk');
+    if (tog.note) turnOn('note');
+    if (tog.cur && !isTouch) turnOn('cur'); // cursor is desktop-only
+
+    if (typeof sv.noteText === 'string') noteTa.value = sv.noteText;
+  })();
+
   $('rg-zoom').oninput = function () { if ($('tg-zoom').checked) feat.zoom(1); };
   $('ta-css').oninput = function () { if (ccss) ccss.textContent = $('ta-css').value; };
   // Don't let page key handlers eat typing in our textareas
