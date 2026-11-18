@@ -1397,28 +1397,55 @@
   mergeSaved(xs, savedSet.xs, XS_K);
 
   var drawXh = function () {
-    var s = xs.size, t = xs.thick, g = xs.gap, c = xs.color, stl = xs.style, o = '';
-    var L = function (x1, y1, x2, y2) {
-      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + c + '" stroke-width="' + t + '"/>';
+      var s = xs.size, t = xs.thick, g = xs.gap, c = xs.color, stl = xs.style;
+    
+      xh.replaceChildren();
+    
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;opacity:' + (xs.op / 100) + ';';
+      if (xs.outline) {
+        wrap.style.filter = 'drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000)';
+      }
+    
+      var addRect = function (x, y, w, h, rot) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;background:' + c + ';box-sizing:content-box;';
+        if (rot) d.style.transform = 'rotate(' + rot + 'deg)';
+        wrap.appendChild(d);
+      };
+    
+      if (stl === 'cross' || stl === 'crossdot' || stl === 'tshape') {
+        addRect(-(g + s), -t / 2, s, t); // Left
+        addRect(g, -t / 2, s, t);        // Right
+        addRect(-t / 2, g, t, s);        // Bottom
+        if (stl !== 'tshape') {
+          addRect(-t / 2, -(g + s), t, s); // Top
+        }
+      }
+    
+      if (stl === 'x') {
+        var dist = (g + s / 2) * 0.7071;
+        addRect(dist - s / 2, dist - t / 2, s, t, 45);
+        addRect(dist - s / 2, -dist - t / 2, s, t, -45);
+        addRect(-dist - s / 2, dist - t / 2, s, t, -45);
+        addRect(-dist - s / 2, -dist - t / 2, s, t, 45);
+      }
+    
+      if (stl === 'circle' || stl === 'circledot') {
+        var ring = document.createElement('div');
+        ring.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:' + (s * 2) + 'px;height:' + (s * 2) + 'px;border:' + t + 'px solid ' + c + ';border-radius:50%;box-sizing:content-box;';
+        wrap.appendChild(ring);
+      }
+    
+      if (stl === 'dot' || stl === 'crossdot' || stl === 'circledot') {
+        var dot = document.createElement('div');
+        var d = (stl === 'dot' ? Math.max(s / 4, t) : Math.max(t, 1.5)) * 2;
+        dot.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:' + d + 'px;height:' + d + 'px;background:' + c + ';border-radius:50%;box-sizing:content-box;';
+        wrap.appendChild(dot);
+      }
+    
+      xh.appendChild(wrap);
     };
-    if (stl === 'cross' || stl === 'crossdot' || stl === 'tshape') {
-      o += L(-(g + s), 0, -g, 0) + L(g, 0, g + s, 0) + L(0, g, 0, g + s);
-      if (stl !== 'tshape') o += L(0, -(g + s), 0, -g);
-    }
-    if (stl === 'x') {
-      var a = g * 0.7071, b = (g + s) * 0.7071;
-      o += L(a, a, b, b) + L(-a, a, -b, b) + L(a, -a, b, -b) + L(-a, -a, -b, -b);
-    }
-    if (stl === 'circle' || stl === 'circledot') {
-      o += '<circle r="' + s + '" fill="none" stroke="' + c + '" stroke-width="' + t + '"/>';
-    }
-    if (stl === 'dot' || stl === 'crossdot' || stl === 'circledot') {
-      var r = stl === 'dot' ? Math.max(s / 4, t) : Math.max(t, 1.5);
-      o += '<circle r="' + r + '" fill="' + c + '"/>';
-    }
-    var f = (xs.outline ? 'filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);' : '') + 'opacity:' + xs.op / 100 + ';';
-    xh.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="-64 -64 128 128" style="position:absolute;left:-64px;top:-64px;overflow:visible;' + f + '">' + o + '</svg>';
-  };
   drawXh();
 
   feat.xh = function (on) {
@@ -1699,20 +1726,49 @@
   var escT = function (t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
 
   var drawCur = function () {
-    var s = cc.size, c = cc.color, o = '', stl = cc.style;
-    var ring = '<circle r="' + (s / 2) + '" fill="none" stroke="' + c + '" stroke-width="2"/>';
-    if (stl === 'dot') o = '<circle r="' + Math.max(3, s / 4) + '" fill="' + c + '"/>';
-    else if (stl === 'ring') o = ring;
-    else if (stl === 'ringdot') o = ring + '<circle r="2.5" fill="' + c + '"/>';
-    else if (stl === 'cross') o = '<line x1="' + (-s / 2) + '" y1="0" x2="' + (s / 2) + '" y2="0" stroke="' + c + '" stroke-width="2"/><line x1="0" y1="' + (-s / 2) + '" x2="0" y2="' + (s / 2) + '" stroke="' + c + '" stroke-width="2"/>';
-    else if (stl === 'arrow') {
-      var p = [[0, 0], [0, 0.85], [0.2, 0.66], [0.34, 1], [0.5, 0.93], [0.36, 0.6], [0.64, 0.6]].map(function (q) { return (q[0] * s) + ',' + (q[1] * s); }).join(' ');
-      o = '<polygon points="' + p + '" fill="' + c + '" stroke="#000" stroke-width="1" stroke-linejoin="round"/>';
-    } else if (stl === 'emoji') {
-      o = '<text x="0" y="0" font-size="' + s + '" text-anchor="middle" dominant-baseline="central">' + escT(cc.emoji || '🎯') + '</text>';
-    }
-    curEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="-64 -64 128 128" style="position:absolute;left:-64px;top:-64px;overflow:visible;opacity:' + cc.op / 100 + ';filter:drop-shadow(0 0 1px rgba(0,0,0,.6))">' + o + '</svg>';
-  };
+      var s = cc.size, c = cc.color, stl = cc.style;
+    
+      curEl.replaceChildren();
+    
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;opacity:' + (cc.op / 100) + ';filter:drop-shadow(0 0 1px rgba(0,0,0,.6));';
+    
+      var addCircle = function (d, fill, stroke) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:' + d + 'px;height:' + d + 'px;border-radius:50%;box-sizing:content-box;' +
+          (fill ? 'background:' + fill + ';' : '') +
+          (stroke ? 'border:' + stroke + ';' : '');
+        wrap.appendChild(el);
+      };
+    
+      if (stl === 'dot') {
+        addCircle(Math.max(3, s / 4) * 2, c, null);
+      } else if (stl === 'ring' || stl === 'ringdot') {
+        addCircle(s, null, '2px solid ' + c);
+        if (stl === 'ringdot') {
+          addCircle(5, c, null);
+        }
+      } else if (stl === 'cross') {
+        var hLine = document.createElement('div');
+        hLine.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:' + s + 'px;height:2px;background:' + c + ';';
+        var vLine = document.createElement('div');
+        vLine.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:2px;height:' + s + 'px;background:' + c + ';';
+        wrap.appendChild(hLine);
+        wrap.appendChild(vLine);
+      } else if (stl === 'arrow') {
+        var arrow = document.createElement('div');
+        arrow.style.cssText = 'position:absolute;left:0;top:0;width:' + s + 'px;height:' + s + 'px;background:' + c + ';clip-path:polygon(0% 0%, 0% 85%, 20% 66%, 34% 100%, 50% 93%, 36% 60%, 64% 60%);';
+        wrap.appendChild(arrow);
+      } else if (stl === 'emoji') {
+        var txt = document.createElement('div');
+        txt.style.cssText = 'position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-size:' + s + 'px;line-height:1;user-select:none;';
+        txt.textContent = cc.emoji || '🎯';
+        wrap.appendChild(txt);
+      }
+    
+      curEl.appendChild(wrap);
+    };
+  drawCur();
 
   var curHide = function (hide) {
     if (curPageStyle) { curPageStyle.remove(); curPageStyle = null; }
